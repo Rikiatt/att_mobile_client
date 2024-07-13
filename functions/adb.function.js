@@ -36,9 +36,12 @@ module.exports = {
   },
 
   inputADB: async ({ device_id, text }) => {
-    console.log(`Nhập::[${text}]`);
-    await client.shell(device_id, `input text ${text}`);
-    await delay(1000);
+    for (const char of text) {
+      console.log(`Nhập::[${char}]`);
+      await client.shell(device_id, `input text ${char}`);
+      await delay(100);
+    }
+    await delay(500);
   },
 
   enterADB: async ({ device_id }) => {
