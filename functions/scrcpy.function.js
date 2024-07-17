@@ -9,9 +9,9 @@ const { delay } = require('../helpers/functionHelper');
 const execPromise = util.promisify(exec);
 
 module.exports = {
-  connectScrcpy: async ({ device_id }) => {
+  connectScrcpy: async ({ device_id, title }) => {
     console.log('Kết nối thiết bị');
-    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id}`);
+    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} ${title && `--window-title='${title}'`}`);
     await delay(5000);
   },
 
