@@ -4,6 +4,7 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const adb = require('adbkit');
 const { delay } = require('../helpers/functionHelper');
 const client = adb.createClient({ bin: adbPath });
+const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
 
 module.exports = {
   listDevice: async () => {
@@ -36,13 +37,16 @@ module.exports = {
   },
 
   inputADB: async ({ device_id, text }) => {
-    for (const char of text) {
-      const charRegex = escapeSpecialChars(char);
-      console.log(`Nhập::[${char}]`);
-      await client.shell(device_id, `input text ${charRegex}`);
-      await delay(100);
-    }
-    await delay(500);
+    const formatText = removeVietnameseStr(text);
+    const charRegex = escapeSpecialChars(formatText);
+    await client.shell(device_id, `input text ${charRegex}`);
+    // for (const char of text) {
+    //   const charRegex = escapeSpecialChars(char);
+    //   console.log(`Nhập::[${char}]`);
+    //   await client.shell(device_id, `input text ${charRegex}`);
+    //   await delay(100);
+    // }
+    await delay(1000);
   },
 
   enterADB: async ({ device_id }) => {
@@ -62,10 +66,6 @@ module.exports = {
     await client.shell(device_id, `input keyevent KEYCODE_HOME`);
     await delay(500);
   }
-};
-
-const escapeSpecialChars = (text) => {
-  return text.replace(/([!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~])/g, '\\$1').replace(/\s/g, '\\ ');
 };
 
 const percentSize = (percent, screenSize) => {
