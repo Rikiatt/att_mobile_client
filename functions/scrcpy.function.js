@@ -11,7 +11,7 @@ const execPromise = util.promisify(exec);
 module.exports = {
   connectScrcpy: async ({ device_id, title }) => {
     console.log('Kết nối thiết bị');
-    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} ${title ? `--window-title='${title}'` : ''}`);
+    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --window-title="${title ? title : device_id}"`);
     await delay(5000);
   },
 
