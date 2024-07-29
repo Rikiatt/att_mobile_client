@@ -6,7 +6,7 @@ const cronTask = async () => {
 };
 
 const cronUpdate = new cron.CronJob(
-  '*/10 * * * *',
+  '*/20 * * * *',
   async () => {
     try {
       await updateSource();

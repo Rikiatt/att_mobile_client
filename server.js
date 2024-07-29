@@ -9,6 +9,7 @@ const Router = require('./routers');
 const { port } = require('./config');
 const { updateSource } = require('./functions/function');
 const cronTask = require('./functions/cron.function');
+const { autoRunGnirehtet } = require('./functions/gnirehtet.function');
 
 const server = require('http').createServer(app);
 
