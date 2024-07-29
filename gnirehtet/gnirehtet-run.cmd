@@ -1,2 +1,1 @@
-@gnirehtet.exe run
-@pause
+@gnirehtet.exe autorun

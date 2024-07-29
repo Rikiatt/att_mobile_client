@@ -1,0 +1,1 @@
+cd gnirehtet && start gnirehtet-run.cmd

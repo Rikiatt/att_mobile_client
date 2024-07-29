@@ -1,16 +1,20 @@
 const nodeCmd = require('../helpers/nodeCmdHelper');
 const path = require('path');
 
-const gnirehtetFolder = path.join(__dirname, '../gnirehtet', 'gnirehtet.exe');
 const { delay } = require('../helpers/functionHelper');
 const { listDevice } = require('./adb.function');
 
+const gnirehtetFolder = path.join(__dirname, '../gnirehtet', 'gnirehtet.exe');
+const batFilePath = path.join(__dirname, 'start_gnirehtet.bat');
+
 module.exports = {
   autoRunGnirehtet: async () => {
-    console.log('Chia sẻ kết nối ngược');
+    console.log('Dừng gnirehtet.exe');
     nodeCmd.runSync(`taskkill /F /IM gnirehtet.exe`);
 
-    nodeCmd.run(`"${gnirehtetFolder}" autorun`);
+    console.log('Chia sẻ kết nối ngược');
+
+    nodeCmd.run(`start "" "${batFilePath}"`);
 
     await delay(1000);
   },
