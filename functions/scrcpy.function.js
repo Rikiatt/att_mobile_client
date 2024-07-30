@@ -7,11 +7,7 @@ const { delay } = require('../helpers/functionHelper');
 module.exports = {
   connectScrcpy: async ({ device_id, title }) => {
     console.log('Kết nối thiết bị');
-    nodeCmd.run(
-      `"${scrcpyFolder}" -s ${device_id} --video-codec=h265 --max-size=1920 --max-fps=60 --no-audio --window-title="${
-        title ? title : device_id
-      }"`
-    );
+    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
     await delay(3000);
   },
 
