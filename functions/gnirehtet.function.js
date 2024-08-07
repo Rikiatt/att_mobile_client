@@ -25,6 +25,8 @@ module.exports = {
       console.log('Đóng kết nối ' + device.id);
       nodeCmd.runSync(`"${gnirehtetFolder}" stop ${device.id}`);
     }
+    console.log('Dừng gnirehtet.exe');
+    nodeCmd.runSync(`taskkill /F /IM gnirehtet.exe`);
     await delay(1000);
   }
 };

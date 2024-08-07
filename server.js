@@ -9,7 +9,7 @@ const Router = require('./routers');
 const { port } = require('./config');
 const { updateSource } = require('./functions/function');
 const cronTask = require('./functions/cron.function');
-const { autoRunGnirehtet } = require('./functions/gnirehtet.function');
+const { autoRunGnirehtet, stopGnirehtet } = require('./functions/gnirehtet.function');
 
 const server = require('http').createServer(app);
 
@@ -30,6 +30,7 @@ app.use((req, res, next) => {
 
 server.listen(port, async () => {
   await updateSource();
+  await stopGnirehtet();
 
   exec(`start msedge http://localhost:${port}`, {
     windowsHide: true
