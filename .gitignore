@@ -13,7 +13,7 @@
 
 
 # Views
-/views/portal_ui_automator/node_module/
+views/portal_ui_automator/node_modules/
 # !/views/portal_ui_automator/build/
 
 images/*.png
@@ -30,4 +30,3 @@ database/*json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-node_modules
