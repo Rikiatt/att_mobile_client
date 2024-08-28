@@ -1,15 +1,14 @@
 const path = require('path');
-const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
-
 const adb = require('adbkit');
 const { delay } = require('../helpers/functionHelper');
-const client = adb.createClient({ bin: adbPath });
 const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
+
+const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
+const client = adb.createClient({ bin: adbPath });
 
 module.exports = {
   listDevice: async () => {
     try {
-      console.log('Lấy danh sách thiết bị');
       const devices = await client.listDevices();
       for (let device of devices) {
         const screenSize = await getScreenSize(device.id);
@@ -22,7 +21,7 @@ module.exports = {
         device.androidVersion = androidVersion;
         device.model = model;
       }
-      console.log(devices);
+      console.log("Danh sách thiết bị ", devices?.length);
       return devices;
     } catch (error) {
       console.error('Error getting connected devices:', error);
@@ -65,7 +64,14 @@ module.exports = {
     console.log('Trở về Home');
     await client.shell(device_id, `input keyevent KEYCODE_HOME`);
     await delay(500);
-  }
+  },
+
+  sendFile: async (device_id, localPath, devicePath) => {
+    await client.push(device_id, localPath, devicePath);
+    await delay(500);
+    await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    await delay(100);
+  },
 };
 
 const percentSize = (percent, screenSize) => {

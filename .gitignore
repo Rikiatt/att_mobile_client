@@ -16,7 +16,8 @@
 /views/portal_ui_automator/node_module/
 # !/views/portal_ui_automator/build/
 
-
+images/*.png
+database/*json
 
 # misc
 .DS_Store

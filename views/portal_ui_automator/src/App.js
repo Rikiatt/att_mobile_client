@@ -1,12 +1,13 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { getListDevice } from './api/adb';
-import { getVersion } from './api/bridge';
-
+import { getListDevice, } from './api/adb';
+import { getVersion, postLocalData } from './api/bridge';
+import { Key, KeyRounded, Link } from '@mui/icons-material';
 import Loading from './components/Loading';
 
 import {
   Avatar,
+  Box,
   Button,
   Card,
   CardContent,
@@ -33,7 +34,7 @@ import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 import { swalToast } from './utils/swal';
-import { connect, enter, home, typeText } from './services/handle.service';
+import { connect, enter, home, typePortKey, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleBidv from './sections/bank_handle/HandleBidv';
 import HandleMb from './sections/bank_handle/HandleMb';
@@ -43,6 +44,9 @@ import HandleAbb from './sections/bank_handle/HandleAbb';
 import HandleVcbNew from './sections/bank_handle/HandleVcbNew';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
+import HandleShowQr from './sections/HandleShowQr';
+import Swal from 'sweetalert2';
+import { getSetting } from './api/setting';
 
 function App() {
   const [devices, setDevices] = useState([]);
@@ -50,6 +54,7 @@ function App() {
   const [mutate, setMutate] = useState(false);
   const [newVersion, setNewVersion] = useState('');
   const [openDial, setOpenDial] = useState(false);
+  const [qr, setQr] = useState(false);
 
   const handleOpenDial = () => {
     setOpenDial(true);
@@ -64,12 +69,14 @@ function App() {
       setLoading((prev) => !prev);
       const result = await getListDevice();
       const resultVer = await getVersion();
+      const resultSet = await getSetting()
       setLoading((prev) => !prev);
       if (result.status && result.status === false) {
         return swalToast('error', result.msg);
       }
       setNewVersion(resultVer.version || '');
       setDevices(result);
+      setQr(resultSet?.valid);
     };
     callAPI();
   }, [mutate]);
@@ -84,6 +91,13 @@ function App() {
     swalToast('success', 'Thành công');
     setMutate((prev) => !prev);
   };
+  const showDevice = (item) => {
+    Swal.fire({
+      icon: "info",
+      title: "Thông tin thiết bị - " + (localStorage.getItem(item.id) || "Ghi chú"),
+      html: `<p>ID: ${item.id}</p><p>Name: ${item.nameDevice}</p><p>Model: ${item.model}</p><p>Size: ${item.screenSize}</p>`
+    })
+  }
 
   return (
     <>
@@ -92,8 +106,9 @@ function App() {
           <Stack direction="row" alignItems="center" spacing={2}>
             <img src="./logo_att.png" alt="logo" style={{ width: 40, height: 40 }} />
             <Typography variant="h5" fontWeight="bold" color="#172B4D">
-              Ui Automator {newVersion || ''}
+              Ui Manual {newVersion || ''}
             </Typography>
+            <SetupPusher setMutate={setMutate} />
           </Stack>
           <Divider sx={{ mt: 2 }} />
         </Grid>
@@ -119,7 +134,7 @@ function App() {
               const Y = item.screenSize.split('x')[1];
 
               return (
-                <Grid key={index} item xs={12} sm={6} md={4} lg={2.4}>
+                <Grid key={index} item xs={12} sm={6} md={4} lg={3}>
                   <Card>
                     <CardHeader
                       avatar={
@@ -129,60 +144,88 @@ function App() {
                       }
                       title={<TitleComp title={title} item={item} setMutate={setMutate} />}
                       subheader={
-                        <Typography variant="caption" color="GrayText" title={`${item.nameDevice} - ${item.screenSize}`}>
-                          {item.model}
-                        </Typography>
+                        <Box>
+                          <Typography
+                            variant="body"
+                            color="Highlight"
+                            sx={{ cursor: "pointer", fontWeight: "bold" }}
+                            onClick={() => showDevice(item)}
+                            title={`${item.nameDevice} - ${item.screenSize}`}>
+                            {item.id}
+                          </Typography>
+                        </Box>
                       }
                     />
                     <CardContent>
-                      <Stack justifyContent="center" alignItems="center" spacing={1}>
-                        <Button variant="outlined" color="primary" fullWidth onClick={() => typeText({ device_id: item.id }, setLoading)}>
-                          Nhập ký tự
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          fullWidth
-                          onClick={async () => {
-                            setLoading(true);
-                            await enter({ device_id: item.id });
-                            setLoading(false);
-                          }}
-                        >
-                          Enter
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          fullWidth
-                          onClick={async () => {
-                            setLoading(true);
-                            await home({ device_id: item.id });
-                            setLoading(false);
-                          }}
-                        >
-                          Home
-                        </Button>
-                      </Stack>
-
-                      <Divider sx={{ mt: 2, mb: 2 }} />
-                      <Stack justifyContent="center" alignItems="center" spacing={1}>
-                        <Tooltip title="Điều khiển/thao tác thiết bị" arrow>
+                      <Divider sx={{ mb: 2 }} />
+                      <Grid container spacing={1}>
+                        <Grid item xs={6}>
                           <Button
-                            variant="outlined"
-                            color="secondary"
                             fullWidth
+                            variant="outlined"
+                            fontSize={'11'}
+                            color="primary"
+                            onClick={() =>
+                              typeText({ device_id: item.id }, setLoading)}>
+                            Nhập ký tự
+                          </Button>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            fontSize={'11'}
                             onClick={async () => {
                               setLoading(true);
-                              await connect({ device_id: item.id, title });
+                              await enter({ device_id: item.id });
                               setLoading(false);
                             }}
-                            startIcon={<LaunchIcon />}
                           >
-                            Mở thiết bị
+                            Enter
                           </Button>
-                        </Tooltip>
-                      </Stack>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Tooltip title="Điều khiển/thao tác thiết bị" arrow>
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              fullWidth
+                              fontSize={'11'}
+                              onClick={async () => {
+                                setLoading(true);
+                                await connect({ device_id: item.id, title });
+                                setLoading(false);
+                              }}
+                              startIcon={<LaunchIcon />}
+                            >
+                              Mở máy
+                            </Button>
+                          </Tooltip>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            fontSize={'11'}
+                            onClick={async () => {
+                              setLoading(true);
+                              await home({ device_id: item.id });
+                              setLoading(false);
+                            }}
+                          >
+                            Home
+                          </Button>
+                        </Grid>
+                      </Grid>
+
+                      {qr &&
+                        <>
+                          <Divider sx={{ mt: 2, mb: 2 }} />
+                          <HandleShowQr item={item} />
+                        </>
+                      }
                       <Divider sx={{ mt: 2, mb: 2 }} />
                       <HandleBidv item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleMb item={item} X={X} Y={Y} setLoading={setLoading} />
@@ -286,3 +329,59 @@ const actionsDial = [
   { icon: <PhonelinkOffIcon />, name: 'Tắt kết nối ngược', typeHandle: 'stopShare' },
   { icon: <PowerSettingsNewIcon color="error" />, name: 'Restart tool', typeHandle: 'restart' }
 ];
+
+function SetupPusher({ setMutate }) {
+  const [isEdit, setEdit] = useState();
+  const [textTitle, setTextTitle] = useState('');
+
+  const saveHandle = async () => {
+    setEdit((prev) => !prev);
+    setMutate((prev) => !prev);
+    const data = { pusher_key: textTitle.trim() }
+
+    const result = await postLocalData(data);
+
+    if (result?.valid == true) {
+      return swalToast('success', 'Thành công');
+    } else {
+      return swalToast('error', "Lỗi hệ thống");
+    }
+  };
+
+  return (
+    <>
+      <Stack direction="row" alignItems="center" spacing={1}>
+        {isEdit ? (
+          <>
+            <TextField
+              variant="outlined"
+              placeholder="key pusher"
+              size="small"
+              sx={{ width: "180px" }}
+              value={textTitle}
+              onChange={(event) => setTextTitle(event.target.value)}
+            />
+            <Tooltip title="Lưu">
+              <IconButton size="small" onClick={saveHandle}>
+                <SaveIcon color="primary" sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Hủy" arrow>
+              <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
+                <CancelIcon color="error" sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <Tooltip title="Cấu hình key pusher" arrow>
+              <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
+                <KeyRounded color="primary" sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      </Stack>
+    </>
+  );
+}
