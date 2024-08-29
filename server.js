@@ -65,7 +65,7 @@ server.listen(port, async () => {
       }
 
       let qrLocalPath = path.join(__dirname, 'images', device_id + '_qr.png')
-      let qrDevicePath = '/sdcard/' + device_id + '_qr.png';
+      let qrDevicePath = '/sdcard/DCIM/Camera/' + device_id + '_qr.png';
 
       if (vietqr_url) {
         await downloadQr(vietqr_url, qrLocalPath);
