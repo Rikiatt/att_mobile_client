@@ -17,6 +17,7 @@ views/portal_ui_automator/node_modules/
 # !/views/portal_ui_automator/build/
 
 images/*.png
+images/*.jpg
 database/*json
 
 # misc
