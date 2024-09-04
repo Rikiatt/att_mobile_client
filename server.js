@@ -7,9 +7,10 @@ const { exec } = require('child_process');
 const Router = require('./routers');
 const { port } = require('./config');
 const cronTask = require('./functions/cron.function');
-const { listDevice, sendFile } = require('./functions/adb.function');
+const { listDevice, sendFile, delImg } = require('./functions/adb.function');
 const { updateSource, transToQr, downloadQr, setDataJson, getDataJson } = require('./functions/function');
 const { autoRunGnirehtet, stopGnirehtet } = require('./functions/gnirehtet.function');
+const { delay } = require('./helpers/functionHelper');
 
 const server = require('http').createServer(app);
 
@@ -64,8 +65,18 @@ server.listen(port, async () => {
         return;
       }
 
-      let qrLocalPath = path.join(__dirname, 'images', device_id + '_qr.png')
-      let qrDevicePath = '/sdcard/DCIM/Camera/' + device_id + '_qr.png';
+
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+
+      const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+      let qrLocalPath = path.join(__dirname, 'images', device_id + '_qr.jpg')
+      let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
       if (vietqr_url) {
         await downloadQr(vietqr_url, qrLocalPath);
@@ -75,7 +86,16 @@ server.listen(port, async () => {
       let jsonPath = path.join(__dirname, 'database', device_id + '_url.json')
 
       await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
+
+      await delImg(device_id, '/sdcard/DCIM/Camera/'); 
+      await delay(100);
+
       await sendFile(device_id, qrLocalPath, qrDevicePath);
+
+      setTimeout(async () => {
+        await delImg(device_id, '/sdcard/DCIM/Camera/', filename);
+        console.log("Deleted QR old - " + filename);
+      }, 300000);
 
       console.log("Success !!");
     });
