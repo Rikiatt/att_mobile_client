@@ -11,7 +11,7 @@ module.exports = {
       status_code: data ? 200 : 404,
       valid: !!data,
       message: 'Thành công',
-      result: !!data
+      result: data
     });
   },
 };

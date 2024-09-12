@@ -32,73 +32,96 @@ app.use((req, res, next) => {
 server.listen(port, async () => {
   await updateSource();
   await stopGnirehtet();
-
   exec(`start msedge http://localhost:${port}`, {
     windowsHide: true
   });
-
   console.log(`UI Automator is listening on http://localhost:${port}`);
-
   const lastReceived = {};
+  try {
+    const io = require('socket.io-client');
+    // Khởi tạo file json
+    let localPath = path.join(__dirname, 'database', 'localdata.json');
+    const localData = await getDataJson(localPath);
+    if (localData && localData.endpoint && localData.site) {
+      const { site, endpoint } = localData;
+      console.log("---> Listen on server <---");
+      const socket = io(endpoint + "/" + site);
 
-  // Khởi tạo file json
-  let localPath = path.join(__dirname, 'database', 'localdata.json');
-  const localData = await getDataJson(localPath);
-  if (localData?.pusher_key && localData?.pusher_key !== "") {
-    console.log("---> Listen event on server by Pusher <---");
-    var pusher = new Pusher(localData?.pusher_key, { cluster: 'ap1' });
-    var channel = pusher.subscribe('my-channel');
-    channel.bind('my-event', async function (data) {
-      const now = Date.now();
-      console.log('data', data);
-      const devices = await listDevice();
-      const findDevice = devices.find((item) => item?.id === data?.device_id);
-      if (!findDevice) return;
+      // Khi kết nối thành công
+      socket.on('connect', async () => {
+        console.log('Connected to server:', socket.id);
+        await setDataJson(localPath, { ...localData, connected: true });
+      });
 
-      if (lastReceived[data?.device_id] && now - lastReceived[data?.device_id] < 5000) return;
-      lastReceived[data?.device_id] = now;
+      // Nhận phản hồi từ server
+      socket.on('broadcast', async (data) => {
+        console.log('Server response:', data);
+        const now = Date.now();
+        console.log('data', data);
+        const devices = await listDevice();
+        const findDevice = devices.find((item) => item?.id == data?.device_id);
+        if (!findDevice) {
+          return;
+        }
 
-      const { vietqr_url, device_id, trans_id, bin, account_number, amount, trans_mess } = data;
+        // Đúng thiết bị
+        if (lastReceived[data?.device_id] && now - lastReceived[data?.device_id] < 5000) {
+          return;
+        };
+        lastReceived[data?.device_id] = now;
 
-      if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess)) {
-        console.log("Mix Data");
-        return;
-      }
+        const { vietqr_url, device_id, trans_id, bin, account_number, amount, trans_mess } = data;
 
+        if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess)) {
+          console.log("Mix Data");
+          socket.emit('callback', { ...data, success: false });
+          return;
+        }
 
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
 
-      const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-      let qrLocalPath = path.join(__dirname, 'images', device_id + '_qr.jpg')
-      let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+        const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+        let qrLocalPath = path.join(__dirname, 'images', device_id + '_qr.jpg')
+        let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
-      if (vietqr_url) {
-        await downloadQr(vietqr_url, qrLocalPath);
-      } else {
-        await transToQr(data, qrLocalPath);
-      }
-      let jsonPath = path.join(__dirname, 'database', device_id + '_url.json')
+        if (vietqr_url) {
+          await downloadQr(vietqr_url, qrLocalPath);
+        } else {
+          await transToQr(data, qrLocalPath);
+        }
+        let jsonPath = path.join(__dirname, 'database', device_id + '_url.json')
 
-      await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
+        await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-      await delImg(device_id, '/sdcard/DCIM/Camera/'); 
-      await delay(100);
+        await delImg(device_id, '/sdcard/DCIM/Camera/');
+        await delay(100);
 
-      await sendFile(device_id, qrLocalPath, qrDevicePath);
+        await sendFile(device_id, qrLocalPath, qrDevicePath);
 
-      setTimeout(async () => {
-        await delImg(device_id, '/sdcard/DCIM/Camera/', filename);
-        console.log("Deleted QR old - " + filename);
-      }, 300000);
+        setTimeout(async () => {
+          await delImg(device_id, '/sdcard/DCIM/Camera/', filename);
+          console.log("Deleted QR old - " + filename);
+        }, 300000);
 
-      console.log("Success !!");
-    });
+        // Thành công !!!
+        console.log("Success !!");
+        socket.emit('callback', { ...data, success: true });
+      });
+
+      // Khi bị ngắt kết nối
+      socket.on('disconnect', async () => {
+        console.log('Disconnected from server');
+        await setDataJson(localPath, { ...localData, connected: false });
+      });
+    }
+  } catch (e) {
+    console.log(e);
   }
 });
 

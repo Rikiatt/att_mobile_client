@@ -32,6 +32,19 @@ import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import PhonelinkIcon from '@mui/icons-material/Phonelink';
 import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
 import SettingsIcon from '@mui/icons-material/Settings';
+import {
+  SettingsInputAntenna,
+  Save,
+  Edit,
+  Cancel,
+  Launch,
+  PowerSettingsNew,
+  Phonelink,
+  PhonelinkOff,
+  Settings,
+  WifiTetheringError,
+  WifiTethering
+} from '@mui/icons-material';
 
 import { swalToast } from './utils/swal';
 import { connect, enter, home, typePortKey, typeText } from './services/handle.service';
@@ -55,7 +68,7 @@ function App() {
   const [newVersion, setNewVersion] = useState('');
   const [openDial, setOpenDial] = useState(false);
   const [qr, setQr] = useState(false);
-
+  const [seting, setSeting] = useState({});
   const handleOpenDial = () => {
     setOpenDial(true);
   };
@@ -77,6 +90,7 @@ function App() {
       setNewVersion(resultVer.version || '');
       setDevices(result);
       setQr(resultSet?.valid);
+      setSeting(resultSet?.result || {})
     };
     callAPI();
   }, [mutate]);
@@ -108,7 +122,7 @@ function App() {
             <Typography variant="h5" fontWeight="bold" color="#172B4D">
               Ui Manual {newVersion || ''}
             </Typography>
-            <SetupPusher setMutate={setMutate} />
+            <SetupPusher setMutate={setMutate} seting={seting} />
           </Stack>
           <Divider sx={{ mt: 2 }} />
         </Grid>
@@ -330,14 +344,16 @@ const actionsDial = [
   { icon: <PowerSettingsNewIcon color="error" />, name: 'Restart tool', typeHandle: 'restart' }
 ];
 
-function SetupPusher({ setMutate }) {
+function SetupPusher({ setMutate, seting }) {
   const [isEdit, setEdit] = useState();
   const [textTitle, setTextTitle] = useState('');
 
   const saveHandle = async () => {
     setEdit((prev) => !prev);
     setMutate((prev) => !prev);
-    const data = { pusher_key: textTitle.trim() }
+    const parsedUrl = new URL(textTitle.trim());
+
+    const data = { endpoint: parsedUrl.origin, site: parsedUrl.pathname.replace('/', '') }
 
     const result = await postLocalData(data);
 
@@ -355,7 +371,7 @@ function SetupPusher({ setMutate }) {
           <>
             <TextField
               variant="outlined"
-              placeholder="key pusher"
+              placeholder="Link truy cập"
               size="small"
               sx={{ width: "180px" }}
               value={textTitle}
@@ -374,9 +390,10 @@ function SetupPusher({ setMutate }) {
           </>
         ) : (
           <>
-            <Tooltip title="Cấu hình key pusher" arrow>
+            <Tooltip title="Cấu hình link truy cập" arrow>
               <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                <KeyRounded color="primary" sx={{ fontSize: 16 }} />
+                {(seting?.endpoint && seting?.connected) && <WifiTethering color={"primary"} sx={{ fontSize: 20 }} />}
+                {(!seting?.endpoint || !seting?.connected) && <WifiTetheringError color={"gray"} sx={{ fontSize: 20 }} />}
               </IconButton>
             </Tooltip>
           </>
