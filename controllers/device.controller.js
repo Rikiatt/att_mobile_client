@@ -6,7 +6,7 @@ const { stopGnirehtet, autoRunGnirehtet } = require('../functions/gnirehtet.func
 
 module.exports = {
   restart: async (req, res) => {
-    // updateSource();
+    updateSource();
     await delay(2000);
     responseHelper(res, 200, 'Thành công');
   },
@@ -23,7 +23,7 @@ module.exports = {
 
   get_qr: async (req, res) => {
     const { query } = req;
-    let jsonPath = path.join(__dirname, '../database', query.device_id + '_url.json')
+    let jsonPath = path.join(__dirname, '../database', query.device_id.split(':')[0] + '_url.json')
     const data = await getDataJson(jsonPath);
     res.json({
       status_code: 200,
@@ -32,7 +32,7 @@ module.exports = {
       result: Date.now() - (data?.last_time || 0) < 30000 ? data.vietqr_url : null
     });
   },
-  
+
 };
 
 /**

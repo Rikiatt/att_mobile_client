@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 
 server.listen(port, async () => {
   const ipPublic = await getIpPublic();
-  // await updateSource();
+  await updateSource();
   await stopGnirehtet();
   exec(`start msedge http://localhost:${port}`, {
     windowsHide: true
@@ -91,7 +91,7 @@ server.listen(port, async () => {
         const seconds = String(date.getSeconds()).padStart(2, '0');
 
         const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-        let qrLocalPath = path.join(__dirname, 'images', device_id + '_qr.jpg')
+        let qrLocalPath = path.join(__dirname, 'images', device_id.split(':')[0] + '_qr.jpg')
         let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
         if (vietqr_url) {
@@ -99,7 +99,7 @@ server.listen(port, async () => {
         } else {
           await transToQr(data, qrLocalPath);
         }
-        let jsonPath = path.join(__dirname, 'database', device_id + '_url.json')
+        let jsonPath = path.join(__dirname, 'database', device_id.split(':')[0] + '_url.json')
 
         await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
