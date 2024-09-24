@@ -6,7 +6,7 @@ const { stopGnirehtet, autoRunGnirehtet } = require('../functions/gnirehtet.func
 
 module.exports = {
   restart: async (req, res) => {
-    updateSource();
+    // updateSource();
     await delay(2000);
     responseHelper(res, 200, 'Thành công');
   },
@@ -32,4 +32,26 @@ module.exports = {
       result: Date.now() - (data?.last_time || 0) < 30000 ? data.vietqr_url : null
     });
   },
+  
 };
+
+/**
+ * - 1: adb tcpip 5555 | adb -s 69YTCQCQZ5RO89DM  tcpip 5555
+ * - 2: adb -s 69YTCQCQZ5RO89DM connect 192.168.0.103:5555
+ * -    adb disconnect 192.168.0.107:5555   ->    disconnected 192.168.0.107:5555
+ *      
+ * -    adb connect 192.168.0.107:5555      ->    connected to 192.168.0.107:5555 
+ *        -> device_id=ip_public$$192.168.0.107:5555 -> lọc IP public, IP private để gửi qr
+ * 
+ * -    adb tcpip 5555    ->    error: no devices/emulators found
+ * 
+ * Error getting screen size: FailError: Failure: 'closed'  
+ * Error getting Bluetooth device name: FailError: Failure: 'device offline'
+ * Error getting Android version: FailError: Failure: 'device offline'
+ * Error getting model: FailError: Failure: 'device offline'
+ * 
+ * 
+ * 
+ * 
+ * 
+ */

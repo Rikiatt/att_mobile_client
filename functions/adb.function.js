@@ -11,10 +11,12 @@ module.exports = {
     try {
       const devices = await client.listDevices();
       for (let device of devices) {
-        const screenSize = await getScreenSize(device.id);
-        const nameDevice = await getNameDevice(device.id);
-        const androidVersion = await getAndroidVersion(device.id);
-        const model = await getModel(device.id);
+        const [screenSize, nameDevice, androidVersion, model] = await Promise.all([
+          getScreenSize(device.id),
+          getNameDevice(device.id),
+          getAndroidVersion(device.id),
+          getModel(device.id)
+        ])
 
         device.screenSize = screenSize;
         device.nameDevice = nameDevice;
@@ -33,6 +35,7 @@ module.exports = {
     console.log(`Click::[${percentSize(percent.X, screenSize.X)} - ${percentSize(percent.Y, screenSize.Y)}]`);
     await client.shell(device_id, `input tap ${percentSize(percent.X, screenSize.X)} ${percentSize(percent.Y, screenSize.Y)}`);
     await delay(500);
+    return { status: 200, message: 'Success' };
   },
 
   inputADB: async ({ device_id, text }) => {
@@ -46,24 +49,55 @@ module.exports = {
     //   await delay(100);
     // }
     await delay(1000);
+    return { status: 200, message: 'Success' };
   },
 
   enterADB: async ({ device_id }) => {
     console.log('Nhấn Enter');
     await client.shell(device_id, `input keyevent 66`);
     await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  connectTcpIp: async ({ device_id }) => {
+    // device_id: 192.168.0.1:5555
+    try {
+      const ipaddress = await getIp(device_id);
+      await client.tcpip(device_id, 5555);
+      await delay(1000);
+      await client.connect(`${ipaddress}:5555`);
+      console.log(`Connected to ${device_id}`);
+      return { status: 200, message: 'Success' };
+    } catch (error) {
+      console.error(`Failed to connect to ${device_id}:`, error);
+      return { status: 500, message: 'Fail' };
+    }
+  },
+
+  disconnectTcpIp: async ({ device_id }) => {
+    // device_id: 192.168.0.1:5555
+    try {
+      await client.disconnect(device_id);
+      console.log(`Disconnected from ${device_id}`);
+      return { status: 200, message: 'Success' };
+    } catch (error) {
+      console.error(`Failed disconnect from ${device_id}:`, error);
+      return { status: 200, message: 'Success' };
+    }
   },
 
   keyEventADB: async ({ device_id, key_event }) => {
     console.log(`Key Event ${key_event}`);
     await client.shell(device_id, `input keyevent ${key_event}`);
     await delay(500);
+    return { status: 200, message: 'Success' };
   },
 
   backHomeADB: async ({ device_id }) => {
     console.log('Trở về Home');
     await client.shell(device_id, `input keyevent KEYCODE_HOME`);
     await delay(500);
+    return { status: 200, message: 'Success' };
   },
 
   sendFile: async (device_id, localPath, devicePath) => {
@@ -71,6 +105,7 @@ module.exports = {
     await delay(500);
     await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
     await delay(100);
+    return { status: 200, message: 'Success' };
   },
 
   delImg: async (device_id, devicePath, filename = '') => {
@@ -88,6 +123,7 @@ module.exports = {
       })
     await delay(100);
     client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    return { status: 200, message: 'Success' };
   }
 };
 
@@ -157,3 +193,18 @@ const getModel = async (device_id) => {
     return '';
   }
 };
+
+const getIp = async (device_id) => {
+  try {
+    const output = await client.shell(device_id, 'ip addr show wlan0');
+    const result = await adb.util.readAll(output);
+
+    const ipMatch = result.toString().match(/inet\s+(\d+\.\d+\.\d+\.\d+)/);
+    const ipAddress = ipMatch ? ipMatch[1] : 'IP not found';
+
+    console.log(`${device_id} IP: ${ipAddress}`);
+    return ipAddress;
+  } catch (error) {
+    console.error(`Error IP ${device_id}:`, error);
+  }
+}

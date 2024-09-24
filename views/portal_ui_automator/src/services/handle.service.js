@@ -28,6 +28,14 @@ export const connect = async (data) => {
   await actionADB({ action: 'connect', device_id: data.device_id, title: data.title });
 };
 
+export const connectTcpIp = async (data) => {
+  return await actionADB({ action: 'connectTcpIp', device_id: data.device_id });
+};
+
+export const disconnectTcpIp = async (data) => {
+  return await actionADB({ action: 'disconnectTcpIp', device_id: data.device_id });
+};
+
 // ============== BIDV ============== //
 
 export const bidvClickLogin = async (data, setLoading) => {

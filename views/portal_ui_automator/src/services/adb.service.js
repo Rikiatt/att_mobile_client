@@ -8,6 +8,7 @@ export async function actionADB(data) {
       return swalToast('error', result.msg);
     }
     swalToast('success', 'Thành công');
+    return result
   } catch (error) {
     console.log(error);
     swalToast('error', error.message);

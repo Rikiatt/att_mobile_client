@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import { getListDevice, } from './api/adb';
 import { getVersion, postLocalData } from './api/bridge';
-import { Key, KeyRounded, Link } from '@mui/icons-material';
+import { AddLink, Key, KeyRounded, Link, LinkOff } from '@mui/icons-material';
 import Loading from './components/Loading';
 
 import {
@@ -46,8 +46,8 @@ import {
   WifiTethering
 } from '@mui/icons-material';
 
-import { swalToast } from './utils/swal';
-import { connect, enter, home, typePortKey, typeText } from './services/handle.service';
+import { swalToast, swalQuestionConfirm } from './utils/swal';
+import { connect, connectTcpIp, disconnectTcpIp, enter, home, typePortKey, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleBidv from './sections/bank_handle/HandleBidv';
 import HandleMb from './sections/bank_handle/HandleMb';
@@ -59,7 +59,7 @@ import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import HandleShowQr from './sections/HandleShowQr';
 import Swal from 'sweetalert2';
-import { getSetting } from './api/setting';
+import { getIpPublic, getSetting } from './api/setting';
 
 function App() {
   const [devices, setDevices] = useState([]);
@@ -69,6 +69,7 @@ function App() {
   const [openDial, setOpenDial] = useState(false);
   const [qr, setQr] = useState(false);
   const [seting, setSeting] = useState({});
+  const [ipPublic, setIpPublic] = useState(' - ');
   const handleOpenDial = () => {
     setOpenDial(true);
   };
@@ -82,7 +83,8 @@ function App() {
       setLoading((prev) => !prev);
       const result = await getListDevice();
       const resultVer = await getVersion();
-      const resultSet = await getSetting()
+      const resultSet = await getSetting();
+      const resultIp = await getIpPublic()
       setLoading((prev) => !prev);
       if (result.status && result.status === false) {
         return swalToast('error', result.msg);
@@ -90,7 +92,8 @@ function App() {
       setNewVersion(resultVer.version || '');
       setDevices(result);
       setQr(resultSet?.valid);
-      setSeting(resultSet?.result || {})
+      setSeting(resultSet?.result || {});
+      setIpPublic(resultIp);
     };
     callAPI();
   }, [mutate]);
@@ -105,11 +108,11 @@ function App() {
     swalToast('success', 'Thành công');
     setMutate((prev) => !prev);
   };
-  const showDevice = (item) => {
+  const showDevice = (item, ipPublic) => {
     Swal.fire({
       icon: "info",
       title: "Thông tin thiết bị - " + (localStorage.getItem(item.id) || "Ghi chú"),
-      html: `<p>ID: ${item.id}</p><p>Name: ${item.nameDevice}</p><p>Model: ${item.model}</p><p>Size: ${item.screenSize}</p>`
+      html: `<p>ID: ${item.id}$${ipPublic}</p><p>Name: ${item.nameDevice}</p><p>Model: ${item.model}</p><p>Size: ${item.screenSize}</p>`
     })
   }
 
@@ -152,7 +155,7 @@ function App() {
                   <Card>
                     <CardHeader
                       avatar={
-                        <Avatar sx={{ bgcolor: blue[700] }} title={item.id}>
+                        <Avatar sx={{ bgcolor: blue[700] }} title={item.id}                        >
                           {index + 1}
                         </Avatar>
                       }
@@ -163,9 +166,9 @@ function App() {
                             variant="body"
                             color="Highlight"
                             sx={{ cursor: "pointer", fontWeight: "bold" }}
-                            onClick={() => showDevice(item)}
+                            onClick={() => showDevice(item, ipPublic)}
                             title={`${item.nameDevice} - ${item.screenSize}`}>
-                            {item.id}
+                            {item.id + "$" + ipPublic}
                           </Typography>
                         </Box>
                       }
@@ -288,6 +291,8 @@ function App() {
 export default App;
 
 function TitleComp({ title, item, setMutate }) {
+  const regexHost = /\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\:\d{1,5}\b/;
+
   const [isEdit, setEdit] = useState(false);
   const [textTitle, setTextTitle] = useState(title);
 
@@ -295,6 +300,27 @@ function TitleComp({ title, item, setMutate }) {
     localStorage.setItem(item.id, textTitle.trim());
     setEdit((prev) => !prev);
     setMutate((prev) => !prev);
+  };
+
+  const connectTcpIpHandle = async () => {
+    const q = await swalQuestionConfirm('question', 'Kết nối Wiffi debug tới thiết bị - ' + item.id)
+    if (!q) return;
+    const conn = await connectTcpIp({ device_id: item.id });
+    if (conn?.status == 200) {
+      sessionStorage.setItem(`tcpip-${item.id}`, 'connect');
+      window.location.reload()
+    }
+  };
+
+  const disconnectTcpIpHandle = async () => {
+    const q = await swalQuestionConfirm('question', 'Ngắt kết nối Wiffi debug tới thiết bị - ' + item.id)
+    if (!q) return;
+
+    const conn = await disconnectTcpIp({ device_id: item.id });
+    if (conn?.status == 200) {
+      sessionStorage.setItem(`tcpip-${item.id}`, 'disconnect');
+      window.location.reload()
+    }
   };
 
   return (
@@ -325,15 +351,30 @@ function TitleComp({ title, item, setMutate }) {
             <Typography variant="h6" fontWeight="bold">
               {textTitle}
             </Typography>
-
-            <Tooltip title="Chỉnh sửa ghi chú" arrow>
-              <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                <EditIcon color="primary" sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Tooltip>
+            <Stack direction={'row'} justifyContent={'end'}>
+              <Tooltip title={"Chỉnh sửa ghi chú"} arrow>
+                <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
+                  <EditIcon color="primary" sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+              {!regexHost.test(item.id) &&
+                <Tooltip title={"Kết nối Wifi debug"} arrow>
+                  <IconButton size="small" onClick={connectTcpIpHandle}>
+                    <AddLink color="primary" sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
+              }
+              {regexHost.test(item.id)
+                && <Tooltip title={"Ngắt kết nối Wifi debug"} arrow>
+                  <IconButton size="small" onClick={disconnectTcpIpHandle}>
+                    <LinkOff color="primary" sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
+              }
+            </Stack>
           </>
         )}
-      </Stack>
+      </Stack >
     </>
   );
 }

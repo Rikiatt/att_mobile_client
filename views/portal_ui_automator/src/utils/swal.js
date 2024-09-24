@@ -7,6 +7,22 @@ export const swalToast = (icon, title) => {
   });
 };
 
+export const swalQuestionConfirm = (icon, title) => {
+  return Swal.fire({
+    icon: icon,
+    title: title,
+    confirmButtonText: 'Xác nhận',
+    showCancelButton: true,
+    cancelButtonText: 'Hủy'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      return true;
+    } else {
+      return null;
+    }
+  });
+};
+
 export const swalInfoChooseText = async (text) => {
   return Swal.fire({
     icon: 'info',

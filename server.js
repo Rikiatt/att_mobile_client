@@ -8,7 +8,7 @@ const Router = require('./routers');
 const { port } = require('./config');
 const cronTask = require('./functions/cron.function');
 const { listDevice, sendFile, delImg } = require('./functions/adb.function');
-const { updateSource, transToQr, downloadQr, setDataJson, getDataJson } = require('./functions/function');
+const { updateSource, transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./functions/function');
 const { autoRunGnirehtet, stopGnirehtet } = require('./functions/gnirehtet.function');
 const { delay } = require('./helpers/functionHelper');
 
@@ -30,7 +30,8 @@ app.use((req, res, next) => {
 });
 
 server.listen(port, async () => {
-  await updateSource();
+  const ipPublic = await getIpPublic();
+  // await updateSource();
   await stopGnirehtet();
   exec(`start msedge http://localhost:${port}`, {
     windowsHide: true
@@ -55,20 +56,23 @@ server.listen(port, async () => {
 
       // Nhận phản hồi từ server
       socket.on('broadcast', async (data) => {
-        console.log('Server response:', data);
         const now = Date.now();
         console.log('data', data);
         const devices = await listDevice();
-        const findDevice = devices.find((item) => item?.id == data?.device_id);
+
+        const findId = data.device_id.split('$')[0];
+        const findIp = data.device_id.split('$')[1];
+
+        const findDevice = devices.find((item) => ((!findIp || findIp == ipPublic) && item.id == findId));
         if (!findDevice) {
           return;
         }
 
         // Đúng thiết bị
-        if (lastReceived[data?.device_id] && now - lastReceived[data?.device_id] < 5000) {
+        if (lastReceived[findId] && now - lastReceived[findId] < 5000) {
           return;
         };
-        lastReceived[data?.device_id] = now;
+        lastReceived[findId] = now;
 
         const { vietqr_url, device_id, trans_id, bin, account_number, amount, trans_mess } = data;
 

@@ -5,7 +5,9 @@ export const endpoints = {
   restart: '/restart',
   stopShare: '/stop-share',
   startShare: '/start-share',
-  qr: '/get-qr'
+  qr: '/get-qr',
+  startTcpIp: 'start-tcpip',
+  stopTcpIp: 'stop-tcpip'
 };
 
 export async function getActionDevice(type) {
