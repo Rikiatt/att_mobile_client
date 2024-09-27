@@ -74,7 +74,7 @@ server.listen(port, async () => {
         };
         lastReceived[findId] = now;
 
-        const { vietqr_url, device_id, trans_id, bin, account_number, amount, trans_mess } = data;
+        const { vietqr_url, trans_id, bin, account_number, amount, trans_mess } = data;
 
         if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess)) {
           console.log("Mix Data");
@@ -91,7 +91,7 @@ server.listen(port, async () => {
         const seconds = String(date.getSeconds()).padStart(2, '0');
 
         const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-        let qrLocalPath = path.join(__dirname, 'images', device_id.split(':')[0] + '_qr.jpg')
+        let qrLocalPath = path.join(__dirname, 'images', findId.split(':')[0] + '_qr.jpg')
         let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
         if (vietqr_url) {
@@ -99,17 +99,17 @@ server.listen(port, async () => {
         } else {
           await transToQr(data, qrLocalPath);
         }
-        let jsonPath = path.join(__dirname, 'database', device_id.split(':')[0] + '_url.json')
+        let jsonPath = path.join(__dirname, 'database', findId.split(':')[0] + '_url.json')
 
         await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-        await delImg(device_id, '/sdcard/DCIM/Camera/');
+        await delImg(findId, '/sdcard/DCIM/Camera/');
         await delay(100);
 
-        await sendFile(device_id, qrLocalPath, qrDevicePath);
+        await sendFile(findId, qrLocalPath, qrDevicePath);
 
         setTimeout(async () => {
-          await delImg(device_id, '/sdcard/DCIM/Camera/', filename);
+          await delImg(findId, '/sdcard/DCIM/Camera/', filename);
           console.log("Deleted QR old - " + filename);
         }, 300000);
 
