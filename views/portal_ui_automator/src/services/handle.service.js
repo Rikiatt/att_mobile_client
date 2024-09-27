@@ -29,7 +29,7 @@ export const connect = async (data) => {
 };
 
 export const connectTcpIp = async (data) => {
-  return await actionADB({ action: 'connectTcpIp', device_id: data.device_id });
+  return await actionADB({ action: 'connectTcpIp', device_id: data.device_id, type: data.type || 'wlan0' });
 };
 
 export const disconnectTcpIp = async (data) => {
