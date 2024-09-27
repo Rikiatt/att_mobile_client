@@ -59,10 +59,10 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  connectTcpIp: async ({ device_id }) => {
+  connectTcpIp: async ({ device_id, type = 'wlan0' }) => {
     // device_id: 192.168.0.1:5555
     try {
-      const ipaddress = await getIp(device_id);
+      const ipaddress = await getIp(device_id, type);
       await client.tcpip(device_id, 5555);
       await delay(1000);
       await client.connect(`${ipaddress}:5555`);
@@ -194,9 +194,9 @@ const getModel = async (device_id) => {
   }
 };
 
-const getIp = async (device_id) => {
+const getIp = async (device_id, type) => {
   try {
-    const output = await client.shell(device_id, 'ip addr show wlan0');
+    const output = await client.shell(device_id, 'ip addr show ' + type); // wlan0 tune0
     const result = await adb.util.readAll(output);
 
     const ipMatch = result.toString().match(/inet\s+(\d+\.\d+\.\d+\.\d+)/);

@@ -303,9 +303,10 @@ function TitleComp({ title, item, setMutate }) {
   };
 
   const connectTcpIpHandle = async () => {
-    const q = await swalQuestionConfirm('question', 'Kết nối Wiffi debug tới thiết bị - ' + item.id)
+    const q = await swalQuestionConfirm('question', 'Kết nối Wifi debug tới thiết bị - ' + item.id, 'Qua Wifi', 'Qua Proxy')
     if (!q) return;
-    const conn = await connectTcpIp({ device_id: item.id });
+
+    const conn = await connectTcpIp({ device_id: item.id, type: q });
     if (conn?.status == 200) {
       sessionStorage.setItem(`tcpip-${item.id}`, 'connect');
       window.location.reload()
@@ -313,7 +314,7 @@ function TitleComp({ title, item, setMutate }) {
   };
 
   const disconnectTcpIpHandle = async () => {
-    const q = await swalQuestionConfirm('question', 'Ngắt kết nối Wiffi debug tới thiết bị - ' + item.id)
+    const q = await swalQuestionConfirm('question', 'Ngắt kết nối Wifi debug tới thiết bị - ' + item.id, 'Xác nhận')
     if (!q) return;
 
     const conn = await disconnectTcpIp({ device_id: item.id });

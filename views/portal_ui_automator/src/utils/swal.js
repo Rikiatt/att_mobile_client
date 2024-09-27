@@ -7,16 +7,20 @@ export const swalToast = (icon, title) => {
   });
 };
 
-export const swalQuestionConfirm = (icon, title) => {
+export const swalQuestionConfirm = (icon, title, confirm, deny) => {
   return Swal.fire({
     icon: icon,
     title: title,
-    confirmButtonText: 'Xác nhận',
+    confirmButtonText: confirm,
+    denyButtonText: deny,
+    showDenyButton: !!deny,
     showCancelButton: true,
     cancelButtonText: 'Hủy'
   }).then((result) => {
     if (result.isConfirmed) {
-      return true;
+      return 'wlan0';
+    } else if (result.isDenied) {
+      return 'tun0';
     } else {
       return null;
     }
