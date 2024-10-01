@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import { getListDevice, } from './api/adb';
 import { getVersion, postLocalData } from './api/bridge';
-import { AddLink, Key, KeyRounded, Link, LinkOff } from '@mui/icons-material';
+import { AddLink, Key, KeyRounded, Link, LinkOff, DeveloperMode } from '@mui/icons-material';
 import Loading from './components/Loading';
 
 import {
@@ -46,7 +46,7 @@ import {
   WifiTethering
 } from '@mui/icons-material';
 
-import { swalToast, swalQuestionConfirm } from './utils/swal';
+import { swalToast, swalQuestionConfirm, swalInputText } from './utils/swal';
 import { connect, connectTcpIp, disconnectTcpIp, enter, home, typePortKey, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleBidv from './sections/bank_handle/HandleBidv';
@@ -406,6 +406,18 @@ function SetupPusher({ setMutate, seting }) {
     }
   };
 
+
+  const SetupConnectIP = async () => {
+    const q = await swalInputText('Kết nối tới thiết bị qua IP', '', 'Địa chỉ IP');
+    if (!q) return;
+
+    const conn = await connectTcpIp({ device_id: q, type: 'tailscale' });
+    if (conn?.valid == true) {
+      return swalToast('success', 'Thành công');
+    } else {
+      return swalToast('error', "Lỗi hệ thống");
+    }
+  };
   return (
     <>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -441,6 +453,13 @@ function SetupPusher({ setMutate, seting }) {
           </>
         )}
       </Stack>
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Tooltip title="Cấu hình link truy cập" arrow>
+          <IconButton size="small" onClick={SetupConnectIP}>
+            <DeveloperMode color={"primary"} sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Tooltip>
+      </Stack >
     </>
   );
 }

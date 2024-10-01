@@ -28,7 +28,7 @@ module.exports = {
   actionADB: async (req, res) => {
     try {
       const result = await mapAction[req.body.action](req.body);
-      responseHelper(res, 200, { status: result?.status || 200, message: result?.message || 'Thành công' });
+      responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {
       console.log(error);
       responseHelper(res, 500, { message: error.message });

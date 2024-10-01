@@ -62,15 +62,19 @@ module.exports = {
   connectTcpIp: async ({ device_id, type = 'wlan0' }) => {
     // device_id: 192.168.0.1:5555
     try {
-      const ipaddress = await getIp(device_id, type);
-      await client.tcpip(device_id, 5555);
-      await delay(1000);
-      await client.connect(`${ipaddress}:5555`);
-      console.log(`Connected to ${device_id}`);
-      return { status: 200, message: 'Success' };
+      let connStr = device_id;
+      if (type != 'tailscale') {
+        const ipaddress = await getIp(device_id, type);
+        await client.tcpip(device_id, 5555);
+        connStr = `${ipaddress}:5555`;
+        await delay(1000);
+      }
+      await client.connect(`${connStr}`);
+      console.log(`Connected to ${connStr}`);
+      return { status: 200, valid: true, message: 'Success' };
     } catch (error) {
       console.error(`Failed to connect to ${device_id}:`, error);
-      return { status: 500, message: 'Fail' };
+      return { status: 500, valid: false, message: 'Fail' };
     }
   },
 

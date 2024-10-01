@@ -26,6 +26,27 @@ export const swalQuestionConfirm = (icon, title, confirm, deny) => {
     }
   });
 };
+export const swalInputText = async (title, inputLabel, inputPlaceholder) => {
+  const { value: text } = await Swal.fire({
+    title,
+    input: 'text',
+    inputLabel,
+    inputPlaceholder,
+    confirmButtonText: 'Xác nhận',
+    showCancelButton: true,
+    cancelButtonText: 'Hủy',
+    inputAttributes: {
+      autocapitalize: 'off',
+      autocorrect: 'off',
+      autocomplete: 'off'
+    }
+  });
+  if (text) {
+    return text;
+  } else {
+    return null;
+  }
+};
 
 export const swalInfoChooseText = async (text) => {
   return Swal.fire({
