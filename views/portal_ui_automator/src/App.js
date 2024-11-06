@@ -444,7 +444,7 @@ function SetupPusher({ setMutate, seting }) {
           </>
         ) : (
           <>
-            <Tooltip title="Cấu hình link truy cập" arrow>
+            <Tooltip title={(seting?.endpoint && seting?.message) ? seting.message : 'Cấu hình link truy cập'} arrow>
               <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
                 {(seting?.endpoint && seting?.connected) && <WifiTethering color={"primary"} sx={{ fontSize: 20 }} />}
                 {(!seting?.endpoint || !seting?.connected) && <WifiTetheringError color={"gray"} sx={{ fontSize: 20 }} />}

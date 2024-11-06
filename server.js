@@ -45,13 +45,27 @@ server.listen(port, async () => {
     const localData = await getDataJson(localPath);
     if (localData && localData.endpoint && localData.site) {
       const { site, endpoint } = localData;
+
       console.log("---> Listen on server <---");
-      const socket = io(endpoint + "/" + site);
+      // Cấu hình kết nối socket tới attpays+ và attpay.org
+      let handPath = '/socket.io';
+      if (site.includes('ui_manual')) {
+        handPath = "/ui_manual/connect/socket.io";
+      }
+      const socket = io(endpoint + "/" + site, {
+        path: handPath,
+        transports: ['websocket']
+      });
 
       // Khi kết nối thành công
       socket.on('connect', async () => {
         console.log('Connected to server:', socket.id);
-        await setDataJson(localPath, { ...localData, connected: true });
+        await setDataJson(localPath, { ...localData, connected: true, message: 'Success' });
+      });
+
+      socket.on('connect_error', async (error) => {
+        console.error('Socket Fail:: ', error.message);
+        await setDataJson(localPath, { ...localData, connected: false, message: error.message });
       });
 
       // Nhận phản hồi từ server
@@ -121,7 +135,7 @@ server.listen(port, async () => {
       // Khi bị ngắt kết nối
       socket.on('disconnect', async () => {
         console.log('Disconnected from server');
-        await setDataJson(localPath, { ...localData, connected: false });
+        await setDataJson(localPath, { ...localData, connected: false, message: 'Server disconnected' });
       });
     }
   } catch (e) {
