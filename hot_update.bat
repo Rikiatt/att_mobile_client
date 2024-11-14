@@ -1,1 +1,1 @@
-git config --global --add safe.directory C:/ui_automator_v2 && git reset --hard && git pull
+git config --global --add safe.directory C:/ui_automator_v2 && git reset --hard && git pull && npm i && cd C:/ui_automator_v2 && cd views && cd portal_ui_automator && npm i
