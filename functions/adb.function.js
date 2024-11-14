@@ -190,12 +190,12 @@ module.exports = {
 };
 
 async function loadCoordinatesForDevice(device_id) {
-  const deviceName = await deviceHelper.getDeviceName(device_id);
-  console.log('deviceName:', deviceName);
-  const deviceCoordinates = coordinates[deviceName]; 
+  const deviceModel = await deviceHelper.getDeviceModel(device_id);
+  console.log('deviceModel:', deviceModel);
+  const deviceCoordinates = coordinates[deviceModel]; 
 
   if (!deviceCoordinates) {
-      throw new Error(`No coordinates found for device ${deviceName}`);
+      throw new Error(`No coordinates found for device model: ${deviceModel}`);
   }
   
   return deviceCoordinates;

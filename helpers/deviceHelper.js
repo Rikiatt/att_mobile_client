@@ -17,18 +17,21 @@ function getConnectedDevices() {
     });
 };
 
-function getDeviceName(device_id) {
+function getDeviceModel(device_id) {
     return new Promise((resolve, reject) => {
-        exec(`adb -s ${device_id} shell settings get global device_name`, (error, stdout) => {
+        exec(`adb -s ${device_id} shell getprop ro.product.model`, (error, stdout) => {
             if (error) {
                 reject(error);
             } else {
                 // Xóa khoảng trắng và chuyển thành tên phù hợp với JSON
-                const deviceName = stdout.trim().replace(/ /g, '');
-                resolve(deviceName);
+                // const deviceName = stdout.trim().replace(/ /g, '').replace();
+
+                // Xử lý trường hợp Galaxy S10+ khác hậu tố
+                const deviceModel = stdout.trim().replace(/ /g, '').replace(/SM-G975[FWU0-9]+/g, 'SM-G975');
+                resolve(deviceModel);
             }
         });
     });
 }
 
-module.exports = { getConnectedDevices, getDeviceName };
+module.exports = { getConnectedDevices, getDeviceModel };

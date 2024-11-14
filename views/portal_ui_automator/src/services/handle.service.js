@@ -198,16 +198,16 @@ export const vietinClickLogin = async (data, setLoading) => {
   if (!text) return;
   setLoading(true);
 
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await delay(200);
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await delay(50);
   // bước này bắt đầu tyeText(device_id, ...coordinates[char])
   await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
-  await delay(200);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  // await delay(50);
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
 
   setLoading(false);
 };
