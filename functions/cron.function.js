@@ -9,7 +9,8 @@ const cronUpdate = new cron.CronJob(
   '*/20 * * * *',
   async () => {
     try {
-      await updateSource();
+      // await updateSource();
+      console.log('Updated nothing');
     } catch (error) {
       console.error('Lỗi khi cron:', error);
     }

@@ -42,26 +42,12 @@ export const bidvClickLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
   setLoading(true);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await enter({ device_id: data.device_id });
-  await delay(3000);
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(3000);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 }); // Mũi tên xuống
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 }); // Mũi tên xuống
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 }); // Mũi tên xuống
-
-  await delay(2000);
-  await enter({ device_id: data.device_id });
-  await delay(1000);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   setLoading(false);
 };
+
 export const bidvClickConfirm = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
@@ -77,47 +63,35 @@ export const bidvClickConfirm = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== SHB ============== //
+
+export const shbClickLogin = async (data, setLoading) => {
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+  setLoading(true);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  setLoading(false);
+};
+
 // ============== MB BANK ============== //
 
 export const mbClickLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
   setLoading(true);
-
-  await actionADB({
-    action: 'tap',
-    device_id: data.device_id,
-    percent: {
-      X: 50,
-      Y: 66
-    },
-    screenSize: { X: data.X, Y: data.Y }
-  });
-  await delay(500);
-  await actionADB({
-    action: 'tap',
-    device_id: data.device_id,
-    percent: {
-      X: 50,
-      Y: 69
-    },
-    screenSize: { X: data.X, Y: data.Y }
-  });
-  await delay(2000);
+  await actionADB({ action: 'stop', device_id: data.device_id });
+  await actionADB({ action: 'start', device_id: data.device_id });
+  await delay(6000);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(2000);
-  await enter({ device_id: data.device_id });
-  await actionADB({
-    action: 'tap',
-    device_id: data.device_id,
-    percent: {
-      X: 50,
-      Y: 50
-    },
-    screenSize: { X: data.X, Y: data.Y }
-  });
-  await delay(1000);
-
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
   setLoading(false);
 };
 
@@ -228,15 +202,13 @@ export const vietinClickLogin = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await delay(2000);
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(3000);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await delay(200);
+  // bước này bắt đầu tyeText(device_id, ...coordinates[char])
+  await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
+  await delay(200);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
 
-  await delay(1000);
   setLoading(false);
 };
 

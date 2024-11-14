@@ -1,11 +1,16 @@
-const { listDevice, tapADB, inputADB, enterADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
+const { listDevice, stopAppADB, startAppADB, tapADB, inputADB, inputADBVTB, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
 const mapAction = {
+  stop: stopAppADB,
+  start: startAppADB,
   tap: tapADB,
   input: inputADB,
+  inputVTB: inputADBVTB,
   enter: enterADB,
+  tab: tabADB,
+  newline: newlineADB,
   keyEvent: keyEventADB,
   home: backHomeADB,
   connect: connectScrcpy,
@@ -26,7 +31,7 @@ module.exports = {
   },
 
   actionADB: async (req, res) => {
-    try {
+    try {      
       const result = await mapAction[req.body.action](req.body);
       responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {

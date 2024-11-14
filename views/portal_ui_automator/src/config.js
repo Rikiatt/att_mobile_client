@@ -14,6 +14,14 @@ export const commandList = [
   {
     key: 'delay',
     label: 'Delay (ms)'
+  },
+  {
+    key: 'tab',
+    label: 'Tab'
+  },
+  {
+    key: 'newline',
+    label: 'NewLine'
   }
 ];
 
@@ -44,6 +52,18 @@ export const commandParse = [
     func: {
       action: 'delay',
       time: 'Nhap_mili_giay'
+    }
+  },
+  {
+    key: 'tab',
+    func: {
+      action: 'tab'
+    }
+  },
+  {
+    key: 'newline',
+    func: {
+      action: 'newline'
     }
   }
 ];

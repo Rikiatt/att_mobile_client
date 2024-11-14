@@ -6,6 +6,10 @@ const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.uti
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
+const coordinates = require('../config/coordinates.json');
+const adbHelper = require('../helpers/adbHelper');
+const deviceHelper = require('../helpers/deviceHelper');
+
 module.exports = {
   listDevice: async () => {
     try {
@@ -31,6 +35,20 @@ module.exports = {
     }
   },
 
+  stopAppADB: async ({ device_id }) => {
+    console.log('App has been stopped');
+    await client.shell(device_id, 'am force-stop com.mbmobile');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADB: async ({ device_id }) => {
+    console.log('App has been started');
+    await client.shell(device_id, 'monkey -p com.mbmobile -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
   tapADB: async ({ device_id, percent, screenSize }) => {
     console.log(`Click::[${percentSize(percent.X, screenSize.X)} - ${percentSize(percent.Y, screenSize.Y)}]`);
     await client.shell(device_id, `input tap ${percentSize(percent.X, screenSize.X)} ${percentSize(percent.Y, screenSize.Y)}`);
@@ -52,9 +70,49 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  inputADBVTB: async ({ device_id, text }) => {    
+    const coordinates = await loadCoordinatesForDevice(device_id);
+
+    for (const char of text) {
+      if (isUpperCase(char)) {
+          await adbHelper.tapADBVTB(device_id, ...coordinates['CapsLock']);
+          await sleep(50); 
+          await adbHelper.tapADBVTB(device_id, ...coordinates[char]);
+          await sleep(50);
+      }
+      else if (isSpecialChar(char)) {
+          await adbHelper.tapADBVTB(device_id, ...coordinates['!#1']);
+          await sleep(50); 
+          await adbHelper.tapADBVTB(device_id, ...coordinates[char]);
+          await sleep(50); 
+          await adbHelper.tapADBVTB(device_id, ...coordinates['ABC']);
+      }        
+      else {
+          await adbHelper.tapADBVTB(device_id, ...coordinates[char.toLowerCase()]);
+      }
+              
+      await sleep(50); 
+    }
+    return { status: 200, message: 'Success' };
+  },
+
   enterADB: async ({ device_id }) => {
     console.log('Nhấn Enter');
     await client.shell(device_id, `input keyevent 66`);
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  tabADB: async ({ device_id }) => {
+    console.log('Nhấn Tab');
+    await client.shell(device_id, `input keyevent 61`);
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  newlineADB: async ({ device_id }) => {
+    console.log('Xuống dòng / element');
+    await client.shell(device_id, `input keyevent 20`);
     await delay(500);
     return { status: 200, message: 'Success' };
   },
@@ -129,6 +187,30 @@ module.exports = {
     client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
     return { status: 200, message: 'Success' };
   }
+};
+
+async function loadCoordinatesForDevice(device_id) {
+  const deviceName = await deviceHelper.getDeviceName(device_id);
+  console.log('deviceName:', deviceName);
+  const deviceCoordinates = coordinates[deviceName]; 
+
+  if (!deviceCoordinates) {
+      throw new Error(`No coordinates found for device ${deviceName}`);
+  }
+  
+  return deviceCoordinates;
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isSpecialChar = (char) => {
+  return ['@', '#', '$', '%', '&', '*', '-', '+', '(', ')', 
+          '~', '^', '<', '>', '|', '\\', '{', '}', '[', ']', 
+          '=', '!', '"', "'", ':', ';', '/', '?'].includes(char);
+};
+
+const isUpperCase = (char) => {
+  return char === char.toUpperCase() && char !== char.toLowerCase();
 };
 
 const percentSize = (percent, screenSize) => {

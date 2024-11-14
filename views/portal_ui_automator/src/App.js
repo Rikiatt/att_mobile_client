@@ -55,6 +55,7 @@ import HandleShinhan from './sections/bank_handle/HandleShinhan';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleAbb from './sections/bank_handle/HandleAbb';
 import HandleVcbNew from './sections/bank_handle/HandleVcbNew';
+import HandleSHB from './sections/bank_handle/HandleSHB';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import HandleShowQr from './sections/HandleShowQr';
@@ -245,12 +246,13 @@ function App() {
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
                       <HandleBidv item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleMb item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleMb item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       {/* <HandleVcbOld item={item} X={X} Y={Y} setLoading={setLoading} /> */}
-                      <HandleVcbNew item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleVcbNew item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleAbb item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} />
                     </CardContent>
                   </Card>
                 </Grid>
