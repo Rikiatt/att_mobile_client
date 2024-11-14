@@ -4,13 +4,13 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 git reset --hard
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-git pull
+git pull origin riki
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 npm i
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-cd C:/ui_automator_v2/views/portal_ui_automator
+cd views/portal_ui_automator
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 npm i
