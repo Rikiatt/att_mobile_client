@@ -4,7 +4,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 git reset --hard
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-git pull origin riki
+git pull
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 npm i
