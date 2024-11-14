@@ -1,1 +1,17 @@
-git config --global --add safe.directory C:/ui_automator_v2 && git reset --hard && git pull && npm i && cd views && cd portal_ui_automator && npm i
+git config --global --add safe.directory C:/ui_automator_v2
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+git reset --hard
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+git pull
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+npm i
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+cd C:/ui_automator_v2/views/portal_ui_automator
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+npm i
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
