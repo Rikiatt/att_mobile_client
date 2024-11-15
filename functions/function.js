@@ -9,7 +9,7 @@ module.exports = {
   updateSource: async () => {
     console.log('----- TIẾN TRÌNH CẬP NHẬT -----');
     nodeCmd.runSync('');
-    // nodeCmd.runSync('git reset --hard');
+    nodeCmd.runSync('git reset --hard');
 
     const pull = nodeCmd.runSync('git pull');
     console.log(pull);
