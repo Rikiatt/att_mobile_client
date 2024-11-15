@@ -11,7 +11,7 @@ module.exports = {
     nodeCmd.runSync('');
     // nodeCmd.runSync('git reset --hard');
 
-    const pull = nodeCmd.runSync('git pull origin riki');
+    const pull = nodeCmd.runSync('git pull');
     console.log(pull);
     if (pull.data.includes('Already up to date')) return;
 
