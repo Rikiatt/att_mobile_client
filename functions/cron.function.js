@@ -11,7 +11,7 @@ const cronUpdate = new cron.CronJob(
     try {
         // await updateSource();
     } catch (error) {
-      console.error('Lỗi khi cron:', error);
+        console.error('Lỗi khi cron:', error);
     }
   },
   null,
