@@ -11,6 +11,7 @@
 # production
 /build
 
+/node_modules
 
 # Views
 views/portal_ui_automator/node_modules/

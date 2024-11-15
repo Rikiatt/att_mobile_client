@@ -9,9 +9,3 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 npm i
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-
-cd views/portal_ui_automator
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-
-npm i
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
