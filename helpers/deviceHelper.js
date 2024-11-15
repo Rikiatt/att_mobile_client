@@ -28,6 +28,7 @@ function getDeviceModel(device_id) {
 
                 // Xử lý trường hợp Galaxy S10+ khác hậu tố
                 const deviceModel = stdout.trim().replace(/ /g, '').replace(/SM-G975[FWU0-9]+/g, 'SM-G975');
+                // const deviceModel = stdout.trim().replace(/ /g, '').replace(/SM-G975[A-Za-z0-9-_.]*/g, 'SM-G975');
                 resolve(deviceModel);
             }
         });
