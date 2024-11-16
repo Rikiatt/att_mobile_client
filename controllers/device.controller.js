@@ -6,7 +6,7 @@ const { stopGnirehtet, autoRunGnirehtet } = require('../functions/gnirehtet.func
 
 module.exports = {
   restart: async (req, res) => {
-    updateSource();
+    // updateSource();
     await delay(2000);
     responseHelper(res, 200, 'Thành công');
   },

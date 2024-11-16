@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 
 server.listen(port, async () => {
   const ipPublic = await getIpPublic();
-  await updateSource();
+  // await updateSource();
   await stopGnirehtet();
   exec(`start msedge http://localhost:${port}`, {
     windowsHide: true
