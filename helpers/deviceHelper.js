@@ -27,8 +27,9 @@ function getDeviceModel(device_id) {
                 // const deviceName = stdout.trim().replace(/ /g, '').replace();
 
                 // Xử lý trường hợp Galaxy S10+ khác hậu tố
-                const deviceModel = stdout.trim().replace(/ /g, '').replace(/SM-G975[FWU0-9]+/g, 'SM-G975');
-                // const deviceModel = stdout.trim().replace(/ /g, '').replace(/SM-G975[A-Za-z0-9-_.]*/g, 'SM-G975');
+                const deviceModel = stdout.trim().replace(/ /g, '')
+                .replace(/SM-G975[FWU0-9]+/g, 'SM-G975');
+                // .replace(/SM-N960[A-Za-z0-9-_.]*/g, 'SM-N960'); // Galaxy Note9                
                 resolve(deviceModel);
             }
         });
