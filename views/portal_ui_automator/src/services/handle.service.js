@@ -42,7 +42,14 @@ export const bidvClickLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
   setLoading(true);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await enter({ device_id: data.device_id });
+  await delay(2000);
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   setLoading(false);
@@ -87,7 +94,7 @@ export const mbClickLogin = async (data, setLoading) => {
   setLoading(true);
   await actionADB({ action: 'stop', device_id: data.device_id });
   await actionADB({ action: 'start', device_id: data.device_id });
-  await delay(6000);
+  await delay(10000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
@@ -198,6 +205,16 @@ export const vietinClickLogin = async (data, setLoading) => {
   if (!text) return;
   setLoading(true);
 
+  // Click nút Đăng nhập
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+  // Nhập mật khẩu và click nút Đăng nhập
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
