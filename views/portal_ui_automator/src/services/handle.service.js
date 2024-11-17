@@ -47,7 +47,7 @@ export const bidvClickLogin = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await enter({ device_id: data.device_id });
-  await delay(2000);
+  await delay(3000);
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
