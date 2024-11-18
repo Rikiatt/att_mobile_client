@@ -1,5 +1,5 @@
-const adb = require('adbkit');
 const path = require('path');
+const adb = require('adbkit');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 

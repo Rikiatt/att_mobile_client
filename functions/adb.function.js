@@ -191,7 +191,7 @@ module.exports = {
 
 async function loadCoordinatesForDevice(device_id) {
   const deviceModel = await deviceHelper.getDeviceModel(device_id);
-  console.log('deviceModel:', deviceModel);
+  console.log('deviceModel now:', deviceModel);
   const deviceCoordinates = coordinates[deviceModel]; 
 
   if (!deviceCoordinates) {
