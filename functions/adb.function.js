@@ -90,7 +90,7 @@ module.exports = {
   },
 
   inputADBVTB: async ({ device_id, text }) => {  
-    await loadCoordinatesForDevice(device_id);
+    const coordinates = await loadCoordinatesForDevice(device_id);
     
     for (const char of text) {
       if (isUpperCase(char)) {
