@@ -1,4 +1,4 @@
-const { listDevice, stopAppADB, startAppADB, tapADB, inputADB, inputADBVTB, loadCoordinatesForDevice, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
+const { listDevice, stopAppADB, startAppADB, tapADB, inputADB, inputADBVTB, checkDevice, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
@@ -8,7 +8,7 @@ const mapAction = {
   tap: tapADB,
   input: inputADB,
   inputVTB: inputADBVTB,
-  loadCoordinatesForDevice: loadCoordinatesForDevice,
+  checkDevice: checkDevice,
   enter: enterADB,
   tab: tabADB,
   newline: newlineADB,
@@ -34,9 +34,12 @@ module.exports = {
   actionADB: async (req, res) => {
     try {      
       const result = await mapAction[req.body.action](req.body);
+      console.log(result)
+
       responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {
-      console.log(error);
+      console.log('error:', error);
+
       responseHelper(res, 500, { message: error.message });
     }
   }

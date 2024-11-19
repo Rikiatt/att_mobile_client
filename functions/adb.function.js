@@ -70,7 +70,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  loadCoordinatesForDevice: async ({ device_id }) => {
+  checkDevice: async ({ device_id }) => {
     try {
       const deviceModel = await deviceHelper.getDeviceModel(device_id);      
   
@@ -79,7 +79,7 @@ module.exports = {
       
       if (deviceCoordinates == undefined) {        
         console.log(`No coordinates found for device model: ${deviceModel}`);
-        return;
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
       return deviceCoordinates;
@@ -215,10 +215,7 @@ async function loadCoordinatesForDevice(device_id) {
     console.log('deviceModel now:', deviceModel);
 
     const deviceCoordinates = coordinates[deviceModel];
-    if (deviceCoordinates == undefined) {
-      console.log(`No coordinates found for device model: ${deviceModel}`);
-      return;
-    }
+   
 
     return deviceCoordinates;
   } catch (error) {

@@ -24,6 +24,7 @@ export async function postActionADB(data) {
   try {
     const url = endpoints.key + endpoints.actionADB;
     const response = await axios.post(url, data);
+    console.log(response)
     return response.data;
   } catch (error) {
     console.log(error);

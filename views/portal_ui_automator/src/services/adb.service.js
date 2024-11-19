@@ -4,6 +4,7 @@ import { swalToast } from '../utils/swal';
 export async function actionADB(data) {
   try {
     const result = await postActionADB(data);
+    console.log('result:', result);
     if (result.status && result.status === false) {
       return swalToast('error', result.msg);
     }
