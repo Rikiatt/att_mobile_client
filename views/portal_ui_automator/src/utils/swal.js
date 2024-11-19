@@ -64,6 +64,14 @@ export const swalInfoChooseText = async (text) => {
   });
 };
 
+export const swalNotification = (icon, title, text) => {
+  return Swal.fire({
+    icon: icon,
+    title: title,
+    text: text
+  });
+};
+
 export const swalTextArea = async (title, inputLabel, inputPlaceholder) => {
   const { value: text } = await Swal.fire({
     title,

@@ -70,6 +70,27 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  loadCoordinatesForDevice: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);
+      console.log('deviceModel now:', deviceModel);
+  
+      const deviceCoordinates = coordinates[deviceModel];
+      console.log('log deviceCoordinates:', deviceCoordinates);
+      
+      if (!deviceCoordinates) {
+        // throw new Error(`No coordinates found for device model: ${deviceModel}`);
+        console.log(`No coordinates found for device model: ${deviceModel}`);
+        return;
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error loading coordinates for device: ${error.message}`);
+      throw error;
+    }
+  },
+
   inputADBVTB: async ({ device_id, text }) => {    
     const coordinates = await loadCoordinatesForDevice(device_id);
 
@@ -189,17 +210,23 @@ module.exports = {
   }
 };
 
+// dùng cho inputADBVTB bên trên
 async function loadCoordinatesForDevice(device_id) {
-  const deviceModel = await deviceHelper.getDeviceModel(device_id);
-  console.log('deviceModel now:', deviceModel);
-  const deviceCoordinates = coordinates[deviceModel]; 
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
 
-  if (!deviceCoordinates) {
+    const deviceCoordinates = coordinates[deviceModel];
+    if (!deviceCoordinates) {
       throw new Error(`No coordinates found for device model: ${deviceModel}`);
+    }
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinates for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
   }
-  
-  return deviceCoordinates;
-}
+};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

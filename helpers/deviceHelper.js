@@ -4,23 +4,6 @@ const adb = require('adbkit');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
-function getConnectedDevices() {
-    return new Promise((resolve, reject) => {
-        exec('adb devices', (error, stdout, stderr) => {
-            if (error) {
-                reject(`Error: ${stderr}`);
-            } else {
-                const devices = stdout.split('\n')
-                    .slice(1)
-                    .filter(line => line.includes('\tdevice'))
-                    .map(line => line.split('\t')[0]);
-                
-                resolve(devices); // Trả về mảng `device_id`
-            }
-        });
-    });
-};
-
 // function getDeviceModel(device_id) {
 //     return new Promise((resolve, reject) => {
 //         let resultModel =  client.shell(device_id, 'shell getprop ro.product.model');
@@ -59,4 +42,4 @@ const getDeviceModel = async (device_id) => {
     }
 };
 
-module.exports = { getConnectedDevices, getDeviceModel };
+module.exports = { getDeviceModel };
