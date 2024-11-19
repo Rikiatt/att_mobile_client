@@ -77,8 +77,7 @@ module.exports = {
       const deviceCoordinates = coordinates[deviceModel];
       console.log('log deviceCoordinates:', deviceCoordinates);         
       
-      if (deviceCoordinates == undefined) {
-        // throw new Error(`No coordinates found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {        
         console.log(`No coordinates found for device model: ${deviceModel}`);
         return;
       }
@@ -90,9 +89,9 @@ module.exports = {
     }
   },
 
-  inputADBVTB: async ({ device_id, text }) => {    
-    const coordinates = await loadCoordinatesForDevice(device_id);
-
+  inputADBVTB: async ({ device_id, text }) => {  
+    await loadCoordinatesForDevice(device_id);
+    
     for (const char of text) {
       if (isUpperCase(char)) {
           await adbHelper.tapADBVTB(device_id, ...coordinates['CapsLock']);
@@ -216,8 +215,9 @@ async function loadCoordinatesForDevice(device_id) {
     console.log('deviceModel now:', deviceModel);
 
     const deviceCoordinates = coordinates[deviceModel];
-    if (!deviceCoordinates) {
-      throw new Error(`No coordinates found for device model: ${deviceModel}`);
+    if (deviceCoordinates == undefined) {
+      console.log(`No coordinates found for device model: ${deviceModel}`);
+      return;
     }
 
     return deviceCoordinates;
