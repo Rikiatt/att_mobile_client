@@ -209,8 +209,6 @@ export const vietinClickLogin = async (data, setLoading) => {
   try {       
     const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id });    
             
-    console.log('log deviceCoordinates:', deviceCoordinates);
-    console.log('log deviceCoordinates.valid:', deviceCoordinates.valid);
     if (deviceCoordinates.status == 500) {
       return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
     }        
