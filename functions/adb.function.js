@@ -72,13 +72,12 @@ module.exports = {
 
   loadCoordinatesForDevice: async ({ device_id }) => {
     try {
-      const deviceModel = await deviceHelper.getDeviceModel(device_id);
-      console.log('deviceModel now:', deviceModel);
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
   
       const deviceCoordinates = coordinates[deviceModel];
-      console.log('log deviceCoordinates:', deviceCoordinates);
+      console.log('log deviceCoordinates:', deviceCoordinates);         
       
-      if (!deviceCoordinates) {
+      if (deviceCoordinates == undefined) {
         // throw new Error(`No coordinates found for device model: ${deviceModel}`);
         console.log(`No coordinates found for device model: ${deviceModel}`);
         return;
