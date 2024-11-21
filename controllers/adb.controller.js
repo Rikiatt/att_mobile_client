@@ -1,4 +1,4 @@
-const { listDevice, stopAppADB, startAppADB, tapADB, inputADB, inputADBVTB, checkDevice, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
+const { listDevice, stopAppADB, startAppADB, tapADB, inputADB, inputADBVTB, checkDevice, checkDeviceFHD, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
@@ -9,6 +9,7 @@ const mapAction = {
   input: inputADB,
   inputVTB: inputADBVTB,
   checkDevice: checkDevice,
+  checkDeviceFHD: checkDeviceFHD,
   enter: enterADB,
   tab: tabADB,
   newline: newlineADB,

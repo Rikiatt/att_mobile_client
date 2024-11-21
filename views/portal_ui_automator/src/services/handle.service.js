@@ -208,10 +208,15 @@ export const vietinClickLogin = async (data, setLoading) => {
 
   try {       
     const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id });    
+    const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
             
     if (deviceCoordinates.status == 500) {
       return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-    }        
+    }    
+
+    if (checkDeviceFHDOrNot.status == 500) {
+      return swalNotification("error", "Thiết bị chưa cài đặt ở chế độ FHD+", "Vui lòng cài đặt về FHD+");      
+    }     
 
     // Click nút Đăng nhập
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });

@@ -46,4 +46,16 @@ const getDeviceModel = async (device_id) => {
     }
 };
 
-module.exports = { getDeviceModel };
+const checkDeviceFHD = async (device_id) => {
+    try {
+        const output = await client.shell(device_id, 'wm size');
+        const buffer = await adb.util.readAll(output);
+        const deviceFHD = buffer.toString().trim();
+
+        return deviceFHD.includes('1080x2220');
+    } catch (error) {
+        throw new Error(`Error checking device FHD+ or not: ${error.message}`);
+    }
+};
+
+module.exports = { getDeviceModel, checkDeviceFHD };

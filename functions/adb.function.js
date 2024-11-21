@@ -84,7 +84,25 @@ module.exports = {
   
       return deviceCoordinates;
     } catch (error) {
-      console.error(`Error loading coordinates for device: ${error.message}`);
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceFHD: async ({ device_id }) => {
+    try {      
+      const isFHD = await deviceHelper.checkDeviceFHD(device_id);
+
+      if (!isFHD) {
+        console.log('Thiết bị chưa cài đặt ở chế độ FHD+');
+        return { status: 500, valid: false, message: 'Thiết bị chưa cài đặt ở chế độ FHD+' };
+      }
+
+      console.log('Thiết bị đang ở chế độ FHD+');
+      return { status: 200, valid: true, message: 'Thiết bị đang ở chế độ FHD+' };
+      
+    } catch (error) {
+      console.error(`Error checking device FHD+: ${error.message}`);
       throw error;
     }
   },
@@ -215,7 +233,6 @@ async function loadCoordinatesForDevice(device_id) {
     console.log('deviceModel now:', deviceModel);
 
     const deviceCoordinates = coordinates[deviceModel];
-   
 
     return deviceCoordinates;
   } catch (error) {
