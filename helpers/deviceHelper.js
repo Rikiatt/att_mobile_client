@@ -32,7 +32,7 @@ const getDeviceModel = async (device_id) => {
         const buffer = await adb.util.readAll(output);
         const deviceModel = buffer.toString().trim();
         
-        return deviceModel.replace(/ /g, '')
+        return deviceModel.replace(/ /g, ' ')
             .replace(/SM-G975[FWU0-9]+/g, 'SM-G975') // Galaxy S10+
             .replace(/SM-N960[A-Za-z0-9-_.]*/g, 'SM-N960') // Galaxy Note9
             .replace(/SM-G981[A-Za-z0-9-_.]*/g, 'SM-G981') // Galaxy S20 5G
@@ -41,6 +41,8 @@ const getDeviceModel = async (device_id) => {
             .replace(/SM-G973[A-Za-z0-9-_.]*/g, 'SM-G973') // Galaxy S10
             .replace(/SM-A536[A-Za-z0-9-_.]*/g, 'SM-A536') // Galaxy A53 5G
             .replace(/SM-M156B[A-Za-z0-9-_.]*/g, 'SM-M156B') // Galaxy M15            
+            .replace(/itel A666L[A-Za-z0-9-_.]*/g, 'itel A666L') // itel P55
+            .replace(/SM-G780[A-Za-z0-9-_.]*/g, 'SM-G780') // Galaxy S20 FE
     } catch (error) {
         throw new Error(`Error getting device model: ${error.message}`);
     }
