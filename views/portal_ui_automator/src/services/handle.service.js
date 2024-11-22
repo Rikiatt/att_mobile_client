@@ -215,7 +215,7 @@ export const vietinClickLogin = async (data, setLoading) => {
     }    
 
     if (checkDeviceFHDOrNot.status == 500) {
-      return swalNotification("error", "Thiết bị chưa cài đặt ở chế độ FHD+", "Vui lòng cài đặt về FHD+");      
+      return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
     }     
 
     // Click nút Đăng nhập

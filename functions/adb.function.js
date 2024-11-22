@@ -91,16 +91,25 @@ module.exports = {
 
   checkDeviceFHD: async ({ device_id }) => {
     try {      
-      const isFHD = await deviceHelper.checkDeviceFHD(device_id);
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);
+      console.log(`Device model: ${deviceModel}`);
 
-      if (!isFHD) {
-        console.log('Thiết bị chưa cài đặt ở chế độ FHD+');
-        return { status: 500, valid: false, message: 'Thiết bị chưa cài đặt ở chế độ FHD+' };
+      // Kiểm tra nếu model là 'SM-N960N' (Galaxy Note9)
+      if (deviceModel === 'SM-N960') {
+        console.log('Model is SM-N960, checking FHD+ mode...');
+        const isFHD = await deviceHelper.checkDeviceFHD(device_id);
+
+        if (!isFHD) {
+          console.log('Thiết bị chưa cài đặt ở chế độ FHD+');
+          return { status: 500, valid: false, message: 'Thiết bị chưa cài đặt ở chế độ FHD+' };
+        }
+
+        console.log('Thiết bị đang ở chế độ FHD+');
+        return { status: 200, valid: true, message: 'Thiết bị đang ở chế độ FHD+' };
+      } else {
+        console.log(`Model ${deviceModel} không cần kiểm tra FHD+.`);
+        return { status: 200, valid: true, message: 'Thiết bị không yêu cầu kiểm tra FHD+' };
       }
-
-      console.log('Thiết bị đang ở chế độ FHD+');
-      return { status: 200, valid: true, message: 'Thiết bị đang ở chế độ FHD+' };
-      
     } catch (error) {
       console.error(`Error checking device FHD+: ${error.message}`);
       throw error;
