@@ -43,6 +43,8 @@ const getDeviceModel = async (device_id) => {
             .replace(/SM-M156B[A-Za-z0-9-_.]*/g, 'SM-M156B') // Galaxy M15            
             .replace(/itel A666L[A-Za-z0-9-_.]*/g, 'itel A666L') // itel P55
             .replace(/SM-G780[A-Za-z0-9-_.]*/g, 'SM-G780') // Galaxy S20 FE
+            .replace(/SM-M236[A-Za-z0-9-_.]*/g, 'SM-M236') // Galaxy M23
+            .replace(/SM-A346[A-Za-z0-9-_.]*/g, 'SM-A346') // Galaxy A34 5G
     } catch (error) {
         throw new Error(`Error getting device model: ${error.message}`);
     }
