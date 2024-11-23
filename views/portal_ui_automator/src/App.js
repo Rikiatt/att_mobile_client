@@ -122,6 +122,7 @@ function App() {
                 Ui Manual {newVersion || ''}
               </Typography>
               <SetupIP setMutate={setMutate} />
+              <Typography variant="button" fontWeight="bold" color="#172B4D">IP: {ipPublic}</Typography>
             </Stack>
             <SetupConnect setMutate={setMutate} seting={seting} />
           </Stack>
@@ -325,58 +326,56 @@ function TitleComp({ title, item, setMutate }) {
   };
 
   return (
-    <>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {isEdit ? (
-          <>
-            <TextField
-              variant="outlined"
-              placeholder="Ghi chú"
-              size="small"
-              value={textTitle}
-              onChange={(event) => setTextTitle(event.target.value)}
-            />
-            <Tooltip title="Lưu" arrow>
-              <IconButton size="small" onClick={saveHandle}>
-                <Save color="primary" sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Hủy" arrow>
+    <Stack direction="row" alignItems="center" spacing={1}>
+      {isEdit ? (
+        <>
+          <TextField
+            variant="outlined"
+            placeholder="Ghi chú"
+            size="small"
+            value={textTitle}
+            onChange={(event) => setTextTitle(event.target.value)}
+          />
+          <Tooltip title="Lưu" arrow>
+            <IconButton size="small" onClick={saveHandle}>
+              <Save color="primary" sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Hủy" arrow>
+            <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
+              <Cancel color="error" sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+        </>
+      ) : (
+        <>
+          <Typography variant="h6" fontWeight="bold">
+            {textTitle}
+          </Typography>
+          <Stack direction={'row'} justifyContent={'end'}>
+            <Tooltip title={"Chỉnh sửa ghi chú"} arrow>
               <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                <Cancel color="error" sx={{ fontSize: 18 }} />
+                <Edit color="primary" sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
-          </>
-        ) : (
-          <>
-            <Typography variant="h6" fontWeight="bold">
-              {textTitle}
-            </Typography>
-            <Stack direction={'row'} justifyContent={'end'}>
-              <Tooltip title={"Chỉnh sửa ghi chú"} arrow>
-                <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                  <Edit color="primary" sx={{ fontSize: 16 }} />
+            {!regexHost.test(item.id) &&
+              <Tooltip title={"Kết nối Wifi debug"} arrow>
+                <IconButton size="small" onClick={connectTcpIpHandle}>
+                  <AddLink color="primary" sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
-              {!regexHost.test(item.id) &&
-                <Tooltip title={"Kết nối Wifi debug"} arrow>
-                  <IconButton size="small" onClick={connectTcpIpHandle}>
-                    <AddLink color="primary" sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
-              }
-              {regexHost.test(item.id)
-                && <Tooltip title={"Ngắt kết nối Wifi debug"} arrow>
-                  <IconButton size="small" onClick={disconnectTcpIpHandle}>
-                    <LinkOff color="primary" sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
-              }
-            </Stack>
-          </>
-        )}
-      </Stack >
-    </>
+            }
+            {regexHost.test(item.id)
+              && <Tooltip title={"Ngắt kết nối Wifi debug"} arrow>
+                <IconButton size="small" onClick={disconnectTcpIpHandle}>
+                  <LinkOff color="primary" sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            }
+          </Stack>
+        </>
+      )}
+    </Stack>
   );
 }
 
@@ -387,6 +386,9 @@ const actionsDial = [
 ];
 
 function SetupConnect({ setMutate, seting }) {
+  let att_connect = seting.att?.connected || false;
+  let org_connect = seting.org?.connected || false;
+
   const handleEndpoint = async (type) => {
     const endpoint = await swalInputText('Cập nhật Url cho '
       + type.toUpperCase(), type == 'att'
@@ -405,10 +407,10 @@ function SetupConnect({ setMutate, seting }) {
     }
   }
 
-  const handleConnect = async (type) => {
-    const result = await swalInfoChooseText('Kết nối nhận mã QR từ ' + type.toUpperCase());
+  const handleConnect = async (type, disconnect) => {
+    const result = await swalInfoChooseText((disconnect ? 'Ngắt kết nối ' : 'Kết nối nhận mã QR từ ') + type.toUpperCase());
     if (result) {
-      const data = { type };
+      const data = { type, disconnect };
       const result = await connectEndpoint(data);
       if (result?.valid == true) {
         return swalToast('success', 'Thành công');
@@ -426,7 +428,7 @@ function SetupConnect({ setMutate, seting }) {
               <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>)
-          : (seting.org?.endpoint && <Switch color="primary" checked={seting.org?.connected} onChange={() => !seting.org?.connected && handleConnect('org')} />)
+          : (seting.org?.endpoint && <Switch color="primary" checked={org_connect} onChange={() => handleConnect('org', org_connect)} />)
       } label="ORG" labelPlacement="start" />
       <FormControlLabel sx={{ background: seting.connect == 'att' ? '#a9ffa9' : 'unset', p: "0 8px", borderRadius: 12 }} control={
         !seting.att
@@ -435,7 +437,7 @@ function SetupConnect({ setMutate, seting }) {
               <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>)
-          : (seting.att?.endpoint && <Switch color="primary" checked={seting.att?.connected} onChange={() => !seting.att?.connected && handleConnect('att')} />)
+          : (seting.att?.endpoint && <Switch color="primary" checked={att_connect} onChange={() => handleConnect('att', att_connect)} />)
       } label="ATTPAY+" labelPlacement="start" />
     </Stack>
   );

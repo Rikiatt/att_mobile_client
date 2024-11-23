@@ -20,7 +20,7 @@ module.exports = {
 
   connectEP: async (req, res) => {
     const { body } = req;
-    await connectEndpoint({ type: body.type })
+    await connectEndpoint(body)
 
     responseHelper(res, 200, { valid: true });
   },
