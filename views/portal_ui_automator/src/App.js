@@ -388,8 +388,10 @@ const actionsDial = [
 
 function SetupConnect({ setMutate, seting }) {
   const handleEndpoint = async (type) => {
-    const endpoint = await swalInputText('Cập nhật Url cho ' + type.toUpperCase(), type == 'att' ? 'URL có dạng (https://device.attapps.net/ui_manual/connect/ + tên đài)' :
-      'URL có dạng: (https://device.attpay.org/ + tên đài)', 'Url truy cập ... ');
+    const endpoint = await swalInputText('Cập nhật Url cho '
+      + type.toUpperCase(), type == 'att'
+      ? 'URL có dạng (https://de****.att****.net/ui_manual/connect/ + tên đài)'
+      : 'URL có dạng: (https://de****.att***.org/ + tên đài)', 'Url truy cập ... ');
     if (endpoint) {
       const parsedUrl = new URL(endpoint.trim());
       const data = { [type]: { endpoint: parsedUrl.origin, site: parsedUrl.pathname.replace('/', '') } };
