@@ -427,7 +427,7 @@ function SetupConnect({ setMutate, seting, setSeting }) {
         const data = { type, disconnect };
         const result = await connectEndpoint(data);
         if (result?.valid == true) {
-          setSeting((pre) => ({ ...pre, connect: type, [type]: { ...pre[type], connected: true } }))
+          setSeting((pre) => ({ ...pre, connect: type, [type]: { ...pre[type], connected: !disconnect } }))
           return swalToast('success', 'Thành công');
         } else {
           setSeting((pre) => ({ ...pre, connect: '', att: { ...pre.att, connected: false }, org: { ...pre.org, connected: false } }))
