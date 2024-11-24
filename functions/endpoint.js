@@ -73,7 +73,7 @@ module.exports = {
 
             if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess)) {
               console.log("Mix Data");
-              socket.emit('callback', { ...data, success: false });
+              currentSocket.emit('callback', { ...data, success: false });
               return;
             }
 
@@ -110,7 +110,7 @@ module.exports = {
 
             // Thành công !!!
             console.log("Success !!");
-            socket.emit('callback', { ...data, success: true });
+            currentSocket.emit('callback', { ...data, success: true });
           });
 
           // Khi bị ngắt kết nối
