@@ -451,7 +451,13 @@ function SetupConnect({ setMutate, seting, setSeting }) {
               <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>)
-          : (seting.org?.endpoint && <Switch color="primary" checked={org_connect} onChange={() => handleConnect('org', org_connect)} />)
+          : (seting.org?.endpoint
+            ? <Switch color="primary" checked={org_connect} onChange={() => handleConnect('org', org_connect)} />
+            : <Tooltip title="ORG - Cấu hình link truy cập" arrow>
+              <IconButton size="small" onClick={() => handleEndpoint('org')}>
+                <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>)
       } label="ORG" labelPlacement="start" />
       <FormControlLabel sx={{
         background: seting.connect == 'att' ? (seting.att.connected ? '#5ced5c' : 'red') : 'unset',
@@ -465,7 +471,13 @@ function SetupConnect({ setMutate, seting, setSeting }) {
               <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>)
-          : (seting.att?.endpoint && <Switch color="primary" checked={att_connect} onChange={() => handleConnect('att', att_connect)} />)
+          : (seting.att?.endpoint
+            ? <Switch color="primary" checked={att_connect} onChange={() => handleConnect('att', att_connect)} />
+            : <Tooltip title="ATTPAY+ - Cấu hình link truy cập" arrow>
+              <IconButton size="small" onClick={() => handleEndpoint('att')}>
+                <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>)
       } label="ATTPAY+" labelPlacement="start" />
     </Stack>
   );
