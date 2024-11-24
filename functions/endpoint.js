@@ -86,7 +86,7 @@ module.exports = {
             const seconds = String(date.getSeconds()).padStart(2, '0');
 
             const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-            let qrLocalPath = path.join(__dirname, 'images', findId.split(':')[0] + '_qr.jpg')
+            let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg')
             let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
             if (vietqr_url) {
