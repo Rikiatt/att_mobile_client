@@ -94,7 +94,7 @@ module.exports = {
             } else {
               await transToQr(data, qrLocalPath);
             }
-            let jsonPath = path.join(__dirname, 'database', findId.split(':')[0] + '_url.json')
+            let jsonPath = path.join(__dirname, '..', 'database', findId.split(':')[0] + '_url.json')
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
