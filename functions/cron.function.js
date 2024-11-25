@@ -6,12 +6,12 @@ const cronTask = async () => {
 };
 
 const cronUpdate = new cron.CronJob(
-  '*/20 * * * *',
+  '*/30 * * * *',
   async () => {
     try {
-        await updateSource();
+      await updateSource();
     } catch (error) {
-        console.error('Lỗi khi cron:', error);
+      console.error('Lỗi khi cron:', error);
     }
   },
   null,

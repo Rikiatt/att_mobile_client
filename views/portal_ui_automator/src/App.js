@@ -1,7 +1,7 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import { getListDevice, } from './api/adb';
-import { getVersion, postLocalData } from './api/bridge';
+import { connectEndpoint, getVersion, postLocalData } from './api/bridge';
 import { AddLink, Key, KeyRounded, Link, LinkOff, DeveloperMode } from '@mui/icons-material';
 import Loading from './components/Loading';
 
@@ -13,25 +13,19 @@ import {
   CardContent,
   CardHeader,
   Divider,
+  FormControlLabel,
   Grid,
   IconButton,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
   Stack,
+  Switch,
   TextField,
   Tooltip,
   Typography
 } from '@mui/material';
 
-import SaveIcon from '@mui/icons-material/Save';
-import EditIcon from '@mui/icons-material/Edit';
-import CancelIcon from '@mui/icons-material/Cancel';
-import LaunchIcon from '@mui/icons-material/Launch';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import PhonelinkIcon from '@mui/icons-material/Phonelink';
-import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
-import SettingsIcon from '@mui/icons-material/Settings';
 import {
   SettingsInputAntenna,
   Save,
@@ -46,7 +40,7 @@ import {
   WifiTethering
 } from '@mui/icons-material';
 
-import { swalToast, swalQuestionConfirm, swalInputText } from './utils/swal';
+import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
 import { connect, connectTcpIp, disconnectTcpIp, enter, home, typePortKey, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleBidv from './sections/bank_handle/HandleBidv';
@@ -109,11 +103,11 @@ function App() {
     swalToast('success', 'Thành công');
     setMutate((prev) => !prev);
   };
-  const showDevice = (item, ipPublic) => {
+  const showDevice = (item) => {
     Swal.fire({
       icon: "info",
       title: "Thông tin thiết bị - " + (localStorage.getItem(item.id) || "Ghi chú"),
-      html: `<p>ID: ${item.id}$${ipPublic}</p><p>Name: ${item.nameDevice}</p><p>Model: ${item.model}</p><p>Size: ${item.screenSize}</p>`
+      html: `<p>ID: ${item.id}</p><p>Name: ${item.nameDevice}</p><p>Model: ${item.model}</p><p>Size: ${item.screenSize}</p>`
     })
   }
 
@@ -121,14 +115,19 @@ function App() {
     <>
       <Grid container spacing={2} sx={{ pl: 4, pr: 4, pt: 2 }}>
         <Grid item xs={12}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <img src="./logo_att.png" alt="logo" style={{ width: 40, height: 40 }} />
-            <Typography variant="h5" fontWeight="bold" color="#172B4D">
-              Ui Manual {newVersion || ''}
-            </Typography>
-            <SetupPusher setMutate={setMutate} seting={seting} />
+          <Stack direction="row" alignItems="center" spacing={2} justifyContent={"space-between"}>
+            <Stack direction="row" alignItems="center" spacing={2} justifyContent={"space-between"}>
+              <img src="./logo_att.png" alt="logo" style={{ width: 40, height: 40 }} />
+              <Typography variant="h5" fontWeight="bold" color="#172B4D">
+                Ui Manual {newVersion || ''}
+              </Typography>
+              <SetupIP setMutate={setMutate} />
+              <Typography variant="button" fontWeight="bold" color="#172B4D">IP: {ipPublic}</Typography>
+            </Stack>
+            <SetupConnect setMutate={setMutate} seting={seting} setSeting={setSeting} />
           </Stack>
           <Divider sx={{ mt: 2 }} />
+
         </Grid>
 
         <Grid container item xs={12} spacing={3}>
@@ -167,9 +166,9 @@ function App() {
                             variant="body"
                             color="Highlight"
                             sx={{ cursor: "pointer", fontWeight: "bold" }}
-                            onClick={() => showDevice(item, ipPublic)}
+                            onClick={() => showDevice(item)}
                             title={`${item.nameDevice} - ${item.screenSize}`}>
-                            {item.id + "$" + ipPublic}
+                            {item.id}
                           </Typography>
                         </Box>
                       }
@@ -215,7 +214,7 @@ function App() {
                                 await connect({ device_id: item.id, title });
                                 setLoading(false);
                               }}
-                              startIcon={<LaunchIcon />}
+                              startIcon={<Launch />}
                             >
                               Mở máy
                             </Button>
@@ -246,9 +245,9 @@ function App() {
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
                       <HandleBidv item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleMb item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleMb item={item} X={X} Y={Y} setLoading={setLoading} />
                       {/* <HandleVcbOld item={item} X={X} Y={Y} setLoading={setLoading} /> */}
-                      <HandleVcbNew item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleVcbNew item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleAbb item={item} X={X} Y={Y} setLoading={setLoading} />
@@ -269,7 +268,7 @@ function App() {
 
       <SpeedDial
         ariaLabel="SpeedDial openIcon example"
-        icon={<SpeedDialIcon openIcon={<SettingsIcon style={{ fontSize: '1.3rem' }} />} />}
+        icon={<SpeedDialIcon openIcon={<Settings style={{ fontSize: '1.3rem' }} />} />}
         onClose={handleCloseDial}
         onOpen={handleOpenDial}
         open={openDial}
@@ -327,92 +326,168 @@ function TitleComp({ title, item, setMutate }) {
   };
 
   return (
-    <>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {isEdit ? (
-          <>
-            <TextField
-              variant="outlined"
-              placeholder="Ghi chú"
-              size="small"
-              value={textTitle}
-              onChange={(event) => setTextTitle(event.target.value)}
-            />
-            <Tooltip title="Lưu" arrow>
-              <IconButton size="small" onClick={saveHandle}>
-                <SaveIcon color="primary" sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Hủy" arrow>
+    <Stack direction="row" alignItems="center" spacing={1}>
+      {isEdit ? (
+        <>
+          <TextField
+            variant="outlined"
+            placeholder="Ghi chú"
+            size="small"
+            value={textTitle}
+            onChange={(event) => setTextTitle(event.target.value)}
+          />
+          <Tooltip title="Lưu" arrow>
+            <IconButton size="small" onClick={saveHandle}>
+              <Save color="primary" sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Hủy" arrow>
+            <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
+              <Cancel color="error" sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+        </>
+      ) : (
+        <>
+          <Typography variant="h6" fontWeight="bold">
+            {textTitle}
+          </Typography>
+          <Stack direction={'row'} justifyContent={'end'}>
+            <Tooltip title={"Chỉnh sửa ghi chú"} arrow>
               <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                <CancelIcon color="error" sx={{ fontSize: 18 }} />
+                <Edit color="primary" sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
-          </>
-        ) : (
-          <>
-            <Typography variant="h6" fontWeight="bold">
-              {textTitle}
-            </Typography>
-            <Stack direction={'row'} justifyContent={'end'}>
-              <Tooltip title={"Chỉnh sửa ghi chú"} arrow>
-                <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                  <EditIcon color="primary" sx={{ fontSize: 16 }} />
+            {!regexHost.test(item.id) &&
+              <Tooltip title={"Kết nối Wifi debug"} arrow>
+                <IconButton size="small" onClick={connectTcpIpHandle}>
+                  <AddLink color="primary" sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
-              {!regexHost.test(item.id) &&
-                <Tooltip title={"Kết nối Wifi debug"} arrow>
-                  <IconButton size="small" onClick={connectTcpIpHandle}>
-                    <AddLink color="primary" sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
-              }
-              {regexHost.test(item.id)
-                && <Tooltip title={"Ngắt kết nối Wifi debug"} arrow>
-                  <IconButton size="small" onClick={disconnectTcpIpHandle}>
-                    <LinkOff color="primary" sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
-              }
-            </Stack>
-          </>
-        )}
-      </Stack >
-    </>
+            }
+            {regexHost.test(item.id)
+              && <Tooltip title={"Ngắt kết nối Wifi debug"} arrow>
+                <IconButton size="small" onClick={disconnectTcpIpHandle}>
+                  <LinkOff color="primary" sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            }
+          </Stack>
+        </>
+      )}
+    </Stack>
   );
 }
 
 const actionsDial = [
-  { icon: <PhonelinkIcon color="primary" />, name: 'Mở kết nối ngược - VPN điện thoại theo máy tính', typeHandle: 'startShare' },
-  { icon: <PhonelinkOffIcon />, name: 'Tắt kết nối ngược', typeHandle: 'stopShare' },
-  { icon: <PowerSettingsNewIcon color="error" />, name: 'Restart tool', typeHandle: 'restart' }
+  { icon: <Phonelink color="primary" />, name: 'Mở kết nối ngược - VPN điện thoại theo máy tính', typeHandle: 'startShare' },
+  { icon: <PhonelinkOff />, name: 'Tắt kết nối ngược', typeHandle: 'stopShare' },
+  { icon: <PowerSettingsNew color="error" />, name: 'Restart tool', typeHandle: 'restart' }
 ];
 
-function SetupPusher({ setMutate, seting }) {
-  const [isEdit, setEdit] = useState();
-  const [textTitle, setTextTitle] = useState('');
+function SetupConnect({ setMutate, seting, setSeting }) {
+  let att_connect = seting.att?.connected || false;
+  let org_connect = seting.org?.connected || false;
 
-  const saveHandle = async () => {
-    setEdit((prev) => !prev);
-    setMutate((prev) => !prev);
-    const parsedUrl = new URL(textTitle.trim());
-
-    const data = { endpoint: parsedUrl.origin, site: parsedUrl.pathname.replace('/', '') }
-
-    const result = await postLocalData(data);
-
-    if (result?.valid == true) {
-      return swalToast('success', 'Thành công');
-    } else {
-      return swalToast('error', "Lỗi hệ thống");
+  const handleEndpoint = async (type) => {
+    const endpoint = await swalInputText('Cập nhật Url cho '
+      + type.toUpperCase(), type == 'att'
+      ? 'URL có dạng (https://de****.att****.net/ui_manual/connect/ + tên đài)'
+      : 'URL có dạng: (https://de****.att***.org/ + tên đài)', 'Url truy cập ... ');
+    if (endpoint) {
+      const parsedUrl = new URL(endpoint.trim());
+      const data = { [type]: { endpoint: parsedUrl.origin, site: parsedUrl.pathname.replace('/', '') } };
+      setMutate((prev) => !prev);
+      const result = await postLocalData(data);
+      if (result?.valid == true) {
+        return swalToast('success', 'Thành công');
+      } else {
+        return swalToast('error', "Lỗi hệ thống");
+      }
     }
-  };
+  }
 
+  const handleConnect = async (type, disconnect) => {
+    if (disconnect) {
+      const result = await swalInfoChooseText('Ngắt kết nối ' + type.toUpperCase());
+      if (result) {
+        const data = { type, disconnect };
+        const result = await connectEndpoint(data);
+        if (result?.valid == true) {
+          return swalToast('success', 'Thành công');
+        } else {
+          return swalToast('error', "Lỗi hệ thống");
+        }
+      }
+    } else {
+      const acction = await swalQuestionConfirms('warning', 'Thao tác kết nối', 'Thay Url ' + type.toUpperCase(), 'Kết nối ' + type.toUpperCase(), 'Hủy');
 
+      if (acction) {
+        if (acction == 'confirm') { return handleEndpoint(type) };
+        const data = { type, disconnect };
+        const result = await connectEndpoint(data);
+        if (result?.valid == true) {
+          setSeting((pre) => ({ ...pre, connect: type, [type]: { ...pre[type], connected: !disconnect } }))
+          return swalToast('success', 'Thành công');
+        } else {
+          setSeting((pre) => ({ ...pre, connect: '', att: { ...pre.att, connected: false }, org: { ...pre.org, connected: false } }))
+          return swalToast('error', "Lỗi hệ thống");
+        }
+      }
+
+    }
+  }
+  return (
+    <Stack direction="row" alignItems="center" spacing={2}>
+      <FormControlLabel sx={{
+        background: seting.connect == 'org' ? (seting.org.connected == true ? '#5ced5c' : 'red') : 'unset',
+        p: "0 8px",
+        borderRadius: 12,
+        boxShadow: "rgba(50, 50, 93, 0.25) 0px 30px 60px - 12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset"
+      }} control={
+        !seting.org
+          ? (<Tooltip title="ORG - Cấu hình link truy cập" arrow>
+            <IconButton size="small" onClick={() => handleEndpoint('org')}>
+              <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>)
+          : (seting.org?.endpoint
+            ? <Switch color="primary" checked={org_connect} onChange={() => handleConnect('org', org_connect)} />
+            : <Tooltip title="ORG - Cấu hình link truy cập" arrow>
+              <IconButton size="small" onClick={() => handleEndpoint('org')}>
+                <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>)
+      } label="ORG" labelPlacement="start" />
+      <FormControlLabel sx={{
+        background: seting.connect == 'att' ? (seting.att.connected ? '#5ced5c' : 'red') : 'unset',
+        p: "0 8px",
+        borderRadius: 12,
+        boxShadow: "rgba(50, 50, 93, 0.25) 0px 30px 60px - 12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset"
+      }} control={
+        !seting.att
+          ? (<Tooltip title="ATTPAY+ - Cấu hình link truy cập" arrow>
+            <IconButton size="small" onClick={() => handleEndpoint('att')}>
+              <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>)
+          : (seting.att?.endpoint
+            ? <Switch color="primary" checked={att_connect} onChange={() => handleConnect('att', att_connect)} />
+            : <Tooltip title="ATTPAY+ - Cấu hình link truy cập" arrow>
+              <IconButton size="small" onClick={() => handleEndpoint('att')}>
+                <WifiTetheringError color={"primary"} sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>)
+      } label="ATTPAY+" labelPlacement="start" />
+    </Stack>
+  );
+}
+
+function SetupIP({ setMutate }) {
   const SetupConnectIP = async () => {
     const q = await swalInputText('Kết nối tới thiết bị qua IP', '', 'Địa chỉ IP');
     if (!q) return;
-
+    setMutate((prev) => !prev);
     const conn = await connectTcpIp({ device_id: q, type: 'tailscale' });
     if (conn?.valid == true) {
       return swalToast('success', 'Thành công');
@@ -421,47 +496,12 @@ function SetupPusher({ setMutate, seting }) {
     }
   };
   return (
-    <>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {isEdit ? (
-          <>
-            <TextField
-              variant="outlined"
-              placeholder="Link truy cập"
-              size="small"
-              sx={{ width: "180px" }}
-              value={textTitle}
-              onChange={(event) => setTextTitle(event.target.value)}
-            />
-            <Tooltip title="Lưu">
-              <IconButton size="small" onClick={saveHandle}>
-                <SaveIcon color="primary" sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Hủy" arrow>
-              <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                <CancelIcon color="error" sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-          </>
-        ) : (
-          <>
-            <Tooltip title={(seting?.endpoint && seting?.message) ? seting.message : 'Cấu hình link truy cập'} arrow>
-              <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-                {(seting?.endpoint && seting?.connected) && <WifiTethering color={"primary"} sx={{ fontSize: 20 }} />}
-                {(!seting?.endpoint || !seting?.connected) && <WifiTetheringError color={"gray"} sx={{ fontSize: 20 }} />}
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-      </Stack>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Tooltip title="Cấu hình link truy cập" arrow>
-          <IconButton size="small" onClick={SetupConnectIP}>
-            <DeveloperMode color={"primary"} sx={{ fontSize: 20 }} />
-          </IconButton>
-        </Tooltip>
-      </Stack >
-    </>
+    <Stack direction="row" alignItems="center" spacing={1}>
+      <Tooltip title="Cấu hình link truy cập" arrow>
+        <IconButton size="small" onClick={SetupConnectIP}>
+          <DeveloperMode color={"primary"} sx={{ fontSize: 20 }} />
+        </IconButton>
+      </Tooltip>
+    </Stack >
   );
 }

@@ -62,7 +62,7 @@ module.exports = {
     } else {
       const fileContent = fs.readFileSync(dataPath, 'utf-8');
       const jsonData = JSON.parse(fileContent);
-      console.log('File content:', jsonData);
+      // console.log('File content:', jsonData);
       return jsonData;
     }
   },

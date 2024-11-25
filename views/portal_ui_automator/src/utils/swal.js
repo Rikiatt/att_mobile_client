@@ -26,6 +26,26 @@ export const swalQuestionConfirm = (icon, title, confirm, deny) => {
     }
   });
 };
+
+export const swalQuestionConfirms = (icon, title, confirm, deny, cancel) => {
+  return Swal.fire({
+    icon: icon,
+    title: title,
+    confirmButtonText: confirm,
+    denyButtonText: deny,
+    showDenyButton: !!deny,
+    showCancelButton: !!cancel,
+    cancelButtonText: cancel,
+  }).then((result) => {
+    if (result.isConfirmed) {
+      return 'confirm';
+    } else if (result.isDenied) {
+      return 'deny';
+    }
+    return null;
+  });
+};
+
 export const swalInputText = async (title, inputLabel, inputPlaceholder) => {
   const { value: text } = await Swal.fire({
     title,
