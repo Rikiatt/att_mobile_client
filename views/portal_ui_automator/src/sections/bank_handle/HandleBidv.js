@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { bidvClickConfirm, bidvClickLogin } from '../../services/handle.service';
+import { bidvClickConfirm, bidvLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -28,7 +28,7 @@ const HandleBidv = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => bidvClickLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => bidvLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>

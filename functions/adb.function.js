@@ -1,5 +1,6 @@
 const path = require('path');
 const adb = require('adbkit');
+const byline = require('byline');
 const { delay } = require('../helpers/functionHelper');
 const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
 
@@ -35,19 +36,75 @@ module.exports = {
     }
   },
 
-  stopAppADB: async ({ device_id }) => {
-    console.log('App has been stopped');
-    await client.shell(device_id, 'am force-stop com.mbmobile');
+  stopAppADBBIDV: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop com.vnpay.bidv');
+    console.log('App BIDV has been stopped');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBBIDV: async ({ device_id }) => {
+    console.log('Starting App BIDV...');
+    await client.shell(device_id, 'monkey -p com.vnpay.bidv -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
-  startAppADB: async ({ device_id }) => {
-    console.log('App has been started');
+  stopAppADBMB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop com.mbmobile');
+    console.log('App MB has been stopped');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBMB: async ({ device_id }) => {
+    console.log('Starting App MB...');
     await client.shell(device_id, 'monkey -p com.mbmobile -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
+
+  stopAppADBVCB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop com.VCB');
+    console.log('App VCB has been stopped');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBVCB: async ({ device_id }) => {
+    console.log('Starting App VCB...');
+    await client.shell(device_id, 'monkey -p com.VCB -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  stopAppADBVTB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
+    console.log('App VietinBank iPay has been stopped');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBVTB: async ({ device_id }) => {
+    console.log('Starting App VietinBank iPay...');
+    await client.shell(device_id, 'monkey -p com.vietinbank.ipay -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  stopAppADBSHB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop vn.shb.mbanking');
+    console.log('App SHB Mobile has been stopped');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBSHB: async ({ device_id }) => {
+    console.log('Starting App SHB Mobile...');
+    await client.shell(device_id, 'monkey -p vn.shb.mbanking -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },  
 
   tapADB: async ({ device_id, percent, screenSize }) => {
     console.log(`Click::[${percentSize(percent.X, screenSize.X)} - ${percentSize(percent.Y, screenSize.Y)}]`);

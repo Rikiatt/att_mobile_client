@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { shbClickLogin } from '../../services/handle.service';
+import { shbLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -28,7 +28,7 @@ const HandleSHB = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => shbClickLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => shbLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>

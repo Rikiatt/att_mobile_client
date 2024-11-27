@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vcbNewClickConfirm, vcbNewClickLogin, vcbNewGetOTP } from '../../services/handle.service';
+import { vcbLogin, vcbNewClickConfirm, vcbNewGetOTP } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleVcbNew = ({ item, X, Y, setLoading }) => {
+const HandleVcb = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -28,7 +28,7 @@ const HandleVcbNew = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vcbNewClickLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => vcbLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>
@@ -61,4 +61,4 @@ const HandleVcbNew = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleVcbNew;
+export default HandleVcb;

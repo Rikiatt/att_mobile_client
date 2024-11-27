@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { bidvClickConfirm, bidvClickLogin, mbClickLogin } from '../../services/handle.service';
+import { mbLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -28,7 +28,7 @@ const HandleMb = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => mbClickLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => mbLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>

@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { bidvClickConfirm, bidvClickLogin, vietinClickLogin } from '../../services/handle.service';
+import { vietinLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -28,7 +28,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinClickLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => vietinLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>
