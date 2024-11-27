@@ -48,8 +48,8 @@ import HandleMb from './sections/bank_handle/HandleMb';
 import HandleVcb from './sections/bank_handle/HandleVcb';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHB from './sections/bank_handle/HandleSHB';
-import HandleAbb from './sections/bank_handle/HandleAbb';
-import HandleShinhan from './sections/bank_handle/HandleShinhan';
+// import HandleAbb from './sections/bank_handle/HandleAbb';
+// import HandleShinhan from './sections/bank_handle/HandleShinhan';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import HandleShowQr from './sections/HandleShowQr';
@@ -250,8 +250,8 @@ function App() {
                       <HandleVcb item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleAbb item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} />
+                      {/* <HandleAbb item={item} X={X} Y={Y} setLoading={setLoading} /> */}
+                      {/* <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                     </CardContent>
                   </Card>
                 </Grid>
