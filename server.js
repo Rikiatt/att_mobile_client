@@ -36,4 +36,3 @@ server.listen(port, async () => {
     windowsHide: true
   });
 });
-
