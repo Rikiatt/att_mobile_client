@@ -98,12 +98,13 @@ export const mbLogin = async (data, setLoading) => {
     // Start app  
     await actionADB({ action: 'stopMB', device_id: data.device_id });
     await actionADB({ action: 'startMB', device_id: data.device_id });
-    await delay(10000);
+    await delay(9000);
 
     // Nhập mật khẩu và click nút Đăng nhập
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+    await delay(1000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
 
     setLoading(false);
@@ -144,15 +145,13 @@ export const vcbLogin = async (data, setLoading) => {
     // Tab vào ô mật khẩu
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await delay(1000);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });    
 
     // Nhập mật khẩu và click nút Đăng nhập
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
     await delay(1000);
     await enter({ device_id: data.device_id });
-    await enter({ device_id: data.device_id });
-    await delay(1000);
+    await enter({ device_id: data.device_id });    
   } catch(error) {
     swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
     console.error(error);
@@ -238,7 +237,7 @@ export const vietinLogin = async (data, setLoading) => {
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await delay(50);
     await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
-    await delay(50);
+    await delay(1000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
 
@@ -271,6 +270,7 @@ export const shbLogin = async (data, setLoading) => {
 
     // Nhập mật khẩu và click nút Đăng nhập
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+    await delay(1000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   } catch (error) {

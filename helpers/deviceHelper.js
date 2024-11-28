@@ -17,7 +17,7 @@ const getDeviceModel = async (device_id) => {
             .replace(/SM-A155[A-Za-z0-9-_.]*/g, 'SM-A155') // Galaxy A15
             .replace(/SM-G973[A-Za-z0-9-_.]*/g, 'SM-G973') // Galaxy S10
             .replace(/SM-A536[A-Za-z0-9-_.]*/g, 'SM-A536') // Galaxy A53 5G
-            .replace(/SM-M156B[A-Za-z0-9-_.]*/g, 'SM-M156B') // Galaxy M15            
+            .replace(/SM-M156B[A-Za-z0-9-_.]*/g, 'SM-M156B') // Galaxy M15 5G          
             .replace(/itel A666L[A-Za-z0-9-_.]*/g, 'itel A666L') // itel P55
             .replace(/SM-G780[A-Za-z0-9-_.]*/g, 'SM-G780') // Galaxy S20 FE
             .replace(/SM-M236[A-Za-z0-9-_.]*/g, 'SM-M236') // Galaxy M23
