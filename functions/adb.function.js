@@ -1,5 +1,8 @@
-const path = require('path');
 const adb = require('adbkit');
+const Tesseract = require('tesseract.js');
+const sharp = require('sharp');
+const fs = require('fs');
+const path = require('path');
 const byline = require('byline');
 const { delay } = require('../helpers/functionHelper');
 const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
@@ -7,7 +10,10 @@ const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.uti
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
-const coordinates = require('../config/coordinates.json');
+const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
+const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
+const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
+
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
@@ -34,6 +40,46 @@ module.exports = {
       console.error('Error getting connected devices:', error);
       return [];
     }
+  },
+
+  clickScanQRVTB: async ({ device_id }) => {    
+    const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
+    
+    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageVTB: async ({ device_id }) => {    
+    const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
+        
+    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image']);    
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickScanQRBIDV: async ({ device_id }) => {    
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
+    
+    await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageBIDV: async ({ device_id }) => {    
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
+     
+    await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Select-Image']);    
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickConfirmBIDV: async ({ device_id }) => {    
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
+    // const button = 'Confirm';    
+    await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']);
+
+    return { status: 200, message: 'Success' };
   },
 
   stopAppADBBIDV: async ({ device_id }) => {    
@@ -127,15 +173,32 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  checkDevice: async ({ device_id }) => {
+  checkDeviceBIDV: async ({ device_id }) => {
     try {
       const deviceModel = await deviceHelper.getDeviceModel(device_id);      
   
-      const deviceCoordinates = coordinates[deviceModel];
-      console.log('log deviceCoordinates:', deviceCoordinates);         
+      const deviceCoordinates = coordinatesScanQRBIDV[deviceModel];             
       
       if (deviceCoordinates == undefined) {        
-        console.log(`No coordinates found for device model: ${deviceModel}`);
+        console.log(`No coordinatesScanQRBIDV found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceVTB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesLoginVTB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesLoginVTB found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -173,25 +236,38 @@ module.exports = {
     }
   },
 
+  inputADBScanQRVTB: async ({ device_id, text }) => {  
+    const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
+    
+    for (const char of text) {
+      await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB[char]);
+    }  
+
+    return { status: 200, message: 'Success' };
+  },
+
   inputADBVTB: async ({ device_id, text }) => {  
-    const coordinates = await loadCoordinatesForDevice(device_id);
+    const coordinatesLoginVTB = await loadCoordinatesForDeviceLoginVTB(device_id);
     
     for (const char of text) {
       if (isUpperCase(char)) {
-          await adbHelper.tapADBVTB(device_id, ...coordinates['CapsLock']);
+          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['CapsLock']);
           await sleep(50); 
-          await adbHelper.tapADBVTB(device_id, ...coordinates[char]);
+          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char]);
+          console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
           await sleep(50);
       }
       else if (isSpecialChar(char)) {
-          await adbHelper.tapADBVTB(device_id, ...coordinates['!#1']);
+          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['!#1']);
           await sleep(50); 
-          await adbHelper.tapADBVTB(device_id, ...coordinates[char]);
+          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char]);
+          console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
           await sleep(50); 
-          await adbHelper.tapADBVTB(device_id, ...coordinates['ABC']);
+          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['ABC']);
       }        
       else {
-          await adbHelper.tapADBVTB(device_id, ...coordinates[char.toLowerCase()]);
+          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char.toLowerCase()]);
+          console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
       }
               
       await sleep(50); 
@@ -292,17 +368,45 @@ module.exports = {
   }
 };
 
-// dùng cho inputADBVTB bên trên
-async function loadCoordinatesForDevice(device_id) {
+async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
     console.log('deviceModel now:', deviceModel);
 
-    const deviceCoordinates = coordinates[deviceModel];
+    const deviceCoordinates = coordinatesScanQRBIDV[deviceModel];
 
     return deviceCoordinates;
   } catch (error) {
-    console.error(`Error loading coordinates for device: ${error.message}`);
+    console.error(`Error loading coordinatesScanQRBIDV for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRVTB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRVTB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRVTB for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+// Dùng cho inputADBVTB bên trên
+async function loadCoordinatesForDeviceLoginVTB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesLoginVTB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesLoginVTB for device: ${error.message}`);
     throw error; // Re-throw error for the caller to handle
   }
 };

@@ -1,0 +1,13 @@
+{
+    "SM-G781": {
+        "ScanQR": [540, 2125],
+        "Select-Image": [456, 1620],
+        "Confirm": [541, 2169]
+    },
+    
+    "CPH2339": {
+        "ScanQR": [0, 0],
+        "Select-Image": [0, 0],
+        "Confirm": [0, 0]
+    }
+}

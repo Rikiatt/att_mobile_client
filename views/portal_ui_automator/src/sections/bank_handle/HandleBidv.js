@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { bidvClickConfirm, bidvLogin } from '../../services/handle.service';
+import { bidvLoginAndScanQR, bidvTransferAndConfirm } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -22,26 +22,37 @@ const HandleBidv = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>BIDV</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Thao tác đăng nhập (nhập mật khẩu và click đăng nhập)" arrow>
+          <Tooltip title="Thao tác đăng nhập và thao tác quét QR" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => bidvLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => bidvLoginAndScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
-              Đăng nhập
+              Đăng nhập và quét QR
             </Button>
           </Tooltip>
-          <Tooltip title="Bước xác nhận cuối cùng (nhập mã PIN >> Xác nhận)" arrow>
+          {/* <Tooltip title="Chọn ảnh QR trong thư viện" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => bidvClickConfirm({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => clickScanQRBIDV({ device_id: item.id, X, Y }, setLoading)}
             >
-              Nhập PIN và xác nhận
+              Quét QR
+            </Button>
+          </Tooltip> */}
+          <Tooltip title="Click Next >> nhập mã PIN >> Xác nhận)" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => bidvTransferAndConfirm({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Chuyển tiền và xác nhận
             </Button>
           </Tooltip>
         </Stack>

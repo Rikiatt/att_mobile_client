@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vietinLogin } from '../../services/handle.service';
+import { vietinLoginAndScanQR } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -22,15 +22,15 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>Vietin</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Thao tác đăng nhập (nhập mật khẩu và click đăng nhập)" arrow>
+          <Tooltip title="Thao tác đăng nhập và thao tác quét QR" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => vietinLoginAndScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
-              Đăng nhập
+              Đăng nhập và quét QR
             </Button>
           </Tooltip>
         </Stack>
