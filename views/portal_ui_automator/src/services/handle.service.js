@@ -327,7 +327,8 @@ export const vietinScanQR = async (data, setLoading) => {
     
     // Tab vào ô Scan QR và chọn ảnh .. chọn mã QR thủ công ... xóa luôn ảnh trong thư viện
     await actionADB({ action: 'clickSelectImageVTB', device_id: data.device_id }); // Chọn ảnh từ trong máy 
-    await delay(1000);    
+    await delay(5000);    
+    setLoading(true);
     
     // Nhập mã pin ... xóa luôn ảnh trong thư viện
     // await actionADB({ action: 'inputADBScanQRVTB', device_id: data.device_id, text: text.trim() });
