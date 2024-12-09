@@ -364,7 +364,7 @@ export const vietinConfirm = async (data, setLoading) => {
     // Nhập mã pin và xác nhận ... xóa luôn ảnh trong thư viện
     await actionADB({ action: 'inputADBScanQRVTB', device_id: data.device_id, text: text.trim() });
     setLoading(true);
-    await delay(1000); 
+    await actionADB({ action: 'delImg', device_id: data.device_id });    
 
     setLoading(false);
   } catch (error) {
