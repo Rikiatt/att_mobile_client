@@ -351,39 +351,57 @@ module.exports = {
   },
 
   // delImg: async (device_id, devicePath, filename = '') => {
-  delImg: async ( { device_id, devicePath = "/sdcard/DCIM/Camera/", filename } ) => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-    console.log('Log filename:', filename);
+  delImg: async ( { device_id, devicePath = "/sdcard/DCIM/Camera/" } ) => {
+    try{
+      // const date = new Date();
+      // const year = date.getFullYear();
+      // const month = String(date.getMonth() + 1).padStart(2, '0');
+      // const day = String(date.getDate()).padStart(2, '0');
+      // const hours = String(date.getHours()).padStart(2, '0');
+      // const minutes = String(date.getMinutes()).padStart(2, '0');
+      // const seconds = String(date.getSeconds()).padStart(2, '0');
+      // filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+      // console.log('Log filename:', filename);
 
-    // Generate the filename prefix
-    const filenamePrefix = `${year}${month}${day}_`;
+      // Generate the filename prefix
+      // const filenamePrefix = `${year}${month}${day}_`;
 
-    // const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
-    const listCommand = `ls ${devicePath} | grep -E '^${filenamePrefix}[0-9]{6}\\.(png|jpg)$'`;
-    console.log('log list command:', listCommand);
-    client.shell(device_id, listCommand)
-      .then(adb.util.readAll)
-      .then((files) => {
-        const fileList = files.toString().trim().split('\n');
-        if (fileList.length === 0) {
-          console.log('No files to delete.');
-          return;
-        }
-        const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
-        return client.shell(device_id, deleteCommands);
-      })
-    await delay(100);
-    client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+      // const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+      // const listCommand = `ls ${devicePath} | grep -E '^${filenamePrefix}[0-9]{6}\\.(png|jpg)$'`;
+      const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;            
+      const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
+      const fileList = files.toString().trim().split('\n');
 
-    console.log('Deleted image successfully!');
-    return { status: 200, message: 'Success' };
+      if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
+        console.log('No files to delete.');
+        return { status: 404, message: 'No files to delete' };
+      }
+
+      const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+      console.log('Delete command:', deleteCommands);
+
+      await client.shell(device_id, deleteCommands);
+
+      // client.shell(device_id, listCommand)
+      //   .then(adb.util.readAll)
+      //   .then((files) => {
+      //     const fileList = files.toString().trim().split('\n');
+      //     if (fileList.length === 0) {
+      //       console.log('No files to delete.');
+      //       return;
+      //     }
+      //     const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+      //     return client.shell(device_id, deleteCommands);
+      //   })
+      await delay(100);
+      client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+
+      console.log('Deleted image successfully!');
+      return { status: 200, message: 'Success' };
+    } catch (error) {
+      console.error('Error deleting images:', error);
+      return { status: 500, message: 'Error deleting images', error };
+    }
   }
 };
 

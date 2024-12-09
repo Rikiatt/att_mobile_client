@@ -126,7 +126,7 @@ export const bidvTransferAndConfirm = async (data, setLoading) => {
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   setLoading(true);
   await actionADB({ action: 'delImg', device_id: data.device_id });
-  await delay(1000);  
+  await delay(3000);  
 
   // Click vào Confirm (541, 2169)
   await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
