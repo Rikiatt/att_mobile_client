@@ -1,9 +1,6 @@
 const adb = require('adbkit');
-const Tesseract = require('tesseract.js');
-const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
-const byline = require('byline');
 const { delay } = require('../helpers/functionHelper');
 const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
 
@@ -360,11 +357,8 @@ module.exports = {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
-    // const hours = '14';
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    // const minutes = '32';
     const seconds = String(date.getSeconds()).padStart(2, '0');
-    // const seconds = '45';
     filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
     console.log('Log filename:', filename);
 
