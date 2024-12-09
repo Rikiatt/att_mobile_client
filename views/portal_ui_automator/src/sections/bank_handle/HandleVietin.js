@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vietinLoginAndScanQR } from '../../services/handle.service';
+import { vietinLogin, vietinScanQR, vietinConfirm } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -22,15 +22,37 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>Vietin</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Thao tác đăng nhập và thao tác quét QR" arrow>
+          <Tooltip title="Thao tác đăng nhập" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinLoginAndScanQR({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => vietinLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập và quét QR
+            </Button>
+          </Tooltip>
+          <Tooltip title="Thao tác quét QR" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => vietinScanQR({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Quét QR
+            </Button>
+          </Tooltip>
+          <Tooltip title="Thao tác mã PIN và xác nhận" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => vietinConfirm({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Mã PIN và xác nhận
             </Button>
           </Tooltip>
         </Stack>

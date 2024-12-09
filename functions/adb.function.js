@@ -45,7 +45,7 @@ module.exports = {
   clickScanQRVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
-    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['ScanQR']);      
+    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']);      
 
     return { status: 200, message: 'Success' };
   },
@@ -53,7 +53,11 @@ module.exports = {
   clickSelectImageVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
         
-    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image']);    
+    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']); 
+    await sleep(500); 
+    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image']);  
+    await sleep(500);   
+    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image-2']);  
 
     return { status: 200, message: 'Success' };
   },

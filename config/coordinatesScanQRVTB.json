@@ -1,6 +1,8 @@
 {
     "SM-A536": {
+        "Select-ScanQR": [900, 1166],
         "Select-Image": [540, 2143],
+        "Select-Image-2": [282, 2076],
         "Confirm": [540, 2174],
 
         "1": [182, 1789],
