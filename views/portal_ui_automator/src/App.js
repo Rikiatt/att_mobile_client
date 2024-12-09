@@ -119,7 +119,7 @@ function App() {
             <Stack direction="row" alignItems="center" spacing={2} justifyContent={"space-between"}>
               <img src="./logo_att.png" alt="logo" style={{ width: 40, height: 40 }} />
               <Typography variant="h5" fontWeight="bold" color="#172B4D">
-                Ui Manual {newVersion || ''}
+                ATT Mobile Client {newVersion || ''}
               </Typography>
               <SetupIP setMutate={setMutate} />
               <Typography variant="button" fontWeight="bold" color="#172B4D">IP: {ipPublic}</Typography>
