@@ -122,9 +122,10 @@ export const bidvTransferAndConfirm = async (data, setLoading) => {
   setLoading(true);
   await delay(5000);
 
-  // Nhập mã pin ... xóa luôn ảnh trong thư viện
+  // Nhập PIN ... xóa luôn ảnh trong thư viện
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   setLoading(true);
+  await actionADB({ action: 'delImg', device_id: data.device_id });
   await delay(1000);  
 
   // Click vào Confirm (541, 2169)

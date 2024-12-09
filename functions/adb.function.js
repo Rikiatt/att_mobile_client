@@ -248,7 +248,7 @@ module.exports = {
 
   inputADBVTB: async ({ device_id, text }) => {  
     const coordinatesLoginVTB = await loadCoordinatesForDeviceLoginVTB(device_id);
-    
+        
     for (const char of text) {
       if (isUpperCase(char)) {
           await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['CapsLock']);
@@ -349,8 +349,27 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  delImg: async (device_id, devicePath, filename = '') => {
-    const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+  // delImg: async (device_id, devicePath, filename = '') => {
+  delImg: async ( { device_id, devicePath = "/sdcard/DCIM/Camera/", filename } ) => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    // const hours = '14';
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    // const minutes = '32';
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    // const seconds = '45';
+    filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+    console.log('Log filename:', filename);
+
+    // Generate the filename prefix
+    const filenamePrefix = `${year}${month}${day}_`;
+
+    // const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+    const listCommand = `ls ${devicePath} | grep -E '^${filenamePrefix}[0-9]{6}\\.(png|jpg)$'`;
+    console.log('log list command:', listCommand);
     client.shell(device_id, listCommand)
       .then(adb.util.readAll)
       .then((files) => {
@@ -364,6 +383,8 @@ module.exports = {
       })
     await delay(100);
     client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+
+    console.log('Deleted image successfully!');
     return { status: 200, message: 'Success' };
   }
 };

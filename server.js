@@ -7,8 +7,6 @@ const { exec } = require('child_process');
 const Router = require('./routers');
 const { port } = require('./config');
 const cronTask = require('./functions/cron.function');
-const { listDevice, sendFile, delImg } = require('./functions/adb.function');
-const { updateSource, transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./functions/function');
 const { autoRunGnirehtet, stopGnirehtet } = require('./functions/gnirehtet.function');
 const { delay } = require('./helpers/functionHelper');
 
