@@ -1,5 +1,5 @@
 {
-  "name": "ui_automator",
+  "name": "att_mobile_client",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
