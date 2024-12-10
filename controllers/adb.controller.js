@@ -1,15 +1,17 @@
-const { listDevice, delImg, inputADBScanQRVTB, clickSelectImageVTB, clickScanQRVTB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmBIDV, stopAppADBBIDV, startAppADBBIDV, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, tapADB, inputADB, inputADBVTB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
+const { listDevice, delImg, clickConfirmVTB, inputADBScanQRVTB, clickSelectImageVTB, clickScanQRVTB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmBIDV, startApp, stopAppADBBIDV, startAppADBBIDV, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, tapADB, inputADB, inputADBVTB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
 const mapAction = {
   delImg: delImg,
+  clickConfirmVTB: clickConfirmVTB,
   inputADBScanQRVTB: inputADBScanQRVTB,
   clickSelectImageVTB: clickSelectImageVTB,
   clickScanQRVTB: clickScanQRVTB,
   clickScanQRBIDV: clickScanQRBIDV,
   clickSelectImageBIDV: clickSelectImageBIDV,
   clickConfirmBIDV: clickConfirmBIDV,
+  startApp: startApp,
   stopBIDV: stopAppADBBIDV,
   startBIDV: startAppADBBIDV,
   stopMB: stopAppADBMB,

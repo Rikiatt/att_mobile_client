@@ -10,6 +10,12 @@
         "Select-Image": [458, 1622],
         "Confirm": [541, 2169]
     },
+
+    "SM-M156": {
+        "ScanQR": [540, 2057],
+        "Select-Image": [281, 2010],
+        "Confirm": [541, 2169]
+    },
     
     "CPH2339": {
         "ScanQR": [0, 0],

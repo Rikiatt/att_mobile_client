@@ -326,14 +326,8 @@ export const vietinScanQR = async (data, setLoading) => {
     } 
     
     // Tab vào ô Scan QR và chọn ảnh .. chọn mã QR thủ công ... xóa luôn ảnh trong thư viện
-    await actionADB({ action: 'clickSelectImageVTB', device_id: data.device_id }); // Chọn ảnh từ trong máy 
-    await delay(5000);    
-    setLoading(true);
-    
-    // Nhập mã pin ... xóa luôn ảnh trong thư viện
-    // await actionADB({ action: 'inputADBScanQRVTB', device_id: data.device_id, text: text.trim() });
-    // setLoading(true);
-    // await delay(1000); 
+    await actionADB({ action: 'clickSelectImageVTB', device_id: data.device_id }); // Chọn ảnh từ trong máy     
+    setLoading(true); 
 
     setLoading(false);
   } catch (error) {
@@ -361,11 +355,19 @@ export const vietinConfirm = async (data, setLoading) => {
     if (!text) return;
     
     setLoading(true);
+
+    // Click Tiếp tục (= Xác nhận)
+    await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
+    await delay(6000); 
     
     // Nhập mã pin và xác nhận ... xóa luôn ảnh trong thư viện
     await actionADB({ action: 'inputADBScanQRVTB', device_id: data.device_id, text: text.trim() });
     setLoading(true);
     await actionADB({ action: 'delImg', device_id: data.device_id });    
+    await delay(4000);
+
+    // Click xác nhận
+    await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
 
     setLoading(false);
   } catch (error) {

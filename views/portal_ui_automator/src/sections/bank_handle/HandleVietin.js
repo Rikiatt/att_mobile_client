@@ -30,7 +30,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               fullWidth
               onClick={() => vietinLogin({ device_id: item.id, X, Y }, setLoading)}
             >
-              Đăng nhập và quét QR
+              Đăng nhập
             </Button>
           </Tooltip>
           <Tooltip title="Thao tác quét QR" arrow>
