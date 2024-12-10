@@ -4,6 +4,12 @@
         "Select-Image": [456, 1620],
         "Confirm": [541, 2169]
     },
+
+    "SM-G981": {
+        "ScanQR": [540, 2125],
+        "Select-Image": [456, 1620],
+        "Confirm": [541, 2169]
+    },
     
     "CPH2339": {
         "ScanQR": [0, 0],
