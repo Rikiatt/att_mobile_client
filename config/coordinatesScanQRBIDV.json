@@ -6,8 +6,8 @@
     },
 
     "SM-G981": {
-        "ScanQR": [540, 2125],
-        "Select-Image": [456, 1620],
+        "ScanQR": [540, 2120],
+        "Select-Image": [458, 1622],
         "Confirm": [541, 2169]
     },
     
