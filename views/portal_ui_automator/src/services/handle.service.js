@@ -90,23 +90,6 @@ export const bidvLoginAndScanQR = async (data, setLoading) => {
   }
 };
 
-// export const clickScanQRBIDV = async (data, setLoading) => {
-  // const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
-
-  // if (deviceCoordinates.status == 500) {
-  //   return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  // }
-
-  // Click vào ô Scan QR  (540, 2125)
-  // await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
-  // setLoading(true);
-  // await delay(1000);
-  
-  // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
-  // await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
-  // setLoading(false);
-// };
-
 export const bidvTransferAndConfirm = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
@@ -361,7 +344,7 @@ export const vietinConfirm = async (data, setLoading) => {
     await delay(6000); 
     
     // Nhập mã pin và xác nhận ... xóa luôn ảnh trong thư viện
-    await actionADB({ action: 'inputADBScanQRVTB', device_id: data.device_id, text: text.trim() });
+    await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text.trim() });
     setLoading(true);
     await actionADB({ action: 'delImg', device_id: data.device_id });    
     await delay(4000);

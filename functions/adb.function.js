@@ -14,48 +14,6 @@ const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
-const bankApps = [
-  { name: 'ABBANK', package: 'com.abbank.mobile' },
-  { name: 'ACB', package: 'com.acb.mobile' },
-  { name: 'BAC A BANK', package: 'com.baca.bank' },
-  { name: 'BAOVIET Bank', package: 'com.baoviet.bank' },
-  { name: 'BVB', package: 'com.vietcapitalbank.mobile' },
-  { name: 'CB', package: 'com.cb.mobile' },
-  { name: 'CITI', package: 'com.citi.mobile' },
-  { name: 'DBS', package: 'com.dbs.mobile' },
-  { name: 'DONGABANK', package: 'com.dongabank.mobile' },
-  { name: 'EIB', package: 'com.eximbank.mobile' },
-  { name: 'GPBank', package: 'com.gpbank.mobile' },
-  { name: 'HDBANK', package: 'com.hdbank.mobile' },
-  { name: 'HSBC', package: 'com.hsbc.mobile' },
-  { name: 'KASIKORNBANK', package: 'com.kasikornbank.mobile' },
-  { name: 'LienVietPostBank', package: 'com.lienvietpostbank.mobile' },
-  { name: 'MBBank', package: 'com.mbbank.mobile' },
-  { name: 'MSB', package: 'com.msb.mobile' },
-  { name: 'NAM A BANK', package: 'com.nama.bank' },
-  { name: 'NCNB', package: 'com.ncnb.mobile' },
-  { name: 'NCB', package: 'com.ncb.mobile' },
-  { name: 'OCB', package: 'com.ocb.mobile' },
-  { name: 'OceanBank', package: 'com.oceanbank.mobile' },
-  { name: 'Public Bank', package: 'com.publicbank.mobile' },
-  { name: 'Sacombank', package: 'com.sacombank.mobile' },
-  { name: 'Saigonbank', package: 'com.saigonbank.mobile' },
-  { name: 'SCB', package: 'com.scb.mobile' },
-  { name: 'SEABANK', package: 'com.seabank.mobile' },
-  { name: 'SHB', package: 'com.shb.mobile' },
-  { name: 'STANDARD CHARTERED', package: 'com.standardchartered.mobile' },
-  { name: 'Techcombank', package: 'com.techcombank.mobile' },
-  { name: 'TPBank', package: 'com.tpbank.mobile' },
-  { name: 'UOB', package: 'com.uob.mobile' },
-  { name: 'VAB', package: 'com.vab.mobile' },
-  { name: 'VietABank', package: 'com.vietabank.mobile' },
-  { name: 'VietBank', package: 'com.vietbank.mobile' },
-  { name: 'VietCapital Bank', package: 'com.vietcapitalbank.mobile' },
-  { name: 'Vietcombank', package: 'com.vietcombank.mobile' },
-  { name: 'VPBank', package: 'com.vpbank.mobile' },
-  { name: 'VCB', package: 'com.vcb.mobile' },
-];
-
 module.exports = {
   listDevice: async () => {
     try {
@@ -81,7 +39,7 @@ module.exports = {
     }
   },
 
-  clickConfirmVTB: async ({ device_id }) => {    
+  clickConfirmADBVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Confirm']);      
@@ -89,7 +47,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRVTB: async ({ device_id }) => {    
+  clickScanQRADBVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']);      
@@ -97,7 +55,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageVTB: async ({ device_id }) => {    
+  clickSelectImageADBVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
         
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']); 
@@ -109,7 +67,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRBIDV: async ({ device_id }) => {    
+  clickScanQRADBBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
     
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['ScanQR']);      
@@ -117,7 +75,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageBIDV: async ({ device_id }) => {    
+  clickSelectImageADBBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
      
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Select-Image']);    
@@ -125,39 +83,12 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmBIDV: async ({ device_id }) => {    
+  clickConfirmADBBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
     // const button = 'Confirm';    
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']);
 
     return { status: 200, message: 'Success' };
-  },
-
-  startApp: async ( { device_id } ) => {
-    try {
-      // Get the list of installed packages on the device
-      console.log('Fetching list of installed packages...');
-      const shellOutput = await client.shell(device_id, 'pm list packages');
-      const packageList = (await adb.util.readAll(shellOutput))
-          .toString()
-          .split('\n')
-          .map(line => line.replace('package:', '').trim());
-
-      // Find the first bank app in the list
-      const appToStart = bankApps.find(app => packageList.includes(app.package));
-      if (!appToStart) {
-          console.log('No bank app found in the installed packages.');
-          return { status: 404, message: 'No bank app found' };
-      }
-
-      console.log(`Starting app: ${appToStart.name} (${appToStart.package})`);
-      await client.shell(device_id, `monkey -p ${appToStart.package} -c android.intent.category.LAUNCHER 1`);
-      await delay(500); // Optional: delay to ensure the app starts
-      return { status: 200, message: `Started app: ${appToStart.name}` };
-    } catch (error) {
-      console.error('Error starting app:', error);
-      return { status: 500, message: 'Failed to start app' };
-    }
   },
 
   stopAppADBBIDV: async ({ device_id }) => {    
@@ -314,10 +245,9 @@ module.exports = {
     }
   },
 
-  inputADBScanQRVTB: async ({ device_id, text }) => {  
+  inputPINADBVTB: async ({ device_id, text }) => {  
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
-    
-    console.log('Log in inputADBScanQRVTB function');
+        
     for (const char of text) {
       await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB[char]);
       console.log('Log char of text:', char);
