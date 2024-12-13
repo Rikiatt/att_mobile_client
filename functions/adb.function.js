@@ -67,8 +67,8 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmScanFaceADBBIDV: async ({ device_id }) => {    
-    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRVTB(device_id);
+  clickConfirmScanFaceADBBIDV: async ({ device_id, text }) => {    
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
         
     for (const char of text) {
       await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
@@ -98,15 +98,12 @@ module.exports = {
 
   
   clickConfirmADBBIDV: async ({ device_id, text }) => {  
-      const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
           
-      for (const char of text) {
-        await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
-        console.log('Log char of text:', char);
-      }  
+    await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
   
-      return { status: 200, message: 'Success' };
-    },
+    return { status: 200, message: 'Success' };
+  },
 
   stopAppADBBIDV: async ({ device_id }) => {    
     await client.shell(device_id, 'am force-stop com.vnpay.bidv');
