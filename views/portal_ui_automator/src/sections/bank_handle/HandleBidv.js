@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { bidvLoginAndScanQR, bidvTransferAndConfirm } from '../../services/handle.service';
+import { bidvLoginAndScanQR, bidvTransferAndConfirm, bidvScanFaceConfirm } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -53,6 +53,17 @@ const HandleBidv = ({ item, X, Y, setLoading }) => {
               onClick={() => bidvTransferAndConfirm({ device_id: item.id, X, Y }, setLoading)}
             >
               Chuyển tiền và xác nhận
+            </Button>
+          </Tooltip>
+          <Tooltip title="Click Next >> nhập mã PIN >> Xác nhận)" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => bidvScanFaceConfirm({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Xác nhận (sau quét mặt)
             </Button>
           </Tooltip>
         </Stack>
