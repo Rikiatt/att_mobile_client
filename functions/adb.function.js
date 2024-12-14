@@ -381,64 +381,48 @@ module.exports = {
   },
 
   // delImg: async (device_id, devicePath, filename = '') => {
-  delADBImg: async ( { device_id, devicePath = "/sdcard/DCIM/Camera/" } ) => {
-    try{
-      // const date = new Date();
-      // const year = date.getFullYear();
-      // const month = String(date.getMonth() + 1).padStart(2, '0');
-      // const day = String(date.getDate()).padStart(2, '0');
-      // const hours = String(date.getHours()).padStart(2, '0');
-      // const minutes = String(date.getMinutes()).padStart(2, '0');
-      // const seconds = String(date.getSeconds()).padStart(2, '0');
-      // filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-      // console.log('Log filename:', filename);
-
-      // Generate the filename prefix
-      // const filenamePrefix = `${year}${month}${day}_`;
-
-      // const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
-      // const listCommand = `ls ${devicePath} | grep -E '^${filenamePrefix}[0-9]{6}\\.(png|jpg)$'`;
-      const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;            
-      const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
-      const fileList = files.toString().trim().split('\n');
-
-      if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
-        console.log('No files to delete.');
-        return { status: 404, message: 'No files to delete' };
+    delADBImg: async ({ device_id }) => {
+      const devicePaths = [
+          "/sdcard/DCIM/Camera/",
+          "/sdcard/DCIM/",
+          "/sdcard/DCIM/Screenshots/"
+      ];
+  
+      try {
+          for (const devicePath of devicePaths) {
+              console.log(`Processing path: ${devicePath}`);
+              const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;
+              const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
+              const fileList = files.toString().trim().split('\n');
+  
+              if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
+                  console.log(`No files to delete in ${devicePath}.`);
+                  continue; // Skip to the next path
+              }
+  
+              const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+              console.log(`Delete command for ${devicePath}:`, deleteCommands);
+  
+              await client.shell(device_id, deleteCommands);
+  
+              // Trigger a media scanner update
+              await delay(100);
+              await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+          }
+  
+          console.log('Deleted images successfully!');
+          return { status: 200, message: 'Success' };
+      } catch (error) {
+          console.error('Error deleting images:', error);
+          return { status: 500, message: 'Error deleting images', error };
       }
-
-      const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
-      console.log('Delete command:', deleteCommands);
-
-      await client.shell(device_id, deleteCommands);
-
-      // client.shell(device_id, listCommand)
-      //   .then(adb.util.readAll)
-      //   .then((files) => {
-      //     const fileList = files.toString().trim().split('\n');
-      //     if (fileList.length === 0) {
-      //       console.log('No files to delete.');
-      //       return;
-      //     }
-      //     const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
-      //     return client.shell(device_id, deleteCommands);
-      //   })
-      await delay(100);
-      client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
-
-      console.log('Deleted image successfully!');
-      return { status: 200, message: 'Success' };
-    } catch (error) {
-      console.error('Error deleting images:', error);
-      return { status: 500, message: 'Error deleting images', error };
-    }
   }
 };
 
 const banks = [
   { name: "ABBANK", package: "com.abbank.abditizen" },
   { name: "ACB", package: "com.acb.acbbanking" },
-  { name: "Agribank", package: "com.vnpay.Agribank3g" },
+  { name: "Agribank", package: "com.vnpay.Agribank3g" }, // ok
   { name: "BAOVIET Bank", package: "com.baovietbank.mobile" },
   { name: "Bac A Bank", package: "com.bacabank.smartbanking" },
   { name: "CB", package: "com.cbbank.mb" },
@@ -453,12 +437,12 @@ const banks = [
   { name: "Indovina Bank", package: "com.indovinabank.mobile" },
   { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
   { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
-  { name: "MBBank", package: "com.mbmobile" },
+  { name: "MBBank", package: "com.mbmobile" }, // ok
   { name: "MSB", package: "com.msb.mbanking" },
   { name: "Nam A Bank", package: "com.namabank.mobile" },
   { name: "NCB", package: "com.ncb.mobile" },
   { name: "OceanBank", package: "com.oceanbank.mobile" },
-  { name: "OCB", package: "vn.com.ocb.awe" },
+  { name: "OCB", package: "vn.com.ocb.awe" }, // ok
   { name: "PBVN", package: "com.pbvn.app" },
   { name: "PG Bank", package: "com.pgbank.mobile" },
   { name: "PVcomBank", package: "com.pvcombank.smartbanking" },
