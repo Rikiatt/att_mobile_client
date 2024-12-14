@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { bidvLoginAndScanQR, bidvTransferAndConfirm, bidvScanFaceConfirm } from '../../services/handle.service';
+import { anotherBankCheckQR, bidvLoginAndScanQR, bidvTransferAndConfirm, bidvScanFaceConfirm } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -22,6 +22,17 @@ const HandleBidv = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>BIDV</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
+        <Tooltip title="Thao tác đăng nhập vào bank app khác để check QR" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => anotherBankCheckQR({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Check QR
+            </Button>
+          </Tooltip>
           <Tooltip title="Thao tác đăng nhập và thao tác quét QR" arrow>
             <Button
               size="small"
@@ -55,7 +66,7 @@ const HandleBidv = ({ item, X, Y, setLoading }) => {
               Chuyển tiền và xác nhận
             </Button>
           </Tooltip>
-          <Tooltip title="Click Next >> nhập mã PIN >> Xác nhận)" arrow>
+          <Tooltip title="Nhập mã PIN >> Xác nhận)" arrow>
             <Button
               size="small"
               variant="contained"

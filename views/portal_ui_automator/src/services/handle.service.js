@@ -13,8 +13,8 @@ export const enter = async (data) => {
   await actionADB({ action: 'enter', device_id: data.device_id });
 };
 
-export const home = async (data) => {
-  await actionADB({ action: 'home', device_id: data.device_id });
+export const delImg = async (data) => {
+  await actionADB({ action: 'delImg', device_id: data.device_id });
 };
 
 export const camera = async (data) => {
@@ -37,6 +37,25 @@ export const disconnectTcpIp = async (data) => {
 };
 
 // ============== BIDV ============== //
+
+export const anotherBankCheckQR = async (data, setLoading) => {
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu đăng nhập bank khác bất kỳ');
+  if (!text) return;
+
+  setLoading(true);
+
+  await actionADB({ action: 'start', device_id: data.device_id });
+
+
+
+  setLoading(false);
+};
 
 export const bidvLoginAndScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 

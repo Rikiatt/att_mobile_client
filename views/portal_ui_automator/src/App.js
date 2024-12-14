@@ -41,7 +41,7 @@ import {
 } from '@mui/icons-material';
 
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
-import { connect, connectTcpIp, disconnectTcpIp, enter, home, typePortKey, typeText } from './services/handle.service';
+import { connect, connectTcpIp, disconnectTcpIp, enter, home, delImg, typePortKey, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleBidv from './sections/bank_handle/HandleBidv';
 import HandleMb from './sections/bank_handle/HandleMb';
@@ -228,11 +228,11 @@ function App() {
                             fontSize={'11'}
                             onClick={async () => {
                               setLoading(true);
-                              await home({ device_id: item.id });
+                              await delImg({ device_id: item.id });
                               setLoading(false);
                             }}
                           >
-                            Home
+                            Xóa ảnh
                           </Button>
                         </Grid>
                       </Grid>

@@ -373,8 +373,15 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  startADB: async ({ device_id }) => {    
+    console.log("Starting app to check QR...");
+    await startFirstAvailableBank(device_id);
+    // await client.shell(device_id, 'monkey -p com.vnpay.bidv -c android.intent.category.LAUNCHER 1');
+    return { status: 200, message: 'Success' };
+  },
+
   // delImg: async (device_id, devicePath, filename = '') => {
-  delImg: async ( { device_id, devicePath = "/sdcard/DCIM/Camera/" } ) => {
+  delADBImg: async ( { device_id, devicePath = "/sdcard/DCIM/Camera/" } ) => {
     try{
       // const date = new Date();
       // const year = date.getFullYear();
@@ -425,6 +432,93 @@ module.exports = {
       console.error('Error deleting images:', error);
       return { status: 500, message: 'Error deleting images', error };
     }
+  }
+};
+
+const banks = [
+  { name: "ABBANK", package: "com.abbank.abditizen" },
+  { name: "ACB", package: "com.acb.acbbanking" },
+  { name: "Agribank", package: "com.vnpay.Agribank3g" },
+  { name: "BAOVIET Bank", package: "com.baovietbank.mobile" },
+  { name: "Bac A Bank", package: "com.bacabank.smartbanking" },
+  { name: "CB", package: "com.cbbank.mb" },
+  { name: "CIMB", package: "com.cimb.vietnam" },
+  { name: "Co-opBank", package: "vn.com.coopbank" },
+  { name: "DongA Bank", package: "com.dongabank.mobile" },
+  { name: "Eximbank", package: "com.eximbank.ebmobile" },
+  { name: "GPBank", package: "com.gpb.smartbanking" },
+  { name: "HDBank", package: "com.hdbank.hdbankapp" },
+  { name: "Hong Leong Bank", package: "com.hlb.hongleongbankvn" },
+  { name: "HSBC", package: "com.hsbc.mobilebanking" },
+  { name: "Indovina Bank", package: "com.indovinabank.mobile" },
+  { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
+  { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
+  { name: "MBBank", package: "com.mbmobile" },
+  { name: "MSB", package: "com.msb.mbanking" },
+  { name: "Nam A Bank", package: "com.namabank.mobile" },
+  { name: "NCB", package: "com.ncb.mobile" },
+  { name: "OceanBank", package: "com.oceanbank.mobile" },
+  { name: "OCB", package: "vn.com.ocb.awe" },
+  { name: "PBVN", package: "com.pbvn.app" },
+  { name: "PG Bank", package: "com.pgbank.mobile" },
+  { name: "PVcomBank", package: "com.pvcombank.smartbanking" },
+  { name: "Sacombank", package: "com.sacombank.sacombankapp" },
+  { name: "Saigonbank", package: "com.saigonbank.mobile" },
+  { name: "SCB", package: "com.scb.smartbanking" },
+  { name: "SeABank", package: "com.seabank.mobilebanking" },
+  { name: "SHB", package: "com.shbmobilebanking" },
+  { name: "TPBank", package: "com.tpbank.quickpay" },
+  { name: "UOB", package: "com.uob.mobilebankingvn" },
+  { name: "VIB", package: "com.vib.mobile" },
+  { name: "VPBank", package: "com.vpbank.smartbanking" }
+];
+
+const getInstalledPackages = async (device_id) => {
+  try {
+    const shellOutput = await client.shell(device_id, 'pm list packages');
+    const output = await adb.util.readAll(shellOutput);
+    return output
+        .toString('utf-8')
+        .split('\n')
+        .map(line => line.replace('package:', '').trim())
+        .filter(pkg => pkg); // Loại bỏ các dòng trống
+  } catch (error) {
+    console.error(`Error fetching installed packages for device ${device_id}:`, error.message);
+    throw error;
+  }
+};
+
+const startFirstAvailableBank = async (device_id) => {
+  try {
+    const installedPackages = await getInstalledPackages(device_id);
+
+    // Lọc ngân hàng có package name khớp và sắp xếp theo alphabet
+    const availableBanks = banks
+        .filter((bank) => installedPackages.includes(bank.package))
+        .sort((a, b) => a.name.localeCompare(b.name)); // Sắp xếp theo tên alphabet
+
+    if (availableBanks.length === 0) {
+        console.log("No bank apps available on the device.");
+        return { status: 404, message: "No bank apps found on the device." };
+    }
+
+    // Lấy ngân hàng đầu tiên và khởi chạy
+    const firstBank = availableBanks[0];
+    console.log(`Starting ${firstBank.name} on device ${device_id}...`);
+
+    // await client.startActivity(device_id, {
+    //     action: 'android.intent.action.MAIN',
+    //     category: ['android.intent.category.LAUNCHER'],
+    //     packageName: firstBank.package
+    // });
+
+    await client.shell(device_id, `monkey -p ${firstBank.package} -c android.intent.category.LAUNCHER 1`);
+
+    console.log(`${firstBank.name} started successfully.`);
+    return { status: 200, message: `Started ${firstBank.name} successfully.` };
+  } catch (error) {
+      console.error("Error in startFirstAvailableBank:", error.message);
+      return { status: 500, message: "Internal error occurred." };
   }
 };
 
