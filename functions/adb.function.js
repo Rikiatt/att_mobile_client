@@ -381,7 +381,7 @@ module.exports = {
   },
 
   // delImg: async (device_id, devicePath, filename = '') => {
-    delADBImg: async ({ device_id }) => {
+  delADBImg: async ({ device_id }) => {
       const devicePaths = [
           "/sdcard/DCIM/Camera/",
           "/sdcard/DCIM/",
