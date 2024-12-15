@@ -103,7 +103,7 @@ module.exports = {
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
   
     return { status: 200, message: 'Success' };
-  },
+  },  
 
   stopAppADBBIDV: async ({ device_id }) => {    
     await client.shell(device_id, 'am force-stop com.vnpay.bidv');
@@ -375,8 +375,7 @@ module.exports = {
 
   startADB: async ({ device_id }) => {    
     console.log("Starting app to check QR...");
-    await startFirstAvailableBank(device_id);
-    // await client.shell(device_id, 'monkey -p com.vnpay.bidv -c android.intent.category.LAUNCHER 1');
+    await startFirstAvailableBank(device_id);    
     return { status: 200, message: 'Success' };
   },
 
@@ -421,7 +420,7 @@ module.exports = {
 
 const banks = [
   { name: "ABBANK", package: "com.abbank.abditizen" },
-  { name: "ACB", package: "com.acb.acbbanking" },
+  // { name: "ACB", package: "mobile.acb.com.vn" }, // ok
   { name: "Agribank", package: "com.vnpay.Agribank3g" }, // ok
   { name: "BAOVIET Bank", package: "com.baovietbank.mobile" },
   { name: "Bac A Bank", package: "com.bacabank.smartbanking" },
@@ -437,12 +436,12 @@ const banks = [
   { name: "Indovina Bank", package: "com.indovinabank.mobile" },
   { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
   { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
-  { name: "MBBank", package: "com.mbmobile" }, // ok
+  // { name: "MBBank", package: "com.mbmobile" }, // ok
   { name: "MSB", package: "com.msb.mbanking" },
-  { name: "Nam A Bank", package: "com.namabank.mobile" },
-  { name: "NCB", package: "com.ncb.mobile" },
+  // { name: "Nam A Bank", package: "ops.namabank.com.vn" }, // ok
+  // { name: "NCB", package: "com.ncb.bank" }, // ok
   { name: "OceanBank", package: "com.oceanbank.mobile" },
-  { name: "OCB", package: "vn.com.ocb.awe" }, // ok
+  // { name: "OCB", package: "vn.com.ocb.awe" }, // ok
   { name: "PBVN", package: "com.pbvn.app" },
   { name: "PG Bank", package: "com.pgbank.mobile" },
   { name: "PVcomBank", package: "com.pvcombank.smartbanking" },

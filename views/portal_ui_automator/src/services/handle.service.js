@@ -36,6 +36,80 @@ export const disconnectTcpIp = async (data) => {
   return await actionADB({ action: 'disconnectTcpIp', device_id: data.device_id });
 };
 
+// ============== ACB ============== //
+
+export const acbLoginAndScanQR = async (data, setLoading) => {  
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+  setLoading(true);
+
+  try {
+    // Start app ACB (Đã được start khi click btn CHECK QR)
+
+    // Tab vào ô mật khẩu
+    await delay(1000);
+
+    // Nhập mật khẩu
+    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
+    await delay(1000);    
+
+    // Tab và đăng nhập
+    await delay(5000);
+    
+    // Click vào ô Scan QR  (540, 2125)
+    await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
+    setLoading(true);
+    await delay(1000);
+
+    // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
+    await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
+    setLoading(false);
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ============== NCB ============== //
+
+export const ncbLoginAndScanQR = async (data, setLoading) => {  
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+  setLoading(true);
+
+  try {
+    // Start app NCB (Đã được start khi click btn CHECK QR)
+
+    // Tab vào ô mật khẩu
+    await delay(1000);
+
+    // Nhập mật khẩu
+    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
+    await delay(1000);    
+
+    // Tab và đăng nhập
+    await delay(5000);
+    
+    // Click vào ô Scan QR  (540, 2125)
+    await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
+    setLoading(true);
+    await delay(1000);
+
+    // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
+    await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
+    setLoading(false);
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 // ============== BIDV ============== //
 
 export const anotherBankCheckQR = async (data, setLoading) => {
@@ -50,9 +124,15 @@ export const anotherBankCheckQR = async (data, setLoading) => {
 
   setLoading(true);
 
+  // Start app được chọn
   await actionADB({ action: 'start', device_id: data.device_id });
 
+  // Nhập mật khẩu để đăng nhập vào app đó
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
 
+  // Tab và đăng nhập
+  // Tab vào QR / Click vào ô Scan QR (x, y)
+  // Click vào ô chọn ảnh (x, y) ... chọn mã QR (duy nhất)
 
   setLoading(false);
 };
