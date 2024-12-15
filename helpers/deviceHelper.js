@@ -12,7 +12,7 @@ const getDeviceModel = async (device_id) => {
         return deviceModel.replace(/ /g, ' ')
             .replace(/SM-G975[FWU0-9]+/g, 'SM-G975') // Galaxy S10+
             .replace(/SM-N960[A-Za-z0-9-_.]*/g, 'SM-N960') // Galaxy Note9
-            .replace(/SCV40[A-Za-z0-9-_.]*/g, 'SCV40') // Galaxy Note9
+            // .replace(/SCV40[A-Za-z0-9-_.]*/g, 'SCV40') // Galaxy Note9
             .replace(/SM-G981[A-Za-z0-9-_.]*/g, 'SM-G981') // Galaxy S20 5G
             .replace(/SM-G781[A-Za-z0-9-_.]*/g, 'SM-G781') // Galaxy S20 FE 5G
             .replace(/SM-A155[A-Za-z0-9-_.]*/g, 'SM-A155') // Galaxy A15
