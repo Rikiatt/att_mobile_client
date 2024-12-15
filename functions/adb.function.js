@@ -419,39 +419,38 @@ module.exports = {
 };
 
 const banks = [
-  { name: "ABBANK", package: "com.abbank.abditizen" },
-  // { name: "ACB", package: "mobile.acb.com.vn" }, // ok
+  // { name: "ABBANK", package: "com.abbank.abditizen" },
+  { name: "ACB", package: "mobile.acb.com.vn" }, // ok
   { name: "Agribank", package: "com.vnpay.Agribank3g" }, // ok
-  { name: "BAOVIET Bank", package: "com.baovietbank.mobile" },
-  { name: "Bac A Bank", package: "com.bacabank.smartbanking" },
-  { name: "CB", package: "com.cbbank.mb" },
-  { name: "CIMB", package: "com.cimb.vietnam" },
-  { name: "Co-opBank", package: "vn.com.coopbank" },
-  { name: "DongA Bank", package: "com.dongabank.mobile" },
-  { name: "Eximbank", package: "com.eximbank.ebmobile" },
-  { name: "GPBank", package: "com.gpb.smartbanking" },
-  { name: "HDBank", package: "com.hdbank.hdbankapp" },
-  { name: "Hong Leong Bank", package: "com.hlb.hongleongbankvn" },
-  { name: "HSBC", package: "com.hsbc.mobilebanking" },
-  { name: "Indovina Bank", package: "com.indovinabank.mobile" },
-  { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
-  { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
-  // { name: "MBBank", package: "com.mbmobile" }, // ok
-  { name: "MSB", package: "com.msb.mbanking" },
-  // { name: "Nam A Bank", package: "ops.namabank.com.vn" }, // ok
-  // { name: "NCB", package: "com.ncb.bank" }, // ok
-  { name: "OceanBank", package: "com.oceanbank.mobile" },
-  // { name: "OCB", package: "vn.com.ocb.awe" }, // ok
-  { name: "PBVN", package: "com.pbvn.app" },
-  { name: "PG Bank", package: "com.pgbank.mobile" },
-  { name: "PVcomBank", package: "com.pvcombank.smartbanking" },
-  { name: "Sacombank", package: "com.sacombank.sacombankapp" },
-  { name: "Saigonbank", package: "com.saigonbank.mobile" },
-  { name: "SCB", package: "com.scb.smartbanking" },
-  { name: "SeABank", package: "com.seabank.mobilebanking" },
-  { name: "SHB", package: "com.shbmobilebanking" },
-  { name: "TPBank", package: "com.tpbank.quickpay" },
-  { name: "UOB", package: "com.uob.mobilebankingvn" },
+  // { name: "BAOVIET Bank", package: "com.baovietbank.mobile" },
+  // { name: "Bac A Bank", package: "com.bacabank.smartbanking" },
+  // { name: "CB", package: "com.cbbank.mb" },
+  // { name: "CIMB", package: "com.cimb.vietnam" },
+  // { name: "Co-opBank", package: "vn.com.coopbank" },
+  // { name: "DongA Bank", package: "com.dongabank.mobile" },
+  // { name: "Eximbank", package: "com.eximbank.ebmobile" },
+  // { name: "GPBank", package: "com.gpb.smartbanking" },
+  // { name: "HDBank", package: "com.hdbank.hdbankapp" },
+  // { name: "Hong Leong Bank", package: "com.hlb.hongleongbankvn" },
+  // { name: "HSBC", package: "com.hsbc.mobilebanking" },
+  // { name: "Indovina Bank", package: "com.indovinabank.mobile" },
+  // { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
+  // { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
+  { name: "MBBank", package: "com.mbmobile" }, // ok
+  // { name: "MSB", package: "com.msb.mbanking" },
+  { name: "NAB", package: "ops.namabank.com.vn" }, // ok
+  { name: "NCB", package: "com.ncb.bank" }, // ok
+  // { name: "OceanBank", package: "com.oceanbank.mobile" },
+  { name: "OCB", package: "vn.com.ocb.awe" }, // ok
+  // { name: "PBVN", package: "com.pbvn.app" },
+  // { name: "PG Bank", package: "com.pgbank.mobile" },
+  { name: "PVcomBank", package: "com.pvcombank.retail" }, // ok
+  // { name: "Sacombank", package: "com.sacombank.sacombankapp" },
+  // { name: "Saigonbank", package: "com.saigonbank.mobile" },
+  // { name: "SCB", package: "com.scb.smartbanking" },
+  { name: "SeABank", package: "vn.com.seabank.mb1" }, // ok
+  { name: "SHB", package: "vn.shb.mbanking" }, // ok
+  { name: "TPBank", package: "com.tpb.mb.gprsandroid" }, // ok  
   { name: "VIB", package: "com.vib.mobile" },
   { name: "VPBank", package: "com.vpbank.smartbanking" }
 ];
