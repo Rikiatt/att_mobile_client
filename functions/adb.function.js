@@ -441,8 +441,8 @@ const banks = [
   // { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
   // { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
   // { name: "MBBank", package: "com.mbmobile" }, // ok
-  { name: "MSB", package: "vn.com.msb.smartBanking" }, // ok
-  // { name: "NAB", package: "ops.namabank.com.vn" }, // ok
+  // { name: "MSB", package: "vn.com.msb.smartBanking" }, // pending
+  { name: "NAB", package: "ops.namabank.com.vn" }, // ok
   // { name: "NCB", package: "com.ncb.bank" }, // ok
   // { name: "OceanBank", package: "com.oceanbank.mobile" },
   // { name: "OCB", package: "vn.com.ocb.awe" }, // ok

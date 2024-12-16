@@ -12,7 +12,7 @@ const mapAction = {
   clickConfirmVTB: clickConfirmADBVTB,
   inputPINVTB: inputPINADBVTB,
   clickSelectImageVTB: clickSelectImageADBVTB,
-  clickScanQRVTB: clickScanQRADBVTB,
+  clickScanQRVTB: clickScanQRADBVTB,  
   clickConfirmScanFaceBIDV: clickConfirmScanFaceADBBIDV,  
   clickScanQRBIDV: clickScanQRADBBIDV,
   clickSelectImageBIDV: clickSelectImageADBBIDV,

@@ -480,6 +480,29 @@ export const vietinConfirm = async (data, setLoading) => {
   }
 };
 
+export const vietinScanFaceConfirm = async (data, setLoading) => {    
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceVTB', device_id: data.device_id });    
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  const text = await swalInputPass('Nhập mã pin', '', 'Nhập mã pin cần truyền vào thiết bị');
+  if (!text) return;
+
+  // Nhập PIN (sau bước quét mặt)  
+  await delay(1500);
+
+  setLoading(true);
+  await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text.trim() }); 
+  await delay(1000);   
+
+  // Nhập PIN xong thì click Confirm
+  
+  await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id, text: text.trim() });  
+  setLoading(false);
+};
+
 // ============== SHB ============== //
 
 export const shbLogin = async (data, setLoading) => {

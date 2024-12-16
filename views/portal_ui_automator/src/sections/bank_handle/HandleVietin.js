@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vietinLogin, vietinScanQR, vietinConfirm } from '../../services/handle.service';
+import { vietinLogin, vietinScanQR, vietinConfirm, vietinScanFaceConfirm } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -53,6 +53,17 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               onClick={() => vietinConfirm({ device_id: item.id, X, Y }, setLoading)}
             >
               Mã PIN và xác nhận
+            </Button>
+          </Tooltip>
+          <Tooltip title="Xác nhận (sau quét mặt)" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => vietinScanFaceConfirm({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Xác nhận (sau quét mặt)
             </Button>
           </Tooltip>
         </Stack>
