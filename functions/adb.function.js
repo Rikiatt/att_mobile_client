@@ -59,10 +59,10 @@ module.exports = {
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
         
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']); 
-    await sleep(1000); 
+    await sleep(10000); 
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image']);  
-    await sleep(1000);   
-    await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image-2']);  
+    await sleep(2000);   
+    // await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-Image-2']);  
 
     return { status: 200, message: 'Success' };
   },
