@@ -442,17 +442,17 @@ const banks = [
   // { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
   // { name: "MBBank", package: "com.mbmobile" }, // ok
   // { name: "MSB", package: "vn.com.msb.smartBanking" }, // pending
-  { name: "NAB", package: "ops.namabank.com.vn" }, // ok
+  // { name: "NAB", package: "ops.namabank.com.vn" }, // ok
   // { name: "NCB", package: "com.ncb.bank" }, // ok
   // { name: "OceanBank", package: "com.oceanbank.mobile" },
-  // { name: "OCB", package: "vn.com.ocb.awe" }, // ok
+  { name: "OCB", package: "vn.com.ocb.awe" }, // ok
   // { name: "PBVN", package: "com.pbvn.app" },
   // { name: "PG Bank", package: "com.pgbank.mobile" },
-  { name: "PVcomBank", package: "com.pvcombank.retail" }, // pending
+  // { name: "PVcomBank", package: "com.pvcombank.retail" }, // pending
   // { name: "Sacombank", package: "com.sacombank.sacombankapp" },
   // { name: "Saigonbank", package: "com.saigonbank.mobile" },
   // { name: "SCB", package: "com.scb.smartbanking" },
-  { name: "SeABank", package: "vn.com.seabank.mb1" }, // pending
+  // { name: "SeABank", package: "vn.com.seabank.mb1" }, // pending
   { name: "SHB", package: "vn.shb.mbanking" }, // pending
   { name: "TPBank", package: "com.tpb.mb.gprsandroid" }, // pending  
   // { name: "VCB", package: "com.VCB" }, // ok, but got blind
