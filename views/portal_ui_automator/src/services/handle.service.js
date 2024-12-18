@@ -26,6 +26,7 @@ export const camera = async (data) => {
 
 export const connect = async (data) => {
   await actionADB({ action: 'connect', device_id: data.device_id, title: data.title });
+  await actionADB({ action: 'delImg', device_id: data.device_id });
 };
 
 export const connectTcpIp = async (data) => {
