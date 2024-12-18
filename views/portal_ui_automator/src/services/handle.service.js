@@ -226,7 +226,7 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
   if (!text) return;
 
   // Nhập PIN (sau bước quét mặt)
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   setLoading(true);
   await actionADB({ action: 'clickConfirmScanFaceBIDV', device_id: data.device_id, text: text.trim() });
   await delay(3000);  
