@@ -378,8 +378,7 @@ module.exports = {
     await startFirstAvailableBank(device_id);    
     return { status: 200, message: 'Success' };
   },
-
-  // delImg: async (device_id, devicePath, filename = '') => {
+  
   delADBImg: async ({ device_id }) => {
       const devicePaths = [
           "/sdcard/DCIM/Camera/",
@@ -419,6 +418,24 @@ module.exports = {
           console.error('Error deleting images:', error);
           return { status: 500, message: 'Error deleting images', error };
       }
+  },
+
+  delImg: async (device_id, devicePath, filename = '') => {
+    const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+    client.shell(device_id, listCommand)
+      .then(adb.util.readAll)
+      .then((files) => {
+        const fileList = files.toString().trim().split('\n');
+        if (fileList.length === 0) {
+          console.log('No files to delete.');
+          return;
+        }
+        const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+        return client.shell(device_id, deleteCommands);
+      })
+    await delay(100);
+    client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    return { status: 200, message: 'Success' };
   }
 };
 

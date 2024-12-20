@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const io = require('socket.io-client');
 const { delay } = require('../helpers/functionHelper');
-const { listDevice, sendFile, delADBImg } = require('./adb.function');
+const { listDevice, sendFile, delADBImg, delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 
@@ -98,13 +98,13 @@ module.exports = {
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-            await delADBImg(findId, '/sdcard/DCIM/Camera/');
+            await delImg(findId, '/sdcard/DCIM/Camera/');
             await delay(100);
 
             await sendFile(findId, qrLocalPath, qrDevicePath);
 
             setTimeout(async () => {
-              await delADBImg(findId, '/sdcard/DCIM/Camera/', filename);
+              await delImg(findId, '/sdcard/DCIM/Camera/', filename);
               console.log("Deleted QR old - " + filename);
             }, 300000);
 
