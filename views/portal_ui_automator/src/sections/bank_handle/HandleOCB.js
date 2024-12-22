@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { mbLogin } from '../../services/handle.service';
+import { ocbTransfer } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleMB = ({ item, X, Y, setLoading }) => {
+const HandleOCB = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,24 +19,24 @@ const HandleMB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>MB Bank</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>OCB</AccordionSummary>
       <AccordionDetails>
-        <Stack spacing={1}>
-          <Tooltip title="Thao tác đăng nhập (nhập mật khẩu và click đăng nhập)" arrow>
+        <Stack spacing={1}>                           
+          <Tooltip title="Click Next >> nhập mã PIN >> Xác nhận)" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => mbLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => ocbTransfer({ device_id: item.id, X, Y }, setLoading)}
             >
-              Đăng nhập
+              Chuyển tiền (chờ xác nhận)
             </Button>
-          </Tooltip>
+          </Tooltip>          
         </Stack>
       </AccordionDetails>
     </Accordion>
   );
 };
 
-export default HandleMB;
+export default HandleOCB;

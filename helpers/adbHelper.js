@@ -5,6 +5,12 @@ const client = adb.createClient({ bin: adbPath });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+async function tapADBOCB(device_id, x, y) {
+    await client.shell(device_id, `input tap ${x} ${y}`);
+    await sleep(500);
+    return { status: 200, message: 'Success' };
+};
+
 async function tapADBVTB(device_id, x, y) {
     await client.shell(device_id, `input tap ${x} ${y}`);
     await sleep(500);
@@ -17,4 +23,4 @@ async function tapADBBIDV(device_id, x, y) {
     return { status: 200, message: 'Success' };
 };
 
-module.exports = { tapADBVTB, tapADBBIDV };
+module.exports = { tapADBOCB, tapADBVTB, tapADBBIDV };

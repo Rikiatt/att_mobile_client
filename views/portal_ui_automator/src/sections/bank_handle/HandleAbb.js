@@ -3,7 +3,7 @@ import { abbClickLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleAbb = ({ item, X, Y, setLoading }) => {
+const HandleABB = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -39,4 +39,4 @@ const HandleAbb = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleAbb;
+export default HandleABB;

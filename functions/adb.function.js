@@ -10,6 +10,7 @@ const client = adb.createClient({ bin: adbPath });
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
+const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
 
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
@@ -44,6 +45,40 @@ module.exports = {
     
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Confirm']);      
 
+    return { status: 200, message: 'Success' };
+  },
+
+  clickScanQRADBOCB: async ({ device_id }) => {    
+    const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
+    
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageADBOCB: async ({ device_id }) => {    
+    const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
+    
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Image']);
+    await delay(500);      
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Target-Img']);        
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickConfirmADBOCB: async ({ device_id }) => {    
+    const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
+    
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Confirm']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickConfirmADBBIDV: async ({ device_id, text }) => {  
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
+          
+    await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
+  
     return { status: 200, message: 'Success' };
   },
 
@@ -104,6 +139,20 @@ module.exports = {
   
     return { status: 200, message: 'Success' };
   },  
+
+  stopAppADBOCB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
+    console.log('App OCB OMNI has been stopped');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBOCB: async ({ device_id }) => {    
+    await client.shell(device_id, 'monkey -p vn.com.ocb.awe -c android.intent.category.LAUNCHER 1');
+    console.log('App BIDV has been stopped');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
 
   stopAppADBBIDV: async ({ device_id }) => {    
     await client.shell(device_id, 'am force-stop com.vnpay.bidv');
@@ -194,6 +243,24 @@ module.exports = {
     // }
     await delay(1000);
     return { status: 200, message: 'Success' };
+  },
+
+  checkDeviceOCB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQROCB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQROCB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
   },
 
   checkDeviceBIDV: async ({ device_id }) => {
@@ -536,6 +603,20 @@ async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRBIDV for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+async function loadCoordinatesForDeviceScanQROCB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQROCB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQROCB for device: ${error.message}`);
     throw error; // Re-throw error for the caller to handle
   }
 };

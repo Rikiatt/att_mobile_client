@@ -3,7 +3,7 @@ import { anotherBankCheckQR, bidvLoginAndScanQR, bidvTransferAndConfirm, bidvSca
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleBidv = ({ item, X, Y, setLoading }) => {
+const HandleBIDV = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -83,4 +83,4 @@ const HandleBidv = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleBidv;
+export default HandleBIDV;

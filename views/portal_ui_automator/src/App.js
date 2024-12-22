@@ -43,12 +43,13 @@ import {
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
 import { connect, connectTcpIp, disconnectTcpIp, enter, home, delImg, typePortKey, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
-import HandleBidv from './sections/bank_handle/HandleBidv';
-import HandleMb from './sections/bank_handle/HandleMb';
-import HandleVcb from './sections/bank_handle/HandleVcb';
+import HandleOCB from './sections/bank_handle/HandleOCB';
+import HandleBIDV from './sections/bank_handle/HandleBIDV';
+import HandleMB from './sections/bank_handle/HandleMB';
+import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHB from './sections/bank_handle/HandleSHB';
-// import HandleAbb from './sections/bank_handle/HandleAbb';
+// import HandleABB from './sections/bank_handle/HandleABB';
 // import HandleShinhan from './sections/bank_handle/HandleShinhan';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
@@ -244,13 +245,14 @@ function App() {
                         </>
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
-                      <HandleBidv item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleMb item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />
                       {/* <HandleVcbOld item={item} X={X} Y={Y} setLoading={setLoading} /> */}
-                      <HandleVcb item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      {/* <HandleAbb item={item} X={X} Y={Y} setLoading={setLoading} /> */}
+                      {/* <HandleABB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                       {/* <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                     </CardContent>
                   </Card>

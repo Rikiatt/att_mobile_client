@@ -3,7 +3,7 @@ import { vcbLogin, vcbNewClickConfirm, vcbNewGetOTP } from '../../services/handl
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleVcb = ({ item, X, Y, setLoading }) => {
+const HandleVCB = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -61,4 +61,4 @@ const HandleVcb = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleVcb;
+export default HandleVCB;

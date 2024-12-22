@@ -37,78 +37,58 @@ export const disconnectTcpIp = async (data) => {
   return await actionADB({ action: 'disconnectTcpIp', device_id: data.device_id });
 };
 
-// ============== ACB ============== //
+// ============== OCB ============== //
 
-export const acbLoginAndScanQR = async (data, setLoading) => {  
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-  if (!text) return;
-  setLoading(true);
+export const ocbTransfer = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceOCB', device_id: data.device_id }); 
 
-  try {
-    // Start app ACB (Đã được start khi click btn CHECK QR)
-
-    // Tab vào ô mật khẩu
-    await delay(1000);
-
-    // Nhập mật khẩu
-    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
-    await delay(1000);    
-
-    // Tab và đăng nhập
-    await delay(5000);
-    
-    // Click vào ô Scan QR  (540, 2125)
-    await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
-    setLoading(true);
-    await delay(1000);
-
-    // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
-    await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
-    setLoading(false);
-  } catch (error) {
-    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
-    console.error(error);
-  } finally {
-    setLoading(false);
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
-};
 
-// ============== NCB ============== //
+  setLoading(true);  
 
-export const ncbLoginAndScanQR = async (data, setLoading) => {  
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-  if (!text) return;
-  setLoading(true);
+  const text = await swalInputPass('Nhập mã pin', '', 'Nhập mã pin cần truyền vào thiết bị');
+  if (!text) return;  
 
-  try {
-    // Start app NCB (Đã được start khi click btn CHECK QR)
+  // delImg xoa failed thi thong bao, return; luon
 
-    // Tab vào ô mật khẩu
-    await delay(1000);
+  console.log('1. Stop app OCB OMNI 4.0');
+  await actionADB({ action: 'stopOCB', device_id: data.device_id });
 
-    // Nhập mật khẩu
-    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
-    await delay(1000);    
+  console.log('2. Start app OCB OMNI 4.0');
+  await actionADB({ action: 'startOCB', device_id: data.device_id });
+  await delay(8000);
 
-    // Tab và đăng nhập
-    await delay(5000);
-    
-    // Click vào ô Scan QR  (540, 2125)
-    await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
-    setLoading(true);
-    await delay(1000);
+  console.log('3. Login');
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await delay(2000);
 
-    // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
-    await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
-    setLoading(false);
-  } catch (error) {
-    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
+  console.log('4. Input PIN');  
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(5000);
+  
+  console.log('5. Scan QR, select img');
+  await actionADB({ action: 'clickScanQROCB', device_id: data.device_id });
+  await delay(500);
+  await actionADB({ action: 'clickSelectImageOCB', device_id: data.device_id });
+  await delay(2000);
+  
+  console.log('6. Click Tiếp tục'); 
+  await actionADB({ action: 'clickConfirmOCB', device_id: data.device_id });     
+  
+  console.log('7. Delete img');  
+  await actionADB({ action: 'delImg', device_id: data.device_id });
+  
+  console.log('8. Finish.');
+
+  setLoading(false);
 };
 
 // ============== BIDV ============== //
