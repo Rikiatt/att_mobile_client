@@ -30,7 +30,7 @@ const HandleOCB = ({ item, X, Y, setLoading }) => {
               fullWidth
               onClick={() => ocbTransfer({ device_id: item.id, X, Y }, setLoading)}
             >
-              Chuyển tiền (chờ xác nhận)
+              Quét QR
             </Button>
           </Tooltip>          
         </Stack>
