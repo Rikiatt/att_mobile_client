@@ -58,8 +58,6 @@ module.exports = {
             const findId = data.device_id.split('$')[0];
             const findIp = data.device_id.split('$')[1];
 
-            // await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-
             const findDevice = devices.find((item) => ((!findIp || findIp == ipPublic) && item.id == findId));
             if (!findDevice) {
               return;
@@ -79,9 +77,6 @@ module.exports = {
               currentSocket.emit('callback', { ...data, success: false });
               return;
             }
-
-            // await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-            // console.log("Deleted old QR (above) - " + filename);
 
             const date = new Date();
             const year = date.getFullYear();
