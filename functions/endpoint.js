@@ -83,8 +83,8 @@ module.exports = {
               return;
             }
 
-            await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-            console.log("Deleted old QR - " + filename);
+            // await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+            // console.log("Deleted old QR - " + filename);
 
             const date = new Date();
             const year = date.getFullYear();
@@ -107,15 +107,16 @@ module.exports = {
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-            // await delImg(findId, '/sdcard/DCIM/Camera/');
+            await delImg(findId, '/sdcard/DCIM/Camera/');
+            console.log("Deleted old QR - " + filename);
             await delay(100);
 
-            await sendFile(findId, qrLocalPath, qrDevicePath);
-
-            // setTimeout(async () => {
-            //   await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-            //   console.log("Deleted QR old - " + filename);
-            // }, 300000);
+            await sendFile(findId, qrLocalPath, qrDevicePath);            
+            
+            setTimeout(async () => {
+              await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+              console.log("Deleted QR old - " + filename);
+            }, 300000);
 
             // Thành công !!!
             console.log("Success !!");
