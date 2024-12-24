@@ -4,11 +4,12 @@ import { swalToast } from '../utils/swal';
 export async function actionADB(data) {
   try {
     const result = await postActionADB(data);
-    console.log('log result (in postActionADB):', result);
+
     if (result.status && result.status === false) {
       return swalToast('error', result.msg);
     }
     swalToast('success', 'Thành công');
+    
     return result
   } catch (error) {
     console.log(error);

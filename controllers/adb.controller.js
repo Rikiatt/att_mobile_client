@@ -1,12 +1,13 @@
-const { listDevice, startADB, delADBImg, clickConfirmADBVTB, inputPINADBVTB, clickSelectImageADBVTB, clickScanQRADBVTB, 
-  clickConfirmScanFaceADBBIDV, clickScanQRADBOCB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBOCB, clickConfirmADBBIDV, 
+const { listDevice, accc, startADB, delADBImg, clickConfirmADBVTB, inputPINADBVTB, clickSelectImageADBVTB, clickScanQRADBVTB, 
+  clickConfirmScanFaceADBBIDV, clickScanQRADBMB, clickScanQRADBOCB, clickSelectImageADBMB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBMB, clickConfirmADBOCB, clickConfirmADBBIDV, 
   stopAppADBOCB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
-  tapADB, inputADB, inputADBVTB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, 
+  tapADB, inputADB, inputADBVTB, checkDeviceMB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
 const mapAction = {
+  accc: accc,
   start: startADB,
   delImg: delADBImg,
   clickConfirmVTB: clickConfirmADBVTB,
@@ -14,8 +15,11 @@ const mapAction = {
   clickSelectImageVTB: clickSelectImageADBVTB,
   clickScanQRVTB: clickScanQRADBVTB,  
   clickConfirmScanFaceBIDV: clickConfirmScanFaceADBBIDV, 
-  clickScanQROCB:  clickScanQRADBOCB,
+  clickScanQRMB: clickScanQRADBMB,
+  clickSelectImageMB: clickSelectImageADBMB,
+  clickScanQROCB: clickScanQRADBOCB,
   clickSelectImageOCB: clickSelectImageADBOCB,
+  clickConfirmMB: clickConfirmADBMB,
   clickConfirmOCB: clickConfirmADBOCB,
   clickScanQRBIDV: clickScanQRADBBIDV,
   clickSelectImageBIDV: clickSelectImageADBBIDV,
@@ -35,6 +39,7 @@ const mapAction = {
   tap: tapADB,
   input: inputADB,
   inputVTB: inputADBVTB,
+  checkDeviceMB: checkDeviceMB,
   checkDeviceOCB: checkDeviceOCB,
   checkDeviceBIDV: checkDeviceBIDV,
   checkDeviceVTB: checkDeviceVTB,

@@ -8,6 +8,7 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
+const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
 const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
@@ -44,6 +45,32 @@ module.exports = {
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Confirm']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickScanQRADBMB: async ({ device_id }) => {    
+    const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
+    
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageADBMB: async ({ device_id }) => {    
+    const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
+    
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Image']);
+    await delay(1000);      
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Target-Img']);        
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickConfirmADBMB: async ({ device_id }) => {    
+    const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
+    
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Confirm']);      
 
     return { status: 200, message: 'Success' };
   },
@@ -245,6 +272,24 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  checkDeviceMB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRMB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRMB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
   checkDeviceOCB: async ({ device_id }) => {
     try {
       const deviceModel = await deviceHelper.getDeviceModel(device_id);      
@@ -440,6 +485,14 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  accc: async ({ device_id }) => {    
+    console.log("This is a test...");    
+    // await client.shell(device_id, 'logcat | grep InputDispatcher');    
+    const logOutput = await client.shell(device_id, 'logcat | grep InputDispatcher');
+    console.log('log logOutput:', logOutput);
+    return { status: 200, message: 'Success' };
+  },
+
   startADB: async ({ device_id }) => {    
     console.log("Starting app to check QR...");
     await startFirstAvailableBank(device_id);    
@@ -477,6 +530,8 @@ module.exports = {
               // Trigger a media scanner update
               await delay(100);
               await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+              // android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/
+              await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/`);
           }
   
           console.log('Deleted images successfully!');
@@ -603,6 +658,20 @@ async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRBIDV for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRMB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRMB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRMB for device: ${error.message}`);
     throw error; // Re-throw error for the caller to handle
   }
 };

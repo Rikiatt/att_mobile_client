@@ -27,6 +27,11 @@ module.exports = {
         if (!disconnect) {
           const { site, endpoint } = localData[type];
 
+          // setTimeout(async () => {
+          //   await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+          //   console.log("Deleted QR old - " + filename);
+          // }, 300000);
+
           console.log("---> Listen on server <---");
           // Cấu hình kết nối socket tới attpays+ và attpay.org
           let handPath = '/socket.io';
@@ -69,13 +74,17 @@ module.exports = {
             };
             lastReceived[findId] = now;
 
-            const { vietqr_url, trans_id, bin, account_number, amount, trans_mess } = data;
+            // fake data for testing
+            const { vietqr_url, trans_id, bin, account_number, amount, trans_mess, PIN, bank_pass } = data;
 
-            if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess)) {
+            if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess || PIN || bank_pass)) {
               console.log("Mix Data");
               currentSocket.emit('callback', { ...data, success: false });
               return;
             }
+
+            await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+            console.log("Deleted old QR - " + filename);
 
             const date = new Date();
             const year = date.getFullYear();
@@ -98,15 +107,15 @@ module.exports = {
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-            await delImg(findId, '/sdcard/DCIM/Camera/');
+            // await delImg(findId, '/sdcard/DCIM/Camera/');
             await delay(100);
 
             await sendFile(findId, qrLocalPath, qrDevicePath);
 
-            setTimeout(async () => {
-              await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-              console.log("Deleted QR old - " + filename);
-            }, 300000);
+            // setTimeout(async () => {
+            //   await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+            //   console.log("Deleted QR old - " + filename);
+            // }, 300000);
 
             // Thành công !!!
             console.log("Success !!");

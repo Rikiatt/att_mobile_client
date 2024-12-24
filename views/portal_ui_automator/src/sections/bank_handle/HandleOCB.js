@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { ocbTransfer } from '../../services/handle.service';
+import { ocbScanQR } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -22,13 +22,13 @@ const HandleOCB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>OCB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>                           
-          <Tooltip title="Click Next >> nhập mã PIN >> Xác nhận)" arrow>
+          <Tooltip title="Start >> Login >> ScanQR)" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => ocbTransfer({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => ocbScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
               Quét QR
             </Button>

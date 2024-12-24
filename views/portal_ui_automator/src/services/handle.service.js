@@ -39,7 +39,7 @@ export const disconnectTcpIp = async (data) => {
 
 // ============== OCB ============== //
 
-export const ocbTransfer = async (data, setLoading) => {  
+export const ocbScanQR = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDeviceOCB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status == 500) {
@@ -48,7 +48,7 @@ export const ocbTransfer = async (data, setLoading) => {
 
   setLoading(true);  
 
-  const text = await swalInputPass('Nhập mã pin', '', 'Nhập mã pin cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;  
 
   // delImg xoa failed thi thong bao, return; luon
@@ -177,7 +177,7 @@ export const bidvTransferAndConfirm = async (data, setLoading) => {
     return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
-  const text = await swalInputPass('Nhập mã pin', '', 'Nhập mã pin cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
 
   // Click vào Next    (541, 2169)
@@ -203,7 +203,7 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
     return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
-  const text = await swalInputPass('Nhập mã pin', '', 'Nhập mã pin cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
 
   // Nhập PIN (sau bước quét mặt)
@@ -234,33 +234,76 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
 
 // ============== MB BANK ============== //
 
-export const mbLogin = async (data, setLoading) => {
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-  if (!text) return;
+export const mbScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceMB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  console.log('log data:', data);
 
   setLoading(true);
+  // test
+  await actionADB({ action: 'accc', device_id: data.device_id });  
 
-  try {      
-    // Start app  
-    await actionADB({ action: 'stopMB', device_id: data.device_id });
-    await actionADB({ action: 'startMB', device_id: data.device_id });
-    await delay(9000);
+  // const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  // if (!text) return;
 
-    // Nhập mật khẩu và click nút Đăng nhập
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-    await delay(1000);
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  // console.log('1. Stop app MB Bank');
+  // await actionADB({ action: 'stopMB', device_id: data.device_id });
 
-    setLoading(false);
-  } catch (error) {
-    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
+  // console.log('2. Start app MB Bank');
+  // await actionADB({ action: 'startMB', device_id: data.device_id });
+  // await delay(9000);
+
+  // console.log('3. Input password and login');  
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  // await delay(1000);
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  // await delay(4000);
+
+  // console.log('4. Scan QR, select img');
+  // await actionADB({ action: 'clickScanQRMB', device_id: data.device_id });
+  // await delay(500);
+  // await actionADB({ action: 'clickSelectImageMB', device_id: data.device_id });
+  // await delay(3000); // test.
+
+  // console.log('5. Click Confirm');
+  // await actionADB({ action: 'clickConfirmMB', device_id: data.device_id });     
+
+  setLoading(false);
 };
+
+// export const mbLogin = async (data, setLoading) => {
+//   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+//   if (!text) return;
+
+//   setLoading(true);
+
+//   try {      
+//     // Start app  
+//     await actionADB({ action: 'stopMB', device_id: data.device_id });
+//     await actionADB({ action: 'startMB', device_id: data.device_id });
+//     await delay(9000);
+
+//     // Nhập mật khẩu và click nút Đăng nhập
+//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+//     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+//     await delay(1000);
+//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+
+//     setLoading(false);
+//   } catch (error) {
+//     swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+//     console.error(error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
 // ============== VCB ============== //
 
@@ -444,7 +487,7 @@ export const vietinConfirm = async (data, setLoading) => {
     await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
     await delay(6000); 
     
-    // Nhập mã pin và xác nhận ... xóa luôn ảnh trong thư viện
+    // Nhập mã PIN và xác nhận ... xóa luôn ảnh trong thư viện
     await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text.trim() });    
     await actionADB({ action: 'delImg', device_id: data.device_id });    
     await delay(4000);
@@ -468,7 +511,7 @@ export const vietinScanFaceConfirm = async (data, setLoading) => {
     return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
-  const text = await swalInputPass('Nhập mã pin', '', 'Nhập mã pin cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
 
   // Nhập PIN (sau bước quét mặt)  
