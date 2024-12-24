@@ -27,11 +27,6 @@ module.exports = {
         if (!disconnect) {
           const { site, endpoint } = localData[type];
 
-          // setTimeout(async () => {
-          //   await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-          //   console.log("Deleted QR old - " + filename);
-          // }, 300000);
-
           console.log("---> Listen on server <---");
           // Cấu hình kết nối socket tới attpays+ và attpay.org
           let handPath = '/socket.io';
@@ -62,6 +57,8 @@ module.exports = {
 
             const findId = data.device_id.split('$')[0];
             const findIp = data.device_id.split('$')[1];
+
+            await delImg(findId, '/sdcard/DCIM/Camera/', filename);
 
             const findDevice = devices.find((item) => ((!findIp || findIp == ipPublic) && item.id == findId));
             if (!findDevice) {
