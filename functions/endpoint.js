@@ -83,8 +83,8 @@ module.exports = {
               return;
             }
 
-            // await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-            // console.log("Deleted old QR - " + filename);
+            await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+            console.log("Deleted old QR (above) - " + filename);
 
             const date = new Date();
             const year = date.getFullYear();
