@@ -58,7 +58,7 @@ module.exports = {
             const findId = data.device_id.split('$')[0];
             const findIp = data.device_id.split('$')[1];
 
-            await delImg(findId, '/sdcard/DCIM/Camera/', filename);
+            // await delImg(findId, '/sdcard/DCIM/Camera/', filename);
 
             const findDevice = devices.find((item) => ((!findIp || findIp == ipPublic) && item.id == findId));
             if (!findDevice) {
