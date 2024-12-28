@@ -22,7 +22,7 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>BIDV</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-        <Tooltip title="Thao tác đăng nhập vào bank app khác để check QR" arrow>
+          {/* <Tooltip title="Thao tác đăng nhập vào bank app khác để check QR" arrow>
             <Button
               size="small"
               variant="contained"
@@ -32,7 +32,7 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
             >
               Check QR
             </Button>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip title="Thao tác đăng nhập và thao tác quét QR" arrow>
             <Button
               size="small"
