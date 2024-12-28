@@ -478,8 +478,8 @@ export const vietinConfirm = async (data, setLoading) => {
       return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
     }    
 
-    const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
-    if (!text) return;
+    // const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
+    // if (!text) return;
     
     setLoading(true);
 
@@ -511,8 +511,8 @@ export const vietinScanFaceConfirm = async (data, setLoading) => {
     return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
-  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
-  if (!text) return;
+  // const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  // if (!text) return;
 
   // Nhập PIN (sau bước quét mặt)  
   await delay(1500);
@@ -523,7 +523,8 @@ export const vietinScanFaceConfirm = async (data, setLoading) => {
 
   // Nhập PIN xong thì click Confirm
   
-  await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id, text: text.trim() });  
+  // await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id, text: text.trim() });  
+  await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
   setLoading(false);
 };
 
