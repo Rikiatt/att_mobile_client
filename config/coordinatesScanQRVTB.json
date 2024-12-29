@@ -1,8 +1,8 @@
 {
     "ONEPLUS A5000": {
         "Select-ScanQR": [900, 1195],
-        "Select-Image": [540, 1790],        
-        "Confirm": [540, 1813],
+        "Select-Image": [540, 1663],        
+        "Confirm": [540, 1690],
 
         "1": [0, 0],
         "2": [0, 0],
