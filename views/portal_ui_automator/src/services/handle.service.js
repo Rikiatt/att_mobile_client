@@ -409,26 +409,26 @@ export const vietinLogin = async (data, setLoading) => {
     } 
     
     // Start app
-    // await actionADB({ action: 'stopVTB', device_id: data.device_id });
-    // await actionADB({ action: 'startVTB', device_id: data.device_id });
-    // await delay(8000);
+    await actionADB({ action: 'stopVTB', device_id: data.device_id });
+    await actionADB({ action: 'startVTB', device_id: data.device_id });
+    await delay(8000);
 
-    // // Tab vào ô mật khẩu
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    // Tab vào ô mật khẩu
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
 
-    // // Nhập mật khẩu và click nút Đăng nhập
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await delay(50);
+    // Nhập mật khẩu và click nút Đăng nhập
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await delay(50);
     await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
-    // await delay(1000);
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+    await delay(1000);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
 
     setLoading(false);
   } catch (error) {
