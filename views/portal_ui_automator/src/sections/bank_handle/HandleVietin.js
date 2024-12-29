@@ -44,17 +44,6 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               Xác nhận (sau quét QR)
             </Button>
           </Tooltip>
-          {/* <Tooltip title="Xác nhận (sau quét mặt)" arrow>
-            <Button
-              size="small"
-              variant="contained"
-              color="inherit"
-              fullWidth
-              onClick={() => vietinScanFaceConfirm({ device_id: item.id, X, Y }, setLoading)}
-            >
-              Xác nhận (sau quét mặt)
-            </Button>
-          </Tooltip> */}
         </Stack>
       </AccordionDetails>
     </Accordion>
