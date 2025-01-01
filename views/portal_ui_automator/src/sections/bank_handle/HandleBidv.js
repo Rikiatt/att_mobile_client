@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { anotherBankCheckQR, bidvLoginAndScanQR, bidvTransferAndConfirm, bidvScanFaceConfirm } from '../../services/handle.service';
+import { anotherBankCheckQR, bidvLogin, bidvScanQR, bidvConfirm, bidvConfirmBeforeFace, bidvConfirmAfterFace } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -33,15 +33,26 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
               Check QR
             </Button>
           </Tooltip> */}
-          <Tooltip title="Thao tác đăng nhập và thao tác quét QR" arrow>
+          <Tooltip title="Thao tác đăng nhập" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => bidvLoginAndScanQR({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => bidvLogin({ device_id: item.id, X, Y }, setLoading)}
             >
-              Đăng nhập và quét QR
+              Đăng nhập
+            </Button>
+          </Tooltip>
+          <Tooltip title="Thao tác quét QR" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => bidvScanQR({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Quét QR
             </Button>
           </Tooltip>
           {/* <Tooltip title="Chọn ảnh QR trong thư viện" arrow>
@@ -55,7 +66,7 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
               Quét QR
             </Button>
           </Tooltip> */}
-          <Tooltip title="Click Next >> nhập mã PIN >> Xác nhận)" arrow>
+          {/* <Tooltip title="Click Xác nhận)" arrow>
             <Button
               size="small"
               variant="contained"
@@ -63,16 +74,38 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
               fullWidth
               onClick={() => bidvTransferAndConfirm({ device_id: item.id, X, Y }, setLoading)}
             >
-              Chuyển tiền và xác nhận
+              Xác nhận
             </Button>
-          </Tooltip>
-          <Tooltip title="Nhập mã PIN >> Xác nhận)" arrow>
+          </Tooltip> */}
+          <Tooltip title="Xác nhận (sau quét QR))" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => bidvScanFaceConfirm({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => bidvConfirm({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Xác nhận (sau quét QR)
+            </Button>
+          </Tooltip>
+          <Tooltip title="Mã PIN & Xác nhận)" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => bidvConfirmBeforeFace({ device_id: item.id, X, Y }, setLoading)}
+            >
+              Xác nhận (trước quét mặt)
+            </Button>
+          </Tooltip>
+          <Tooltip title="Mã PIN & Xác nhận)" arrow>
+            <Button
+              size="small"
+              variant="contained"
+              color="inherit"
+              fullWidth
+              onClick={() => bidvConfirmAfterFace({ device_id: item.id, X, Y }, setLoading)}
             >
               Xác nhận (sau quét mặt)
             </Button>

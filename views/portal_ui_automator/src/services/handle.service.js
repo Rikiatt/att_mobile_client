@@ -118,7 +118,7 @@ export const anotherBankCheckQR = async (data, setLoading) => {
   setLoading(false);
 };
 
-export const bidvLoginAndScanQR = async (data, setLoading) => {
+export const bidvLogin = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status == 500) {
@@ -153,7 +153,26 @@ export const bidvLoginAndScanQR = async (data, setLoading) => {
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
     await delay(5000);
-    
+
+    setLoading(false);
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+export const bidvScanQR = async (data, setLoading) => {
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  setLoading(true);
+
+  try {        
     // Click vào ô Scan QR  (540, 2125)
     await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
     setLoading(true);
@@ -170,7 +189,7 @@ export const bidvLoginAndScanQR = async (data, setLoading) => {
   }
 };
 
-export const bidvTransferAndConfirm = async (data, setLoading) => {  
+export const bidvConfirm = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status == 500) {
@@ -180,18 +199,52 @@ export const bidvTransferAndConfirm = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
 
-  // Click vào Next    (541, 2169)
+  // Click vào Next 
+  setLoading(true);
   await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
-  setLoading(true);
-  await delay(5000);
+  await delay(4000);
 
-  // Nhập PIN ... xóa luôn ảnh trong thư viện
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  setLoading(true);
+  // Paste PIN  
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });     
+  await delay(4000);
+
+  // Click Confirm
+  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+
+  setLoading(false);
+};
+
+export const bidvConfirmBeforeFace = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  } 
+
+  // Click vào Next
+  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  setLoading(false);
+};
+
+export const bidvConfirmAfterFace = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  if (!text) return;
+
+  // Input PIN  
+  await actionADB({ action: 'inputPINBIDV', device_id: data.device_id, text: text.trim() });   
+  await delay(3000);
+
+  // Xóa luôn ảnh trong thư viện trong lúc quét mặt
   await actionADB({ action: 'delImg', device_id: data.device_id });
-  await delay(3000);  
+  await delay(1000);  
 
-  // Click vào Confirm (541, 2169)
+  // Click vào Confirm
   await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
   setLoading(false);
 };
@@ -209,11 +262,12 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
   // Nhập PIN (sau bước quét mặt)
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   setLoading(true);
-  await actionADB({ action: 'clickConfirmScanFaceBIDV', device_id: data.device_id, text: text.trim() });
+  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  // await actionADB({ action: 'clickConfirmScanFaceBIDV', device_id: data.device_id });
   await delay(3000);  
 
-  // Click vào Confirm (541, 2169)
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  // Click vào Confirm
+  // await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
   setLoading(false);
 };
 

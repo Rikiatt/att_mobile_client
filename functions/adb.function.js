@@ -132,10 +132,10 @@ module.exports = {
   clickConfirmScanFaceADBBIDV: async ({ device_id, text }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
         
-    for (const char of text) {
-      await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
-      console.log('Log char of text:', char);
-    }  
+    // for (const char of text) {
+    //   await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
+    //   console.log('Log char of text:', char);
+    // }  
 
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']);
 
@@ -156,16 +156,7 @@ module.exports = {
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Select-Image']);    
 
     return { status: 200, message: 'Success' };
-  },
-
-  
-  clickConfirmADBBIDV: async ({ device_id, text }) => {  
-    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
-          
-    await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
-  
-    return { status: 200, message: 'Success' };
-  },  
+  }, 
 
   stopAppADBOCB: async ({ device_id }) => {    
     await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
@@ -369,6 +360,17 @@ module.exports = {
       console.error(`Error checking device FHD+: ${error.message}`);
       throw error;
     }
+  },
+
+  inputPINADBBIDV: async ({ device_id, text }) => {  
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
+        
+    for (const char of text) {
+      await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
+      console.log('Log char of text:', char);
+    }  
+
+    return { status: 200, message: 'Success' };
   },
 
   inputPINADBVTB: async ({ device_id, text }) => {  

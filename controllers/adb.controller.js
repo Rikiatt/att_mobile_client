@@ -1,4 +1,4 @@
-const { listDevice, accc, startADB, delADBImg, clickConfirmADBVTB, inputPINADBVTB, clickSelectImageADBVTB, clickScanQRADBVTB, 
+const { listDevice, accc, startADB, delADBImg, clickConfirmADBVTB, inputPINADBBIDV, inputPINADBVTB, clickSelectImageADBVTB, clickScanQRADBVTB, 
   clickConfirmScanFaceADBBIDV, clickScanQRADBMB, clickScanQRADBOCB, clickSelectImageADBMB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBMB, clickConfirmADBOCB, clickConfirmADBBIDV, 
   stopAppADBOCB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
   tapADB, inputADB, inputADBVTB, checkDeviceMB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, backHomeADB, keyEventADB, 
@@ -11,6 +11,7 @@ const mapAction = {
   start: startADB,
   delImg: delADBImg,
   clickConfirmVTB: clickConfirmADBVTB,
+  inputPINBIDV: inputPINADBBIDV,
   inputPINVTB: inputPINADBVTB,
   clickSelectImageVTB: clickSelectImageADBVTB,
   clickScanQRVTB: clickScanQRADBVTB,  
