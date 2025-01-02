@@ -576,7 +576,7 @@ export const vietinConfirmAfterFace = async (data, setLoading) => {
 
     // Click Tiếp tục (= Xác nhận)
     await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
-    await delay(10000); 
+    await delay(10000); // chờ quét mặt hoặc video loading...
     
     // Nhập mã PIN và xác nhận ... xóa luôn ảnh trong thư viện
     // await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text.trim() });    
