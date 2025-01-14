@@ -13,6 +13,14 @@ export const enter = async (data) => {
   await actionADB({ action: 'enter', device_id: data.device_id });
 };
 
+export const home = async (data) => {
+  await actionADB({ action: 'home', device_id: data.device_id });
+};
+
+export const unlockScreen = async (data) => {
+  await actionADB({ action: 'unlockScreen', device_id: data.device_id });
+};
+
 export const delImg = async (data) => {
   await actionADB({ action: 'delImg', device_id: data.device_id });
 };
@@ -380,10 +388,10 @@ export const vcbLogin = async (data, setLoading) => {
   setLoading(true);
   
   try{
-    // Start app
-    await actionADB({ action: 'stopVCB', device_id: data.device_id });
-    await actionADB({ action: 'startVCB', device_id: data.device_id });
-    await delay(8000);
+    // Start app (hidden because of taking a lot of time starting app vcb with some kind of devices)
+    // await actionADB({ action: 'stopVCB', device_id: data.device_id });
+    // await actionADB({ action: 'startVCB', device_id: data.device_id });
+    // await delay(8000);
 
     // Tab vào ô mật khẩu
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });

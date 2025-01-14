@@ -41,6 +41,36 @@ module.exports = {
     }
   },
 
+  dumpUiAutomatorXml: async ( { device_id } ) => {
+    try{
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');        
+        console.log('log timestamp:', timestamp);
+      
+        const fileName = `ui_dump_${timestamp}.xml`;
+        const remotePath = `/sdcard/${fileName}`;
+        const localPath = path.join(__dirname, fileName);
+              
+        await client.shell(device_id, `uiautomator dump ${remotePath}`);
+        console.log(`XML dump saved to device as ${remotePath}`);
+              
+        await client
+              .pull(device_id, remotePath)
+              .then(stream => new Promise((resolve, reject) => {
+                const fileStream = fs.createWriteStream(localPath);
+                stream.pipe(fileStream);
+                fileStream.on('finish', resolve);
+                fileStream.on('error', reject);
+              }));
+      
+        console.log(`XML dump pulled to local: ${localPath}`);
+              
+        await client.shell(device_id, `rm ${remotePath}`);
+        console.log(`Temporary file removed from device: ${remotePath}`);
+    } catch(error) {
+        console.error(`Error: ${error.message}`);
+    }
+  },
+
   clickConfirmADBVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
@@ -101,7 +131,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmADBBIDV: async ({ device_id, text }) => {  
+  clickConfirmADBBIDV: async ({ device_id }) => {  
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
           
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
@@ -129,13 +159,8 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmScanFaceADBBIDV: async ({ device_id, text }) => {    
+  clickConfirmScanFaceADBBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
-        
-    // for (const char of text) {
-    //   await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
-    //   console.log('Log char of text:', char);
-    // }  
 
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']);
 
@@ -479,19 +504,23 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  unlockScreenADB: async ({ device_id, text }) => {
+    console.log('Mở khóa màn hình thiết bị');
+    await client.shell(device_id, `input keyevent 26`);
+    await delay(300);
+    await client.shell(device_id, `input swipe 500 1500 500 500`);
+    await delay(800);
+    await client.shell(device_id, `input text ${text}`);
+    await delay(600);
+    await client.shell(device_id, `input keyevent 66`);
+    return { status: 200, message: 'Success' };
+  },
+
   sendFile: async (device_id, localPath, devicePath) => {
     await client.push(device_id, localPath, devicePath);
     await delay(500);
     await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
     await delay(100);
-    return { status: 200, message: 'Success' };
-  },
-
-  accc: async ({ device_id }) => {    
-    console.log("This is a test...");    
-    // await client.shell(device_id, 'logcat | grep InputDispatcher');    
-    const logOutput = await client.shell(device_id, 'logcat | grep InputDispatcher');
-    console.log('log logOutput:', logOutput);
     return { status: 200, message: 'Success' };
   },
 

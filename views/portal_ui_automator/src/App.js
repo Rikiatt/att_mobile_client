@@ -2,8 +2,10 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import { getListDevice, } from './api/adb';
 import { connectEndpoint, getVersion, postLocalData } from './api/bridge';
-import { AddLink, Key, KeyRounded, Link, LinkOff, DeveloperMode } from '@mui/icons-material';
+import { AddLink, Key, KeyOff, KeyRounded, Link, LinkOff, DeveloperMode } from '@mui/icons-material';
 import Loading from './components/Loading';
+import { swalInputPass } from './utils/swal';
+import { actionADB } from './services/adb.service';
 
 import {
   Avatar,
@@ -31,7 +33,7 @@ import {
   Save,
   Edit,
   Cancel,
-  Launch,
+  Launch,  
   PowerSettingsNew,
   Phonelink,
   PhonelinkOff,
@@ -41,7 +43,7 @@ import {
 } from '@mui/icons-material';
 
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
-import { connect, connectTcpIp, disconnectTcpIp, enter, home, delImg, typePortKey, typeText } from './services/handle.service';
+import { connect, connectTcpIp, disconnectTcpIp, enter, home, unlockScreen, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
@@ -49,8 +51,6 @@ import HandleMB from './sections/bank_handle/HandleMB';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHB from './sections/bank_handle/HandleSHB';
-// import HandleABB from './sections/bank_handle/HandleABB';
-// import HandleShinhan from './sections/bank_handle/HandleShinhan';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import HandleShowQr from './sections/HandleShowQr';
@@ -217,7 +217,41 @@ function App() {
                               }}
                               startIcon={<Launch />}
                             >
-                              Mở máy
+                              Mở thiết bị
+                            </Button>
+                          </Tooltip>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            fontSize={'11'}
+                            onClick={async () => {
+                              setLoading(true);
+                              await home({ device_id: item.id });
+                              setLoading(false);
+                            }}
+                          >
+                            Home
+                          </Button>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Tooltip title="Thao tác mở khóa màn hình thiết bị" arrow>
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              fullWidth
+                              fontSize={'11'}
+                              onClick={async () => {
+                                const text = await swalInputPass('Nhập mã PIN thiết bị', '', 'Nhập mã PIN thiết bị');                                  
+                                setLoading(true);                                
+                                await actionADB({ action: 'unlockScreen', device_id: item.id, text: text.trim() });    
+                                setLoading(false);
+                              }}
+                              startIcon={<KeyOff />}
+                            >
+                              Mở màn hình
                             </Button>
                           </Tooltip>
                         </Grid>
