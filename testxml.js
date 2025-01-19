@@ -48,7 +48,7 @@ async function startRepeatingDump(deviceId, targetDir) {
         await dumpXmlToLocal(deviceId, localPath);        
         if (readXmlContent(localPath)) {
             // console.log('Text "Money transfer successful" found. Stopping dump.');
-            console.log('Text "VCB Digibank" found. Stopping dump.');
+            console.log('Text "..." found. Stopping dump.');
             found = true;
         }
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -62,7 +62,7 @@ function readXmlContent(localPath) {
     try {
         const content = fs.readFileSync(localPath, 'utf-8');
         // if (content.includes('Money transfer successful')) {
-        if (content.includes('Money transfer successful')) {
+        if (content.includes('MB Bank')) {
             return true;
         }
         if (

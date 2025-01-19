@@ -91,6 +91,9 @@ module.exports = {
             let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
             if (vietqr_url) {
+              await delImg(findId, '/sdcard/DCIM/Camera/');
+              console.log("Deleted old QR - " + filename);
+              await delay(100);
               await downloadQr(vietqr_url, qrLocalPath);
             } else {
               await transToQr(data, qrLocalPath);
@@ -99,9 +102,9 @@ module.exports = {
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-            await delImg(findId, '/sdcard/DCIM/Camera/');
-            console.log("Deleted old QR - " + filename);
-            await delay(100);
+            // await delImg(findId, '/sdcard/DCIM/Camera/');
+            // console.log("Deleted old QR - " + filename);
+            // await delay(100);
 
             await sendFile(findId, qrLocalPath, qrDevicePath);            
             
