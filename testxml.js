@@ -62,7 +62,7 @@ function readXmlContent(localPath) {
     try {
         const content = fs.readFileSync(localPath, 'utf-8');
         // if (content.includes('Money transfer successful')) {
-        if (content.includes('MB Bank')) {
+        if (content.includes('Vietin')) {
             return true;
         }
         if (
@@ -78,11 +78,12 @@ function readXmlContent(localPath) {
             // content.includes('8') &&
             // content.includes('9') &&
             // content.includes('0')
-            content.includes('Authenticator') &&
-            content.includes('Chrome') &&
-            content.includes('Drive') &&
-            content.includes('Files') &&
-            content.includes('Gmail')
+            content.includes('Tiếng Việt') 
+            // &&
+            // content.includes('Chrome') &&
+            // content.includes('Drive') &&
+            // content.includes('Files') &&
+            // content.includes('Gmail')
         ) {
             // console.log('Text "Transfer to" and "Account number" and all digits 0-9 found. Stopping dump.');
             console.log('Text "..." and "..." found. Stopping dump.');
