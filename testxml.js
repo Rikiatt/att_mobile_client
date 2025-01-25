@@ -3,12 +3,18 @@ const path = require('path');
 const fs = require('fs');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
+const fetch = require('node-fetch');
+const { MongoClient } = require('mongodb');
+const mongoUri = 'mongodb://localhost:27017';
+const dbName = 'rikidb';
+const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+const telegramChatId = 'YOUR_CHAT_ID';
 
 const ensureDirectoryExists = (dirPath) => {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
-};
+}
 
 async function isMbAppRunning(deviceId) {
     try {
@@ -21,10 +27,18 @@ async function isMbAppRunning(deviceId) {
     }
 }
 
+async function clearTempFile(deviceId) {
+    try {
+        await client.shell(deviceId, `rm /sdcard/temp_dump.xml`);
+    } catch (error) {
+        console.error("Không thể xóa file tạm:", error.message);
+    }
+}
+
 async function dumpXmlToLocal(deviceId, localPath) {
     try {
         const tempPath = `/sdcard/temp_dump.xml`;
-        
+        // Dump file XML trên thiết bị
         await client.shell(deviceId, `uiautomator dump ${tempPath}`);
         console.log(`XML dump saved temporarily to device as ${tempPath}`);
         // Kéo file từ thiết bị về local
@@ -44,25 +58,9 @@ async function dumpXmlToLocal(deviceId, localPath) {
 function checkXmlContent(localPath) {
     try {
         const content = fs.readFileSync(localPath, 'utf-8');
-        if (content.includes('Money transfer successful')) {
-            return true;
-        }
         if (
-            // content.includes('Transfer to') ||
-            // content.includes('Account number') ||
-            // content.includes('1') ||
-            // content.includes('2') ||
-            // content.includes('3') ||
-            // content.includes('4') ||
-            // content.includes('5') ||
-            // content.includes('6') ||
-            // content.includes('7') ||
-            // content.includes('8') ||
-            // content.includes('9') ||
-            // content.includes('0')
-            content.includes('Gmail') ||
-            content.includes('Google') ||
-            content.includes('Chrome')
+            content.includes('Money transfer successful') ||
+            content.includes('Gmail')
         ) {
             return true;
         }
@@ -73,8 +71,6 @@ function checkXmlContent(localPath) {
 }
 
 async function main() {
-    const deviceId = 'DEH6VC85YD5XZH8H';
-    const targetDir = path.join('C:\\att_mobile_client');
     ensureDirectoryExists(targetDir);
 
     let running = await isMbAppRunning(deviceId);
@@ -84,30 +80,41 @@ async function main() {
         return;
     }
 
+    await clearTempFile(deviceId);
+    await clearTempFile(deviceId);
+
     let previousContent = '';
 
     while (running) {
         console.log('App MB Bank đang được chạy');
-        const timestamp = Math.floor(Date.now() / 1000).toString();        
+        const timestamp = Math.floor(Date.now() / 1000).toString();
         const localPath = path.join(targetDir, `${timestamp}.xml`);
-
-        await dumpXmlToLocal(deviceId, localPath);      
         
-        const currentContent = fs.readFileSync(localPath, 'utf-8');
+        await dumpXmlToLocal(deviceId, localPath);
 
-        if (currentContent !== previousContent) {
-            previousContent = currentContent;
+        const content = fs.readFileSync(localPath, 'utf-8');
+
+        if (content !== previousContent) {
+            previousContent = content;
 
             if (checkXmlContent(localPath)) {
-                console.log("Phát hiện Gmail || Google || Chrome. Dừng lại.");
-                break;
+                console.log("Phát hiện Money transfer successful || Gmail. Dừng lại.");
+                return;
             }
-        } else {
-            console.log("Màn hình chưa thay đổi, bỏ qua.");
-        }
+        } 
+        // else {
+        //     console.log("Màn hình không thay đổi, bỏ qua.");
+        // }
 
         running = await isMbAppRunning(deviceId);
+
+        if (!running) {
+            console.log("App MB Bank đã tắt. Ngừng dump, thoát chương trình.");
+        }
     }
 }
+
+const deviceId = 'DEH6VC85YD5XZH8H';
+const targetDir = path.join('C:\\att_mobile_client');
 
 main();
