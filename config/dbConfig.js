@@ -1,15 +1,8 @@
-const mongoose = require('mongoose');
+require('dotenv').config();
 
-const connectToDatabase = async () => {
-    try {
-        await mongoose.connect('mongodb://127.0.0.1:27017/alertDB', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('MongoDB connected successfully.');
-    } catch (error) {
-        console.error('MongoDB connection error:', error.message);
-    }
+const mongoConfig = {
+    uri: process.env.MONGO_URI,
+    dbName: process.env.DB_NAME,
 };
 
-module.exports = connectToDatabase;
+module.exports = mongoConfig;

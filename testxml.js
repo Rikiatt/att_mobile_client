@@ -8,174 +8,190 @@ const { MongoClient } = require('mongodb');
 const mongoUri = 'mongodb://localhost:27017';
 const dbName = 'rikidb';
 const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-let telegramChatId;
+const chatId = '7098096854';
+
+// test
+const { isMbAppRunning } = require('./functions/appBankStatus');
+const { clearTempFile } = require('./functions/adb.function');
+const { dumpXmlToLocal } = require('./functions/adb.function');
+const { checkXmlContent } = require('./functions/adb.function');
+const { sendTelegramAlert } = require('./services/telegramService');
+const { saveAlertToDatabase } = require('./controllers/alert.controller');
 
 const delay = async (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const ensureDirectoryExists = (dirPath) => {
+const ensureDirectoryExists = ( dirPath ) => {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
 }
 
-async function isMbAppRunning(deviceId) {
-    try {
-        const output = await client.shell(deviceId, 'pidof com.mbmobile')
-            .then(adb.util.readAll)
-            .then(buffer => buffer.toString().trim());
-        return output !== '';
-    } catch (error) {
-        return false;
-    }
-}
+// async function isMbAppRunning( device_id ) {
+//     try {
+//         const output = await client.shell(device_id, 'pidof com.mbmobile')
+//             .then(adb.util.readAll)
+//             .then(buffer => buffer.toString().trim());
+//         return output !== '';
+//     } catch (error) {
+//         return false;
+//     }
+// }
 
-async function clearTempFile(deviceId) {
-    try {
-        await client.shell(deviceId, `rm /sdcard/temp_dump.xml`);
-    } catch (error) {
-        console.error("Cannot delete file temp_dump.xml:", error.message);
-    }
-}
+// async function clearTempFile( device_id ) {
+//     try {
+//         await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
+//     } catch (error) {
+//         console.error("Cannot delete file temp_dump.xml:", error.message);
+//     }
+// }
 
-async function dumpXmlToLocal(deviceId, localPath) {
-    try {
-        const tempPath = `/sdcard/temp_dump.xml`;
-        // Dump file XML trên thiết bị
-        await client.shell(deviceId, `uiautomator dump ${tempPath}`);
-        console.log(`XML dump saved temporarily to device as ${tempPath}`);
-        // Kéo file từ thiết bị về local
-        await client.pull(deviceId, tempPath)
-            .then(stream => new Promise((resolve, reject) => {
-                const fileStream = fs.createWriteStream(localPath);
-                stream.pipe(fileStream);
-                fileStream.on('finish', resolve);
-                fileStream.on('error', reject);
-            }));
-        console.log(`XML dump pulled directly to local: ${localPath}`);
-    } catch (error) {
-        console.error(`Error during XML dump to local: ${error.message}`);
-    }
-}
+// async function dumpXmlToLocal( device_id, localPath ) {
+//     try {
+//         const tempPath = `/sdcard/temp_dump.xml`;
+//         // Dump file XML trên thiết bị
+//         await client.shell(device_id, `uiautomator dump ${tempPath}`);
+//         console.log(`XML dump saved temporarily to device as ${tempPath}`);
+//         // Kéo file từ thiết bị về local
+//         await client.pull(device_id, tempPath)
+//             .then(stream => new Promise((resolve, reject) => {
+//                 const fileStream = fs.createWriteStream(localPath);
+//                 stream.pipe(fileStream);
+//                 fileStream.on('finish', resolve);
+//                 fileStream.on('error', reject);
+//             }));
+//         console.log(`XML dump pulled directly to local: ${localPath}`);
+//     } catch (error) {
+//         console.error(`Error during XML dump to local: ${error.message}`);
+//     }
+// }
 
-function checkXmlContent(localPath) {
-    try {
-        const content = fs.readFileSync(localPath, 'utf-8');
-        if (content.includes('Money transfer successful') || content.includes('Gmail')) {
-            return true;
-        }
-        return false;
-    } catch (error) {
-        return false;
-    }
-}
+// function checkXmlContent( localPath ) {
+//     try {
+//         const content = fs.readFileSync(localPath, 'utf-8');
+//         if (content.includes('Money transfer successful') || content.includes('Gmail')) {
+//             return true;
+//         }
+//         return false;
+//     } catch (error) {
+//         return false;
+//     }
+// }
 
-async function getChatId() {
-    const fetch = await import('node-fetch'); 
-    const url = `https://api.telegram.org/bot${telegramToken}/getUpdates`;
-    try {
-        const response = await fetch.default(url);
-        const data = await response.json();
-        if (data.ok && data.result.length > 0) {
-            const chatId = data.result[0].message.chat.id;
-            console.log(`You chat ID: ${chatId}`);
-            return chatId;
-        } else {
-            console.error("Cannot find chat_id. Text message to the bot first pls.");
-            return null;
-        }
-    } catch (error) {
-        console.error('Got an error when get chat_id:', error.message);
-        return null;
-    }
-}
+// async function getChatId() {
+//     const fetch = await import('node-fetch'); 
+//     const url = `https://api.telegram.org/bot${telegramToken}/getUpdates`;
+//     try {
+//         const response = await fetch.default(url);
+//         const data = await response.json();
+//         if (data.ok && data.result.length > 0) {
+//             const chatId = data.result[0].message.chat.id;
+//             console.log(`You chat ID: ${chatId}`);
+//             return chatId;
+//         } else {
+//             console.error("Cannot find chatId. Text message to the bot first pls.");
+//             return null;
+//         }
+//     } catch (error) {
+//         console.error('Got an error when get chatId:', error.message);
+//         return null;
+//     }
+// }
 
-async function sendTelegramAlert(message) {
-    const fetch = await import('node-fetch'); // Use dynamic import for node-fetch
-    const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
-    if (!telegramChatId) {
-        telegramChatId = await getChatId();
-        if (!telegramChatId) {
-            console.error("Cannot send alert to you bot, find the chat_id.");
-            return;
-        }
-    }
-    
-    try {
-        await fetch.default(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: telegramChatId, text: message })
-        });
-        console.log("Alert sent to telegram.");
-    } catch (error) {
-        console.error('Cannot make an allert to Telegram:', error.message);
-    }
-}
+// async function sendTelegramAlert(message) {
+//     const fetch = await import('node-fetch');
+//     const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
 
-async function saveAlertToDatabase(alert) {
-    const client = new MongoClient(mongoUri);
-    try {
-        await client.connect();
-        const db = client.db(dbName);
-        const collection = db.collection('alerts');
-        await collection.insertOne(alert);
-        console.log('Alert saved to database');
-    } catch (error) {
-        console.error('Failed to save alert to database:', error.message);
-    } finally {
-        await client.close();
-    }
-}
+//     if (!chatId) {
+//         console.error("Cannot send alert to your bot, find the chatId.");
+//         return;
+//     }
+
+//     try {
+//         const response = await fetch.default(url, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ chat_id: chatId, text: message }) // Corrected 'chat_id'
+//         });
+
+//         const result = await response.json();
+
+//         if (!result.ok) {
+//             console.error("Failed to send alert to Telegram:", result.description);
+//         } else {
+//             console.log("Alert sent to Telegram successfully.");
+//         }
+//     } catch (error) {
+//         console.error("Cannot send alert to Telegram:", error.message);
+//     }
+// }
+
+// async function saveAlertToDatabase(alert) {
+//     const client = new MongoClient(mongoUri);
+//     try {
+//         await client.connect();
+//         const db = client.db(dbName);
+//         const collection = db.collection('alerts');
+//         await collection.insertOne(alert);
+//         console.log('Alert saved to database');
+//     } catch (error) {
+//         console.error('Failed to save alert to database:', error.message);
+//     } finally {
+//         await client.close();
+//     }
+// }
 
 async function main() {
     ensureDirectoryExists(targetDir);
 
-    telegramChatId = await getChatId(); // Dynamically fetch chat ID
-    if (!telegramChatId) {
+    // chatId = await getChatId(); // Dynamically fetch chat ID
+    if (!chatId) {
         console.error("Cannot continue cause of invalid chat ID.");
         return;
     }
 
-    let running = await isMbAppRunning(deviceId);
+    let running = await isMbAppRunning(device_id);
 
     if (!running) {
         console.log("App MB Bank is not running.");
         return;
     }
-
-    await clearTempFile(deviceId);
-    await delay(1000);
+    
+    await clearTempFile(device_id);    
 
     while (running) {
-        console.log('App MB Bank đang được chạy');
+        console.log('App MB Bank is in process');
         const timestamp = Math.floor(Date.now() / 1000).toString();
         const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-        await dumpXmlToLocal(deviceId, localPath);
+        await dumpXmlToLocal( device_id, localPath );
 
-        if (checkXmlContent(localPath)) {
-            console.log(`Phát hiện nội dung cần dừng. Dừng lại.`);
-            await sendTelegramAlert(`Cảnh báo: Phát hiện nội dung cần dừng trên thiết bị ${deviceId}`);
-            await saveAlertToDatabase({
+        // testing
+        if (checkXmlContent( localPath )) {    
+            await sendTelegramAlert(
+                telegramToken,
+                chatId,
+                `Cảnh báo: Phát hiện nội dung cần dừng trên thiết bị ${device_id}`);
+            await saveAlertToDatabase({ // ok
                 timestamp: new Date().toISOString(),
                 reason: 'Detected sensitive content',
                 filePath: localPath
             });
+            console.log('stop!!!!!!');
             return;
         }
 
-        running = await isMbAppRunning(deviceId);
+        running = await isMbAppRunning(device_id);
 
         if (!running) {            
             console.log("App MB Bank đã tắt. Thoát chương trình.");
-            await clearTempFile(deviceId);    
+            await clearTempFile(device_id);                
         }
     }
 }
 
-const deviceId = 'DEH6VC85YD5XZH8H';
+const device_id = 'F6JFZLUGSCPFBMA6';
 const targetDir = path.join('C:\\att_mobile_client');
 
 main();

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const adb = require('adbkit');
 const fs = require('fs');
 const path = require('path');
@@ -17,6 +18,71 @@ const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
 module.exports = {
+  checkXmlContent: ( localPath ) => {
+    // try {
+    //     const content = fs.readFileSync(localPath, 'utf-8');
+    //     return content.includes('Money transfer successful') || content.includes('Gmail');
+    // } catch (error) {
+    //     console.log('Got an error, return false, error:', error);
+    //     return false;
+    // }
+    try {
+          const content = fs.readFileSync(localPath, 'utf-8');
+          if (content.includes('Money transfer successful') || content.includes('Gmail')) {
+              return true;
+          }
+          return false;
+      } catch (error) {
+          return false;
+    }
+  },
+
+  clearTempFile: async ( { device_id } ) => {
+    try {
+        device_id = 'F6JFZLUGSCPFBMA6';
+        console.log('log device_id: ', device_id);
+        await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
+        await delay(1000);
+        console.log('Clear temp file successfully!');
+    } catch (error) {
+        console.error("Cannot delete file temp_dump.xml:", error.message);
+    }
+  },
+
+  dumpXmlToLocal: async ( device_id, localPath ) => {
+    try {
+        // device_id = 'F6JFZLUGSCPFBMA6';
+        const tempPath = `/sdcard/temp_dump.xml`;
+        
+        await client.shell(device_id, `uiautomator dump ${tempPath}`);
+        console.log(`XML dump saved temporarily to device as ${tempPath}`);
+        await delay(2000);
+        
+        await client.pull(device_id, tempPath)
+            .then(stream => new Promise((resolve, reject) => {
+                const fileStream = fs.createWriteStream(localPath);
+                stream.pipe(fileStream);
+                fileStream.on('finish', resolve);
+                fileStream.on('error', reject);
+            }));
+        console.log(`XML dump pulled directly to local: ${localPath}`);
+    } catch (error) {
+        console.error(`Error during XML dump to local. ${error.message}`);
+    }
+  },
+
+  isMbAppRunning: async ( { device_id } ) => {
+    try {
+        console.log('log in isMbAppRunning');
+        const output = await client.shell(device_id, 'pidof com.mbmobile')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());
+        return output !== '';
+    } catch (error) {
+        return false;
+    }
+  },
+
   listDevice: async () => {
     try {
       const devices = await client.listDevices();
