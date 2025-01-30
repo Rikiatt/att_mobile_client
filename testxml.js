@@ -192,6 +192,6 @@ async function main() {
 }
 
 const device_id = 'F6JFZLUGSCPFBMA6';
-const targetDir = path.join('C:\\att_mobile_client');
+const targetDir = path.join('C:\\att_mobile_client\\logs\\');
 
 main();

@@ -45,6 +45,7 @@ import {
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
 import { connect, connectTcpIp, disconnectTcpIp, enter, home, unlockScreen, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
+import HandleBAB from './sections/bank_handle/HandleBAB';
 import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleMB from './sections/bank_handle/HandleMB';
@@ -286,6 +287,7 @@ function App() {
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleBAB item={item} X={X} Y={Y} setLoading={setLoading} />
                       {/* <HandleABB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                       {/* <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                     </CardContent>

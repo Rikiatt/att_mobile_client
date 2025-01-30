@@ -13,6 +13,8 @@ const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
 const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
+const coordinatesScanQRBAB = require('../config/coordinatesScanQRBAB.json');
+const coordinatesLoginBAB = require('../config/coordinatesLoginBAB.json');
 
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
@@ -55,8 +57,10 @@ module.exports = {
         const tempPath = `/sdcard/temp_dump.xml`;
         
         await client.shell(device_id, `uiautomator dump ${tempPath}`);
-        console.log(`XML dump saved temporarily to device as ${tempPath}`);
-        await delay(2000);
+        console.log(`XML dump saved temporarily to device as ${tempPath}`); 
+        /* Đoạn này log ra các thông báo như là:
+        Unhandled rejection FailError: Failure: 'open failed: No such file or directory'
+        thì không phải là lỗi mà là chỉ là vì chưa có await delay(miliseconds) */       
         
         await client.pull(device_id, tempPath)
             .then(stream => new Promise((resolve, reject) => {
@@ -171,10 +175,34 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  clickLoginADBBAB: async ({ device_id }) => {    
+    const coordinatesLoginBAB = await loadCoordinatesForDeviceLoginBAB(device_id);
+    
+    await adbHelper.tapADBBAB(device_id, ...coordinatesLoginBAB['Login']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickScanQRADBBAB: async ({ device_id }) => {    
+    const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);
+    
+    await adbHelper.tapADBBAB(device_id, ...coordinatesScanQRBAB['Select-ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
   clickScanQRADBOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageADBBAB: async ({ device_id }) => {    
+    const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);
+    
+    await adbHelper.tapADBBAB(device_id, ...coordinatesScanQRBAB['Select-Image']);     
 
     return { status: 200, message: 'Success' };
   },
@@ -249,6 +277,20 @@ module.exports = {
     return { status: 200, message: 'Success' };
   }, 
 
+  stopAppADBBAB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop com.bab.retailUAT');
+    console.log('App Bac A Bank has been stopped');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBBAB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am start -n com.bab.retailUAT/.MainActivity');
+    console.log('App Bac A Bank has been stopped');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
   stopAppADBOCB: async ({ device_id }) => {    
     await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
     console.log('App OCB OMNI has been stopped');
@@ -258,7 +300,7 @@ module.exports = {
 
   startAppADBOCB: async ({ device_id }) => {    
     await client.shell(device_id, 'monkey -p vn.com.ocb.awe -c android.intent.category.LAUNCHER 1');
-    console.log('App BIDV has been stopped');
+    console.log('App OCB OMNI has been stopped');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
@@ -362,6 +404,24 @@ module.exports = {
       
       if (deviceCoordinates == undefined) {        
         console.log(`No coordinatesScanQRMB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceBAB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRBAB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRBAB found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -773,6 +833,20 @@ async function loadCoordinatesForDeviceScanQRMB(device_id) {
   }
 };
 
+async function loadCoordinatesForDeviceScanQRBAB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRBAB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQROCB for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
 async function loadCoordinatesForDeviceScanQROCB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
@@ -812,6 +886,20 @@ async function loadCoordinatesForDeviceLoginVTB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginVTB for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+async function loadCoordinatesForDeviceLoginBAB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesLoginBAB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesLoginBAB for device: ${error.message}`);
     throw error; // Re-throw error for the caller to handle
   }
 };

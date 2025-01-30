@@ -45,6 +45,65 @@ export const disconnectTcpIp = async (data) => {
   return await actionADB({ action: 'disconnectTcpIp', device_id: data.device_id });
 };
 
+// ============== Bac A Bank ============== //
+
+export const babLogin = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+
+  setLoading(true);   
+
+  // delImg xoa failed thi thong bao, return; luon
+
+  console.log('1. Stop app Bac A Bank');
+  await actionADB({ action: 'stopBAB', device_id: data.device_id });
+
+  console.log('2. Start app Bac A Bank');
+  await actionADB({ action: 'startBAB', device_id: data.device_id });
+  await delay(6000);
+
+  console.log('3. Login');
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await delay(1000);
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await actionADB({ action: 'clickLoginBAB', device_id: data.device_id });
+
+  setLoading(false);
+};
+
+export const babScanQR = async (data, setLoading) => {
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }
+
+  setLoading(true);
+
+  try {        
+    // Click vào ô Scan QR  (540, 2125)
+    await actionADB({ action: 'clickScanQRBAB', device_id: data.device_id });
+    await delay(1000);
+    await actionADB({ action: 'clickSelectImageBAB', device_id: data.device_id }); 
+    
+    setLoading(false);
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 // ============== OCB ============== //
 
 export const ocbScanQR = async (data, setLoading) => {  
