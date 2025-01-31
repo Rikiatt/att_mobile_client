@@ -11,10 +11,10 @@ const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 const chatId = '7098096854';
 
 // test
-const { isMbAppRunning } = require('./functions/appBankStatus');
-const { clearTempFile } = require('./functions/adb.function');
-const { dumpXmlToLocal } = require('./functions/adb.function');
-const { checkXmlContent } = require('./functions/adb.function');
+const { isMbAppRunning } = require('./functions/checkAppBankStatus');
+// const { clearTempFile } = require('./functions/adb.function');
+// const { dumpXmlToLocal } = require('./functions/adb.function');
+// const { checkXmlContent } = require('./functions/adb.function');
 const { sendTelegramAlert } = require('./services/telegramService');
 const { saveAlertToDatabase } = require('./controllers/alert.controller');
 
@@ -39,45 +39,45 @@ const ensureDirectoryExists = ( dirPath ) => {
 //     }
 // }
 
-// async function clearTempFile( device_id ) {
-//     try {
-//         await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
-//     } catch (error) {
-//         console.error("Cannot delete file temp_dump.xml:", error.message);
-//     }
-// }
+async function clearTempFile( device_id ) {
+    try {
+        await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
+    } catch (error) {
+        console.error("Cannot delete file temp_dump.xml:", error.message);
+    }
+}
 
-// async function dumpXmlToLocal( device_id, localPath ) {
-//     try {
-//         const tempPath = `/sdcard/temp_dump.xml`;
-//         // Dump file XML trên thiết bị
-//         await client.shell(device_id, `uiautomator dump ${tempPath}`);
-//         console.log(`XML dump saved temporarily to device as ${tempPath}`);
-//         // Kéo file từ thiết bị về local
-//         await client.pull(device_id, tempPath)
-//             .then(stream => new Promise((resolve, reject) => {
-//                 const fileStream = fs.createWriteStream(localPath);
-//                 stream.pipe(fileStream);
-//                 fileStream.on('finish', resolve);
-//                 fileStream.on('error', reject);
-//             }));
-//         console.log(`XML dump pulled directly to local: ${localPath}`);
-//     } catch (error) {
-//         console.error(`Error during XML dump to local: ${error.message}`);
-//     }
-// }
+async function dumpXmlToLocal( device_id, localPath ) {
+    try {
+        const tempPath = `/sdcard/temp_dump.xml`;
+        // Dump file XML trên thiết bị
+        await client.shell(device_id, `uiautomator dump ${tempPath}`);
+        console.log(`XML dump saved temporarily to device as ${tempPath}`);
+        // Kéo file từ thiết bị về local
+        await client.pull(device_id, tempPath)
+            .then(stream => new Promise((resolve, reject) => {
+                const fileStream = fs.createWriteStream(localPath);
+                stream.pipe(fileStream);
+                fileStream.on('finish', resolve);
+                fileStream.on('error', reject);
+            }));
+        console.log(`XML dump pulled directly to local: ${localPath}`);
+    } catch (error) {
+        console.error(`Error during XML dump to local: ${error.message}`);
+    }
+}
 
-// function checkXmlContent( localPath ) {
-//     try {
-//         const content = fs.readFileSync(localPath, 'utf-8');
-//         if (content.includes('Money transfer successful') || content.includes('Gmail')) {
-//             return true;
-//         }
-//         return false;
-//     } catch (error) {
-//         return false;
-//     }
-// }
+function checkXmlContent( localPath ) {
+    try {
+        const content = fs.readFileSync(localPath, 'utf-8');
+        if (content.includes('Money transfer successful') || content.includes('Gmail')) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
 
 // async function getChatId() {
 //     const fetch = await import('node-fetch'); 
@@ -142,7 +142,7 @@ const ensureDirectoryExists = ( dirPath ) => {
 //     }
 // }
 
-async function main() {
+async function trackMBApp() {
     ensureDirectoryExists(targetDir);
 
     // chatId = await getChatId(); // Dynamically fetch chat ID
@@ -166,14 +166,13 @@ async function main() {
         const localPath = path.join(targetDir, `${timestamp}.xml`);
 
         await dumpXmlToLocal( device_id, localPath );
-
-        // testing
+        
         if (checkXmlContent( localPath )) {    
             await sendTelegramAlert(
                 telegramToken,
                 chatId,
                 `Cảnh báo: Phát hiện nội dung cần dừng trên thiết bị ${device_id}`);
-            await saveAlertToDatabase({ // ok
+            await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
                 reason: 'Detected sensitive content',
                 filePath: localPath
@@ -191,7 +190,7 @@ async function main() {
     }
 }
 
-const device_id = 'F6JFZLUGSCPFBMA6';
+const device_id = 'RF8WC024KYB';
 const targetDir = path.join('C:\\att_mobile_client\\logs\\');
 
-main();
+trackMBApp();

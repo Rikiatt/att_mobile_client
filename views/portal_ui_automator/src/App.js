@@ -222,7 +222,7 @@ function App() {
                             </Button>
                           </Tooltip>
                         </Grid>
-                        <Grid item xs={6}>
+                        {/* <Grid item xs={6}>
                           <Button
                             variant="contained"
                             color="primary"
@@ -236,8 +236,8 @@ function App() {
                           >
                             Home
                           </Button>
-                        </Grid>
-                        <Grid item xs={6}>
+                        </Grid> */}
+                        {/* <Grid item xs={6}>
                           <Tooltip title="Thao tác mở khóa màn hình thiết bị" arrow>
                             <Button
                               variant="outlined"
@@ -255,7 +255,7 @@ function App() {
                               Mở màn hình
                             </Button>
                           </Tooltip>
-                        </Grid>
+                        </Grid> */}
                         <Grid item xs={6}>
                           <Button
                             variant="contained"

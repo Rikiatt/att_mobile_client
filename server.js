@@ -33,4 +33,5 @@ server.listen(port, async () => {
   exec(`start msedge http://localhost:${port}`, {
     windowsHide: true
   });
+  // Thực hiện theo dõi thao tác luôn ở đây
 });

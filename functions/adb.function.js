@@ -19,73 +19,127 @@ const coordinatesLoginBAB = require('../config/coordinatesLoginBAB.json');
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
+const ensureDirectoryExists = ( dirPath ) => {
+  if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+  }
+}
+
+const { isMbAppRunning } = require('../functions/checkAppBankStatus');
+
+async function clearTempFile( { device_id } ) {
+  try {      
+      console.log('log device_id in clearTempFile: ', device_id);
+      await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
+      await delay(1000);
+      console.log('Clear temp file successfully!');
+  } catch (error) {
+      console.error("Cannot delete file temp_dump.xml:", error.message);
+  }
+}
+
+async function dumpXmlToLocal ( device_id, localPath ) {
+  try {      
+      console.log('log device_id in dumpXmlToLocal: ', device_id);
+      const tempPath = `/sdcard/temp_dump.xml`;
+      
+      await client.shell(device_id, `uiautomator dump ${tempPath}`);
+      console.log(`XML dump saved temporarily to device as ${tempPath}`);       
+      
+      await client.pull( device_id , tempPath)
+          .then(stream => new Promise((resolve, reject) => {
+              const fileStream = fs.createWriteStream(localPath);
+              stream.pipe(fileStream);
+              fileStream.on('finish', resolve);
+              fileStream.on('error', reject);
+          }));
+      console.log(`XML dump pulled directly to local: ${localPath}`);
+  } catch (error) {
+      console.error(`Error during XML dump to local. ${error.message}`);
+  }
+}
+
+const checkXmlContent = ( localPath ) => {
+  try {
+    const content = fs.readFileSync(localPath, 'utf-8');
+    if (content.includes('Money transfer successful') || content.includes('Gmail')) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('❌ Lỗi khi đọc XML:', error.message);
+    return false;
+  }
+}
+
+async function stopMBApp ({ device_id }) {    
+  await client.shell(device_id, 'am force-stop com.mbmobile');
+  console.log('App MB has been stopped');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
+const { sendTelegramAlert } = require('../services/telegramService');
+const { saveAlertToDatabase } = require('../controllers/alert.controller');
+
 module.exports = {
-  checkXmlContent: ( localPath ) => {
-    // try {
-    //     const content = fs.readFileSync(localPath, 'utf-8');
-    //     return content.includes('Money transfer successful') || content.includes('Gmail');
-    // } catch (error) {
-    //     console.log('Got an error, return false, error:', error);
-    //     return false;
-    // }
-    try {
-          const content = fs.readFileSync(localPath, 'utf-8');
-          if (content.includes('Money transfer successful') || content.includes('Gmail')) {
-              return true;
-          }
-          return false;
-      } catch (error) {
-          return false;
-    }
-  },
+  trackMBApp : async ( { device_id } ) => {
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
 
-  clearTempFile: async ( { device_id } ) => {
-    try {
-        device_id = 'F6JFZLUGSCPFBMA6';
-        console.log('log device_id: ', device_id);
-        await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
-        await delay(1000);
-        console.log('Clear temp file successfully!');
-    } catch (error) {
-        console.error("Cannot delete file temp_dump.xml:", error.message);
-    }
-  },
+    console.log('🔍 Bắt đầu theo dõi MB Bank App...');
+    
+    const chatId = '7098096854';
+    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
-  dumpXmlToLocal: async ( device_id, localPath ) => {
-    try {
-        // device_id = 'F6JFZLUGSCPFBMA6';
-        const tempPath = `/sdcard/temp_dump.xml`;
+    if (!chatId) {
+      console.error("Cannot continue cause of invalid chat ID.");
+      return;
+    } 
+
+    let running = await isMbAppRunning( { device_id } );
+
+    if (!running) {
+        console.log("App MB Bank is not running.");
+        return;
+    }
         
-        await client.shell(device_id, `uiautomator dump ${tempPath}`);
-        console.log(`XML dump saved temporarily to device as ${tempPath}`); 
-        /* Đoạn này log ra các thông báo như là:
-        Unhandled rejection FailError: Failure: 'open failed: No such file or directory'
-        thì không phải là lỗi mà là chỉ là vì chưa có await delay(miliseconds) */       
-        
-        await client.pull(device_id, tempPath)
-            .then(stream => new Promise((resolve, reject) => {
-                const fileStream = fs.createWriteStream(localPath);
-                stream.pipe(fileStream);
-                fileStream.on('finish', resolve);
-                fileStream.on('error', reject);
-            }));
-        console.log(`XML dump pulled directly to local: ${localPath}`);
-    } catch (error) {
-        console.error(`Error during XML dump to local. ${error.message}`);
-    }
-  },
+    await clearTempFile( { device_id } );
+    
+    while (running) {
+        console.log('App MB Bank is in process');
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+        await dumpXmlToLocal( device_id, localPath );
+            
+        if (checkXmlContent( localPath )) {    
+          // console.log('Stop MB Bank app');
+          await stopMBApp ( { device_id } );          
 
-  isMbAppRunning: async ( { device_id } ) => {
-    try {
-        console.log('log in isMbAppRunning');
-        const output = await client.shell(device_id, 'pidof com.mbmobile')
-            .then(adb.util.readAll)
-            .then(buffer => buffer.toString().trim());
-        return output !== '';
-    } catch (error) {
-        return false;
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+
+            await saveAlertToDatabase({
+              timestamp: new Date().toISOString(),
+              reason: 'Detected sensitive content',
+              filePath: localPath 
+            });
+
+            return false;
+        }
+    
+        running = await isMbAppRunning( { device_id } );
+    
+        if (!running) {            
+          console.log('🚫 App MB Bank đã tắt. Dừng theo dõi.');
+          await clearTempFile( { device_id } );      
+          return false;          
+        }
     }
-  },
+  },        
 
   listDevice: async () => {
     try {
@@ -108,36 +162,6 @@ module.exports = {
     } catch (error) {
       console.error('Error getting connected devices:', error);
       return [];
-    }
-  },
-
-  dumpUiAutomatorXml: async ( { device_id } ) => {
-    try{
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');        
-        console.log('log timestamp:', timestamp);
-      
-        const fileName = `ui_dump_${timestamp}.xml`;
-        const remotePath = `/sdcard/${fileName}`;
-        const localPath = path.join(__dirname, fileName);
-              
-        await client.shell(device_id, `uiautomator dump ${remotePath}`);
-        console.log(`XML dump saved to device as ${remotePath}`);
-              
-        await client
-              .pull(device_id, remotePath)
-              .then(stream => new Promise((resolve, reject) => {
-                const fileStream = fs.createWriteStream(localPath);
-                stream.pipe(fileStream);
-                fileStream.on('finish', resolve);
-                fileStream.on('error', reject);
-              }));
-      
-        console.log(`XML dump pulled to local: ${localPath}`);
-              
-        await client.shell(device_id, `rm ${remotePath}`);
-        console.log(`Temporary file removed from device: ${remotePath}`);
-    } catch(error) {
-        console.error(`Error: ${error.message}`);
     }
   },
 

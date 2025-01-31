@@ -1,15 +1,16 @@
-const { listDevice, startADB, delADBImg, dumpUiAutomatorXml, clickConfirmADBVTB, inputPINADBBIDV, inputPINADBVTB, clickSelectImageADBBAB, clickSelectImageADBVTB, clickScanQRADBVTB, 
+const { listDevice, startADB, delADBImg, clickConfirmADBVTB, inputPINADBBIDV, inputPINADBVTB, clickSelectImageADBBAB, clickSelectImageADBVTB, clickScanQRADBVTB, 
   clickConfirmScanFaceADBBIDV, clickScanQRADBMB, clickLoginADBBAB, clickScanQRADBBAB, clickScanQRADBOCB, clickSelectImageADBMB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBMB, clickConfirmADBOCB, clickConfirmADBBIDV, 
   stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
   tapADB, inputADB, inputADBVTB, checkDeviceMB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
-  connectTcpIp, disconnectTcpIp } = require('../functions/adb.function');
+  connectTcpIp, disconnectTcpIp,
+  trackMBApp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
 const mapAction = {
+  trackMBApp: trackMBApp,
   start: startADB,
   delImg: delADBImg,
-  dumpUiAutomatorXml: dumpUiAutomatorXml,
   clickConfirmVTB: clickConfirmADBVTB,
   inputPINBIDV: inputPINADBBIDV,
   inputPINVTB: inputPINADBVTB,
@@ -76,8 +77,19 @@ module.exports = {
 
   actionADB: async (req, res) => {
     try {      
-      const result = await mapAction[req.body.action](req.body);
-      console.log('log result in actionADB():', result);
+      const result = await mapAction[req.body.action](req.body);           
+
+      responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
+    } catch (error) {
+      console.log('error:', error);
+
+      responseHelper(res, 500, { message: error.message });
+    }
+  },
+
+  actionADB2: (req, res) => {
+    try {      
+      const result = mapAction[req.body.action](req.body);           
 
       responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {
