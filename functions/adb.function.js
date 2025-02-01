@@ -61,22 +61,16 @@ async function dumpXmlToLocal ( device_id, localPath ) {
 
 const checkXmlContent = (localPath) => {
   try {
-    const content = fs.readFileSync(localPath, "utf-8");
-
-    // Tạo danh sách các số 0-9 và chữ "Tiếp"
-    const requiredValues = [..."0123456789", "Tiếp"];
-
-    // Kiểm tra từng giá trị có tồn tại trong content-desc
-    const allExist = requiredValues.every(value => 
-      new RegExp(`content-desc="${value}"`).test(content)
-    );
-
-    return allExist;
+    const content = fs.readFileSync(localPath, "utf-8");    
+    if (content.includes('Số tài&#10;khoản') && content.includes('Số&#10;điện thoại') && content.includes('&#10;Số thẻ')
+      && content.includes('Truy vấn giao dịch giá trị lớn') && content.includes('Đối tác MB') && content.includes('Chuyển tiền')) {
+      return true;
+    }
   } catch (error) {
     console.error("❌ Lỗi khi đọc XML:", error.message);
     return false;
   }
-};
+}
 
 async function stopMBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.mbmobile');
@@ -126,8 +120,7 @@ module.exports = {
           await sendTelegramAlert(
             telegramToken,
             chatId,
-            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`
-          );
+            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
 
             await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
