@@ -59,18 +59,24 @@ async function dumpXmlToLocal ( device_id, localPath ) {
   }
 }
 
-const checkXmlContent = ( localPath ) => {
+const checkXmlContent = (localPath) => {
   try {
-    const content = fs.readFileSync(localPath, 'utf-8');
-    if (content.includes('Money transfer successful') || content.includes('Gmail')) {
-      return true;
-    }
-    return false;
+    const content = fs.readFileSync(localPath, "utf-8");
+
+    // Tạo danh sách các số 0-9 và chữ "Tiếp"
+    const requiredValues = [..."0123456789", "Tiếp"];
+
+    // Kiểm tra từng giá trị có tồn tại trong content-desc
+    const allExist = requiredValues.every(value => 
+      new RegExp(`content-desc="${value}"`).test(content)
+    );
+
+    return allExist;
   } catch (error) {
-    console.error('❌ Lỗi khi đọc XML:', error.message);
+    console.error("❌ Lỗi khi đọc XML:", error.message);
     return false;
   }
-}
+};
 
 async function stopMBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.mbmobile');
@@ -120,7 +126,8 @@ module.exports = {
           await sendTelegramAlert(
             telegramToken,
             chatId,
-            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`
+          );
 
             await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
@@ -139,7 +146,7 @@ module.exports = {
           return false;          
         }
     }
-  },        
+  },
 
   listDevice: async () => {
     try {
@@ -185,8 +192,22 @@ module.exports = {
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
     
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Image']);
-    await delay(1000);      
+    await delay(800);      
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Target-Img']);        
+    await delay(800);
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Hamburgur-Menu']);   
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Hamburgur-Menu']); 
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Galaxy-Note9']); 
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-DCIM']); 
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Camera']); 
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },

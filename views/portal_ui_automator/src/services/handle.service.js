@@ -385,7 +385,7 @@ export const mbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
-  await delay(4000);
+  await delay(9000);
 
   // console.log('4. Scan QR, select img');
   await actionADB({ action: 'clickScanQRMB', device_id: data.device_id });
