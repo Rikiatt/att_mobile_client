@@ -1,13 +1,14 @@
 const { listDevice, startADB, delADBImg, clickConfirmADBVTB, inputPINADBBIDV, inputPINADBVTB, clickSelectImageADBBAB, clickSelectImageADBVTB, clickScanQRADBVTB, 
-  clickConfirmScanFaceADBBIDV, clickScanQRADBMB, clickLoginADBBAB, clickScanQRADBBAB, clickScanQRADBOCB, clickSelectImageADBMB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBMB, clickConfirmADBOCB, clickConfirmADBBIDV, 
-  stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
-  tapADB, inputADB, inputADBVTB, checkDeviceMB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
+  clickConfirmScanFaceADBBIDV, clickScanQRNAB, clickScanQRADBMB, clickLoginNAB, clickLoginADBBAB, clickScanQRADBBAB, clickScanQRADBOCB, clickSelectImageNAB, clickSelectImageADBMB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBMB, clickConfirmADBOCB, clickConfirmADBBIDV, 
+  stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
+  tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  trackMBApp } = require('../functions/adb.function');
+  trackNABApp, trackMBApp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
 const mapAction = {
+  trackNABApp: trackNABApp,
   trackMBApp: trackMBApp,
   start: startADB,
   delImg: delADBImg,
@@ -18,8 +19,11 @@ const mapAction = {
   clickSelectImageVTB: clickSelectImageADBVTB,
   clickScanQRVTB: clickScanQRADBVTB,  
   clickConfirmScanFaceBIDV: clickConfirmScanFaceADBBIDV, 
+  clickScanQRNAB: clickScanQRNAB,
   clickScanQRMB: clickScanQRADBMB,
+  clickSelectImageNAB: clickSelectImageNAB,
   clickSelectImageMB: clickSelectImageADBMB,
+  clickLoginNAB: clickLoginNAB,
   clickLoginBAB: clickLoginADBBAB,
   clickScanQRBAB: clickScanQRADBBAB,
   clickScanQROCB: clickScanQRADBOCB,
@@ -35,6 +39,8 @@ const mapAction = {
   startOCB: startAppADBOCB,
   stopBIDV: stopAppADBBIDV,
   startBIDV: startAppADBBIDV,
+  stopNAB: stopAppADBNAB,
+  startNAB: startAppADBNAB,
   stopMB: stopAppADBMB,
   startMB: startAppADBMB,
   stopVCB: stopAppADBVCB,
@@ -46,6 +52,7 @@ const mapAction = {
   tap: tapADB,
   input: inputADB,
   inputVTB: inputADBVTB,
+  checkDeviceNAB: checkDeviceNAB,
   checkDeviceMB: checkDeviceMB,
   checkDeviceBAB: checkDeviceBAB,
   checkDeviceOCB: checkDeviceOCB,

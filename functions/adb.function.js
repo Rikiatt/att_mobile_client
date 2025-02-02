@@ -9,6 +9,8 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
+const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
+const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
 const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
 const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
@@ -26,6 +28,7 @@ const ensureDirectoryExists = ( dirPath ) => {
 }
 
 const { isMbAppRunning } = require('../functions/checkAppBankStatus');
+const { isOpenBankingAppRunning } = require('../functions/checkAppBankStatus');
 
 async function clearTempFile( { device_id } ) {
   try {      
@@ -59,7 +62,7 @@ async function dumpXmlToLocal ( device_id, localPath ) {
   }
 }
 
-const checkXmlContent = (localPath) => {
+const checkXmlContentMB = (localPath) => {
   try {
     const content = fs.readFileSync(localPath, "utf-8");
     
@@ -92,6 +95,46 @@ const checkXmlContent = (localPath) => {
   }
 };
 
+const checkXmlContentNAB = (localPath) => {
+  try {
+    const content = fs.readFileSync(localPath, "utf-8");
+    
+    const keywordsVI = [
+      "Tài khoản",
+      "Thẻ",
+      "Quét QR",
+      "Chuyển tiền quốc tế",
+      "Danh bạ người nhận",
+      "Danh sách lịch chuyển tiền"
+    ];
+    
+    const keywordsEN = [
+      "Account number",
+      "Phone number",
+      "Card",
+      "Large-value transaction inquiry",
+      "MB partner",
+      "Transfer"
+    ];
+
+    // Kiểm tra xem có đủ tất cả các từ khóa trong một bộ ngôn ngữ không
+    const foundVI = keywordsVI.every(kw => content.includes(kw));
+    const foundEN = keywordsEN.every(kw => content.includes(kw));
+
+    return foundVI || foundEN;
+  } catch (error) {
+    console.error("❌ Lỗi khi đọc XML:", error.message);
+    return false;
+  }
+};
+
+async function stopNABApp ({ device_id }) {    
+  await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
+  console.log('App NAB has been stopped');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 async function stopMBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.mbmobile');
   console.log('App MB has been stopped');
@@ -103,6 +146,64 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
+  trackNABApp : async ( { device_id } ) => {
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi NAB App...');
+    
+    const chatId = '7098096854';
+    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    if (!chatId) {
+      console.error("Cannot continue cause of invalid chat ID.");
+      return;
+    } 
+
+    let running = await isOpenBankingAppRunning( { device_id } );
+
+    if (!running) {
+        console.log("App NAB is not running.");
+        return;
+    }
+        
+    await clearTempFile( { device_id } );
+    
+    while (running) {
+        console.log('App NAB is in process');
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+        await dumpXmlToLocal( device_id, localPath );
+            
+        if (checkXmlContentMB( localPath )) {    
+          // console.log('Stop NAB app');
+          await stopNABApp ( { device_id } );          
+
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+
+            await saveAlertToDatabase({
+              timestamp: new Date().toISOString(),
+              reason: 'Detected sensitive content',
+              filePath: localPath 
+            });
+
+            return false;
+        }
+    
+        running = await isOpenBankingAppRunning( { device_id } );
+    
+        if (!running) {            
+          console.log('🚫 App NAB đã tắt. Dừng theo dõi.');
+          await clearTempFile( { device_id } );      
+          return false;          
+        }
+    }
+  },
+
   trackMBApp : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
@@ -133,7 +234,7 @@ module.exports = {
     
         await dumpXmlToLocal( device_id, localPath );
             
-        if (checkXmlContent( localPath )) {    
+        if (checkXmlContentMB( localPath )) {    
           // console.log('Stop MB Bank app');
           await stopMBApp ( { device_id } );          
 
@@ -241,6 +342,22 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  clickLoginNAB: async ({ device_id }) => {    
+    const coordinatesLoginNAB = await loadCoordinatesForDeviceLoginNAB(device_id);
+    
+    await adbHelper.tapADBBAB(device_id, ...coordinatesLoginNAB['Login']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickScanQRNAB: async ({ device_id }) => {    
+    const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
+    
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
   clickScanQRADBBAB: async ({ device_id }) => {    
     const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);
     
@@ -253,6 +370,26 @@ module.exports = {
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageNAB: async ({ device_id }) => {    
+    const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
+    
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Image']);           
+    await delay(800);
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Hamburgur-Menu']);           
+    await delay(800); 
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Galaxy-Note9']); 
+    await delay(800); 
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-DCIM']); 
+    await delay(800); 
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Camera']); 
+    await delay(800); 
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Target-Img']);  
+    await delay(800);       
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Finish']);
 
     return { status: 200, message: 'Success' };
   },
@@ -377,6 +514,20 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  stopAppADBNAB: async ({ device_id }) => {    
+    await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
+    console.log('App NAB has been stopped');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBNAB: async ({ device_id }) => {
+    console.log('Starting App NAB...');
+    await client.shell(device_id, 'monkey -p ops.namabank.com.vn -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
   stopAppADBMB: async ({ device_id }) => {    
     await client.shell(device_id, 'am force-stop com.mbmobile');
     console.log('App MB has been stopped');
@@ -452,6 +603,24 @@ module.exports = {
     // }
     await delay(1000);
     return { status: 200, message: 'Success' };
+  },
+
+  checkDeviceNAB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRNAB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRNAB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
   },
 
   checkDeviceMB: async ({ device_id }) => {
@@ -877,6 +1046,20 @@ async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
   }
 };
 
+async function loadCoordinatesForDeviceScanQRNAB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRNAB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
+    throw error;
+  }
+};
+
 async function loadCoordinatesForDeviceScanQRMB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
@@ -958,6 +1141,20 @@ async function loadCoordinatesForDeviceLoginBAB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginBAB for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+async function loadCoordinatesForDeviceLoginNAB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesLoginNAB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesLoginNAB for device: ${error.message}`);
     throw error; // Re-throw error for the caller to handle
   }
 };
