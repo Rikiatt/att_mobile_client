@@ -4,7 +4,7 @@ services:
     image: ui_automator_att/node:v2
     build: .
     ports:
-      - '5345:5345'
+      - '3456:3456'
       - '5037:5037'
 
     restart: unless-stopped

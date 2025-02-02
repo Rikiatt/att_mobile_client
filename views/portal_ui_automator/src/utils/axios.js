@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { swalToast } from './swal';
 
-const axiosServices = axios.create({ baseURL: 'http://localhost:5345' });
+const axiosServices = axios.create({ baseURL: 'http://localhost:3456' });
 
 // ==============================|| AXIOS - FOR MOCK SERVICES ||============================== //
 

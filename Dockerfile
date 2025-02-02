@@ -4,5 +4,5 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 5345
+EXPOSE 3456
 CMD ["node", "server.js"]
