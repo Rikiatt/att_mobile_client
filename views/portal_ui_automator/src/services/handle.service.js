@@ -377,7 +377,7 @@ export const mbScanQR = async (data, setLoading) => {
 
   await delay(10000);
   // Track MB App while it is in process  
-  const trackMBAppPromise = actionADB2({ action: 'trackMBApp', device_id: data.device_id });
+  // const trackMBAppPromise = actionADB2({ action: 'trackMBApp', device_id: data.device_id });
 
   // console.log('3. Input password and login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -394,10 +394,10 @@ export const mbScanQR = async (data, setLoading) => {
   await delay(3000); 
 
   // Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
-  const trackResult = await trackMBAppPromise;
-  if (!trackResult) {
-      console.log('📢 Theo dõi MB Bank đã kết thúc.');
-  }
+  // const trackResult = await trackMBAppPromise;
+  // if (!trackResult) {
+  //     console.log('📢 Theo dõi MB Bank đã kết thúc.');
+  // }
 
   setLoading(false);
 };
