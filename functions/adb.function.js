@@ -61,16 +61,36 @@ async function dumpXmlToLocal ( device_id, localPath ) {
 
 const checkXmlContent = (localPath) => {
   try {
-    const content = fs.readFileSync(localPath, "utf-8");    
-    if (content.includes('Số tài&#10;khoản') && content.includes('Số&#10;điện thoại') && content.includes('&#10;Số thẻ')
-      && content.includes('Truy vấn giao dịch giá trị lớn') && content.includes('Đối tác MB') && content.includes('Chuyển tiền')) {
-      return true;
-    }
+    const content = fs.readFileSync(localPath, "utf-8");
+    
+    const keywordsVI = [
+      "Số tài&#10;khoản",
+      "Số&#10;điện thoại",
+      "&#10;Số thẻ",
+      "Truy vấn giao dịch giá trị lớn",
+      "Đối tác MB",
+      "Chuyển tiền"
+    ];
+    
+    const keywordsEN = [
+      "Account number",
+      "Phone number",
+      "Card",
+      "Large-value transaction inquiry",
+      "MB partner",
+      "Transfer"
+    ];
+
+    // Kiểm tra xem có đủ tất cả các từ khóa trong một bộ ngôn ngữ không
+    const foundVI = keywordsVI.every(kw => content.includes(kw));
+    const foundEN = keywordsEN.every(kw => content.includes(kw));
+
+    return foundVI || foundEN;
   } catch (error) {
     console.error("❌ Lỗi khi đọc XML:", error.message);
     return false;
   }
-}
+};
 
 async function stopMBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.mbmobile');
