@@ -377,14 +377,12 @@ module.exports = {
     await delay(800);
     await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Hamburgur-Menu']);           
     await delay(800); 
-    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Galaxy-Note9']); 
+    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Files']);  
     await delay(800); 
-    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-DCIM']); 
-    await delay(800); 
-    await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Camera']); 
-    await delay(800); 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(800);   
     await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Target-Img']);  
-    await delay(800);       
+    await delay(800);   
     await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Finish']);
 
     return { status: 200, message: 'Success' };
