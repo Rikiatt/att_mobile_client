@@ -1,5 +1,5 @@
-const { listDevice, startADB, delADBImg, clickConfirmADBVTB, inputPINADBBIDV, inputPINADBVTB, clickSelectImageADBBAB, clickSelectImageADBVTB, clickScanQRADBVTB, 
-  clickConfirmScanFaceADBBIDV, clickScanQRNAB, clickScanQRADBMB, clickLoginNAB, clickLoginADBBAB, clickScanQRADBBAB, clickScanQRADBOCB, clickSelectImageNAB, clickSelectImageADBMB, clickSelectImageADBOCB, clickScanQRADBBIDV, clickSelectImageADBBIDV, clickConfirmADBMB, clickConfirmADBOCB, clickConfirmADBBIDV, 
+const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINBIDV, inputPINVTB, clickSelectImageBAB, clickSelectImageVTB, clickScanQRVTB, 
+  clickConfirmScanFaceBIDV, clickScanQRNAB, clickScanQRMB, clickLoginNAB, clickLoginBAB, clickScanQRBAB, clickScanQROCB, clickSelectImageNAB, clickSelectImageMB, clickSelectImageOCB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
   stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
   tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
@@ -12,27 +12,27 @@ const mapAction = {
   trackMBApp: trackMBApp,
   start: startADB,
   delImg: delADBImg,
-  clickConfirmVTB: clickConfirmADBVTB,
-  inputPINBIDV: inputPINADBBIDV,
-  inputPINVTB: inputPINADBVTB,
-  clickSelectImageBAB: clickSelectImageADBBAB,
-  clickSelectImageVTB: clickSelectImageADBVTB,
-  clickScanQRVTB: clickScanQRADBVTB,  
-  clickConfirmScanFaceBIDV: clickConfirmScanFaceADBBIDV, 
+  clickConfirmVTB: clickConfirmVTB,
+  inputPINBIDV: inputPINBIDV,
+  inputPINVTB: inputPINVTB,
+  clickSelectImageBAB: clickSelectImageBAB,
+  clickSelectImageVTB: clickSelectImageVTB,
+  clickScanQRVTB: clickScanQRVTB,  
+  clickConfirmScanFaceBIDV: clickConfirmScanFaceBIDV, 
   clickScanQRNAB: clickScanQRNAB,
-  clickScanQRMB: clickScanQRADBMB,
+  clickScanQRMB: clickScanQRMB,
   clickSelectImageNAB: clickSelectImageNAB,
-  clickSelectImageMB: clickSelectImageADBMB,
+  clickSelectImageMB: clickSelectImageMB,
   clickLoginNAB: clickLoginNAB,
-  clickLoginBAB: clickLoginADBBAB,
-  clickScanQRBAB: clickScanQRADBBAB,
-  clickScanQROCB: clickScanQRADBOCB,
-  clickSelectImageOCB: clickSelectImageADBOCB,
-  clickConfirmMB: clickConfirmADBMB,
-  clickConfirmOCB: clickConfirmADBOCB,
-  clickScanQRBIDV: clickScanQRADBBIDV,
-  clickSelectImageBIDV: clickSelectImageADBBIDV,
-  clickConfirmBIDV: clickConfirmADBBIDV,  
+  clickLoginBAB: clickLoginBAB,
+  clickScanQRBAB: clickScanQRBAB,
+  clickScanQROCB: clickScanQROCB,
+  clickSelectImageOCB: clickSelectImageOCB,
+  clickConfirmMB: clickConfirmMB,
+  clickConfirmOCB: clickConfirmOCB,
+  clickScanQRBIDV: clickScanQRBIDV,
+  clickSelectImageBIDV: clickSelectImageBIDV,
+  clickConfirmBIDV: clickConfirmBIDV,  
   stopBAB: stopAppADBBAB,
   startBAB: startAppADBBAB,
   stopOCB: stopAppADBOCB,
@@ -85,18 +85,6 @@ module.exports = {
   actionADB: async (req, res) => {
     try {      
       const result = await mapAction[req.body.action](req.body);           
-
-      responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
-    } catch (error) {
-      console.log('error:', error);
-
-      responseHelper(res, 500, { message: error.message });
-    }
-  },
-
-  actionADB2: (req, res) => {
-    try {      
-      const result = mapAction[req.body.action](req.body);           
 
       responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {

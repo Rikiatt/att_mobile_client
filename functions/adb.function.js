@@ -286,7 +286,7 @@ module.exports = {
     }
   },
 
-  clickConfirmADBVTB: async ({ device_id }) => {    
+  clickConfirmVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Confirm']);      
@@ -294,7 +294,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRADBMB: async ({ device_id }) => {    
+  clickScanQRMB: async ({ device_id }) => {    
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
     
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-ScanQR']);      
@@ -302,23 +302,19 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageADBMB: async ({ device_id }) => {    
+  clickSelectImageMB: async ({ device_id }) => {    
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
     
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Image']);
-    await delay(800);      
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Target-Img']);        
-    await delay(800);
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Hamburgur-Menu']);   
-    await delay(800); 
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Hamburgur-Menu']); 
+    await delay(800);                  
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Hamburgur-Menu']);           
     await delay(800); 
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Galaxy-Note9']); 
     await delay(800); 
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-DCIM']); 
     await delay(800); 
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Camera']); 
-    await delay(800); 
+    await delay(800);
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
     await delay(800); 
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Finish']); 
@@ -326,7 +322,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmADBMB: async ({ device_id }) => {    
+  clickConfirmMB: async ({ device_id }) => {    
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
     
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Confirm']);      
@@ -334,7 +330,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickLoginADBBAB: async ({ device_id }) => {    
+  clickLoginBAB: async ({ device_id }) => {    
     const coordinatesLoginBAB = await loadCoordinatesForDeviceLoginBAB(device_id);
     
     await adbHelper.tapADBBAB(device_id, ...coordinatesLoginBAB['Login']);      
@@ -358,7 +354,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRADBBAB: async ({ device_id }) => {    
+  clickScanQRBAB: async ({ device_id }) => {    
     const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);
     
     await adbHelper.tapADBBAB(device_id, ...coordinatesScanQRBAB['Select-ScanQR']);      
@@ -366,7 +362,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRADBOCB: async ({ device_id }) => {    
+  clickScanQROCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-ScanQR']);      
@@ -394,7 +390,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageADBBAB: async ({ device_id }) => {    
+  clickSelectImageBAB: async ({ device_id }) => {    
     const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);
     
     await adbHelper.tapADBBAB(device_id, ...coordinatesScanQRBAB['Select-Image']);     
@@ -402,7 +398,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageADBOCB: async ({ device_id }) => {    
+  clickSelectImageOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Image']);
@@ -412,7 +408,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmADBOCB: async ({ device_id }) => {    
+  clickConfirmOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Confirm']);      
@@ -420,7 +416,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmADBBIDV: async ({ device_id }) => {  
+  clickConfirmBIDV: async ({ device_id }) => {  
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
           
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
@@ -428,7 +424,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRADBVTB: async ({ device_id }) => {    
+  clickScanQRVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
     
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']);      
@@ -436,7 +432,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageADBVTB: async ({ device_id }) => {    
+  clickSelectImageVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
         
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']); 
@@ -448,7 +444,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickConfirmScanFaceADBBIDV: async ({ device_id }) => {    
+  clickConfirmScanFaceBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
 
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']);
@@ -456,7 +452,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRADBBIDV: async ({ device_id }) => {    
+  clickScanQRBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
     
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['ScanQR']);      
@@ -464,7 +460,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageADBBIDV: async ({ device_id }) => {    
+  clickSelectImageBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
      
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Select-Image']);    
@@ -740,7 +736,7 @@ module.exports = {
     }
   },
 
-  inputPINADBBIDV: async ({ device_id, text }) => {  
+  inputPINBIDV: async ({ device_id, text }) => {  
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
         
     for (const char of text) {
@@ -751,7 +747,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  inputPINADBVTB: async ({ device_id, text }) => {  
+  inputPINVTB: async ({ device_id, text }) => {  
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
         
     for (const char of text) {
@@ -1042,7 +1038,7 @@ async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRBIDV for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 

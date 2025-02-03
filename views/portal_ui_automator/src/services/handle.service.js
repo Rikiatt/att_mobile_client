@@ -1,6 +1,5 @@
 import { swalInputText, swalInputPass, swalNotification, swalToast } from '../utils/swal';
 import { actionADB } from './adb.service';
-import { actionADB2 } from './adb.service';
 
 export const typeText = async (data, setLoading) => {
   const text = await swalInputPass('Nhập ký tự', '', 'Nhập ký tự cần truyền vào thiết bị');
@@ -377,7 +376,7 @@ export const nabScanQR = async (data, setLoading) => {
 
   await delay(10000);
   // Track NAB app while it is in process  
-  // const trackMBAppPromise = actionADB2({ action: 'trackNABApp', device_id: data.device_id });
+  // const trackNABAppPromise = actionADB({ action: 'trackNABApp', device_id: data.device_id });
 
   // console.log('3. Click Log in');   
   await actionADB({ action: 'clickLoginNAB', device_id: data.device_id });
@@ -399,7 +398,7 @@ export const nabScanQR = async (data, setLoading) => {
   // await delay(3000); 
 
   // Đợi trackNABApp hoàn thành (nếu app NAB bị thoát)
-  // const trackResult = await trackMBAppPromise;
+  // const trackResult = await trackNABAppPromise;
   // if (!trackResult) {
   //   console.log('📢 Theo dõi NAB đã kết thúc.');
   // }
@@ -430,7 +429,7 @@ export const mbScanQR = async (data, setLoading) => {
 
   await delay(10000);
   // Track MB App while it is in process  
-  const trackMBAppPromise = actionADB2({ action: 'trackMBApp', device_id: data.device_id });
+  const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
 
   // console.log('3. Input password and login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });

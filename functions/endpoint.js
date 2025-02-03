@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const io = require('socket.io-client');
 const { delay } = require('../helpers/functionHelper');
-const { listDevice, sendFile, delADBImg, delImg } = require('./adb.function');
+const { listDevice, sendFile, delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 

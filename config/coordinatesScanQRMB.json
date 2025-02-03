@@ -17,11 +17,10 @@
         "Select-ScanQR": [414, 787],
         "Select-Image": [810, 1868],         
         "Select-Hamburgur-Menu": [92, 151],
-        "Select-Galaxy-Note9": [268, 789],
-        "Select-DCIM": [97, 1431],
-        "Select-Camera": [97, 485],
-        "Confirm": [714, 2083],
-        "Select-Target-Img": [92, 482],
+        "Select-Galaxy-Note9": [111, 789],
+        "Select-DCIM": [600, 751],
+        "Select-Camera": [111, 456],        
+        "Select-Target-Img": [111, 482],
         "Finish": [888, 151]
     }
 }
