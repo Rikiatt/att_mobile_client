@@ -76,7 +76,7 @@ const checkXmlContentMB = (localPath) => {
     ];
     
     const keywordsEN = [
-      "Account number",
+      "Account",
       "Phone number",
       "Card",
       "Large-value transaction inquiry",
@@ -105,18 +105,18 @@ const checkXmlContentNAB = (localPath) => {
       "Quét QR",
       "Chuyển tiền quốc tế",
       "Danh bạ người nhận",
-      "Danh sách lịch chuyển tiền"
+      "Danh sách lịch chuyển tiền",
+      "Chuyển tiền gần đây"
     ];
     
     const keywordsEN = [
-      "Account number",
-      "Phone number",
+      "Money transfer",
+      "Account",
       "Card",
-      "Large-value transaction inquiry",
-      "MB partner",
-      "Transfer"
+      "QR code",
+      "International payments"
     ];
-
+    
     // Kiểm tra xem có đủ tất cả các từ khóa trong một bộ ngôn ngữ không
     const foundVI = keywordsVI.every(kw => content.includes(kw));
     const foundEN = keywordsEN.every(kw => content.includes(kw));
@@ -129,6 +129,7 @@ const checkXmlContentNAB = (localPath) => {
 };
 
 async function stopNABApp ({ device_id }) {    
+  await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
   console.log('App NAB has been stopped');
   await delay(500);
@@ -176,7 +177,7 @@ module.exports = {
     
         await dumpXmlToLocal( device_id, localPath );
             
-        if (checkXmlContentMB( localPath )) {    
+        if (checkXmlContentNAB( localPath )) {    
           // console.log('Stop NAB app');
           await stopNABApp ( { device_id } );          
 
@@ -379,6 +380,7 @@ module.exports = {
     await delay(800); 
     await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Files']);  
     await delay(800); 
+
     await client.shell(device_id, `input swipe 500 1800 500 300`);
     await delay(800);   
     await adbHelper.tapADBNAB(device_id, ...coordinatesScanQRNAB['Select-Target-Img']);  
@@ -466,7 +468,8 @@ module.exports = {
     return { status: 200, message: 'Success' };
   }, 
 
-  stopAppADBBAB: async ({ device_id }) => {    
+  stopAppADBBAB: async ({ device_id }) => {   
+    await client.shell(device_id, 'input keyevent 3'); 
     await client.shell(device_id, 'am force-stop com.bab.retailUAT');
     console.log('App Bac A Bank has been stopped');
     await delay(200);
@@ -481,6 +484,7 @@ module.exports = {
   },
 
   stopAppADBOCB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
     console.log('App OCB OMNI has been stopped');
     await delay(200);
@@ -495,6 +499,7 @@ module.exports = {
   },
 
   stopAppADBBIDV: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vnpay.bidv');
     console.log('App BIDV has been stopped');
     await delay(200);
@@ -509,6 +514,7 @@ module.exports = {
   },
 
   stopAppADBNAB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
     console.log('App NAB has been stopped');
     await delay(500);
@@ -523,6 +529,7 @@ module.exports = {
   },
 
   stopAppADBMB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.mbmobile');
     console.log('App MB has been stopped');
     await delay(500);
@@ -537,6 +544,7 @@ module.exports = {
   },
 
   stopAppADBVCB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.VCB');
     console.log('App VCB has been stopped');
     await delay(500);
@@ -551,6 +559,7 @@ module.exports = {
   },
 
   stopAppADBVTB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
     console.log('App VietinBank iPay has been stopped');
     await delay(500);
@@ -565,6 +574,7 @@ module.exports = {
   },
 
   stopAppADBSHB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop vn.shb.mbanking');
     console.log('App SHB Mobile has been stopped');
     await delay(500);

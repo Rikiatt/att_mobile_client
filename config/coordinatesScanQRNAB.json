@@ -1,11 +1,11 @@
 {
     "SM-N960": {
         "Select-ScanQR": [942, 1469],
-        
-        "Select-Image": [461, 1702],         
+        "Select-Image": [461, 1702],   
+
         "Select-Hamburgur-Menu": [92, 151],
-        "Select-Files": [99, 1681],
-        "Select-Target-Img": [88, 2005],
+        "Select-Files": [99, 1297],
+        "Select-Target-Img": [99, 525],
         "Finish": [540, 2015]
     }
 }

@@ -374,7 +374,7 @@ export const nabScanQR = async (data, setLoading) => {
   // console.log('2. Start app NAB');
   await actionADB({ action: 'startNAB', device_id: data.device_id });
 
-  await delay(10000);
+  await delay(12000);
   // Track NAB app while it is in process  
   // const trackNABAppPromise = actionADB({ action: 'trackNABApp', device_id: data.device_id });
 
