@@ -32,8 +32,6 @@ const { isOpenBankingAppRunning } = require('../functions/checkAppBankStatus');
 
 const { connectEndpoint } = require('../functions/endpoint');
 
-const deviceHelper = require('../helpers/deviceHelper');
-
 async function clearTempFile( { device_id } ) {
   try {      
       console.log('log device_id in clearTempFile: ', device_id);
