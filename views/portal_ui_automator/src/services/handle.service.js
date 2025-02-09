@@ -140,20 +140,15 @@ export const ocbScanQR = async (data, setLoading) => {
   console.log('4. Input PIN');  
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(5000);
+
+  console.log('5. Copy QR images'); 
+  await actionADB({ action: 'copyQRImages', device_id: data.device_id });
   
-  console.log('5. Scan QR, select img');
+  console.log('6. Scan QR, select img');
   await actionADB({ action: 'clickScanQROCB', device_id: data.device_id });
   await delay(500);
   await actionADB({ action: 'clickSelectImageOCB', device_id: data.device_id });
-  await delay(2000);
-  
-  console.log('6. Click Tiếp tục'); 
-  await actionADB({ action: 'clickConfirmOCB', device_id: data.device_id });     
-  
-  console.log('7. Delete img');  
-  await actionADB({ action: 'delImg', device_id: data.device_id });
-  
-  console.log('8. Finish.');
+  await delay(2000);  
 
   setLoading(false);
 };

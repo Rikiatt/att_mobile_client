@@ -124,9 +124,9 @@ module.exports = {
             await setDataJson(localPath, { ...localData, connect: type, [type]: { ...localData[type], connected: false, message: 'Disconnected' } });
           });
         }
-      }
+      }      
     } catch (e) {
       console.log(e);
     }
-  },
+  }  
 };

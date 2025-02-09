@@ -30,6 +30,10 @@ const ensureDirectoryExists = ( dirPath ) => {
 const { isMbAppRunning } = require('../functions/checkAppBankStatus');
 const { isOpenBankingAppRunning } = require('../functions/checkAppBankStatus');
 
+const { connectEndpoint } = require('../functions/endpoint');
+
+const deviceHelper = require('../helpers/deviceHelper');
+
 async function clearTempFile( { device_id } ) {
   try {      
       console.log('log device_id in clearTempFile: ', device_id);
@@ -363,6 +367,30 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  copyQRImages: async ( { device_id } ) => {
+    console.log("📌 Đường dẫn QR hiện tại:", getQrDevicePath());    
+    let qrDevicePath = getQrDevicePath();
+    console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
+    const filename = path.basename(qrDevicePath);
+    console.log('log filename in copyQRImages:', filename);
+    const sourcePath = `/sdcard/DCIM/Camera/${filename}`;
+    const destinationDir = `/sdcard/`;
+
+    console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
+
+    for (let i = 1; i <= 20; i++) {
+      const destinationPath = `${destinationDir}qr_copy_${i}.jpg`; // Tên ảnh sao chép
+      // const adbCommand = `adb -s ${device_id} shell cp ${sourcePath} ${destinationPath}`;
+      
+      try {
+        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+        console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
+      } catch (error) {
+        console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
+      }
+    }
+  },
+
   clickScanQROCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
@@ -401,9 +429,20 @@ module.exports = {
   clickSelectImageOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
     
-    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Image']);
-    await delay(500);      
-    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Target-Img']);        
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Image']);           
+    await delay(800);
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Hamburgur-Menu']);           
+    await delay(800); 
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Galaxy-Note9']);  
+    await delay(800); 
+
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(800);   
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(800);   
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Target-Img']);  
+    await delay(800);   
+    await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Finish']);        
 
     return { status: 200, message: 'Success' };
   },
