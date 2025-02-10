@@ -7,6 +7,7 @@ const { sendFile, delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
+const adb = require('adbkit');
 const client = adb.createClient({ bin: adbPath });
 
 const date = new Date();
