@@ -4,7 +4,7 @@ const io = require('socket.io-client');
 const { delay } = require('../helpers/functionHelper');
 // const { listDevice, sendFile, delImg } = require('./adb.function');
 // const { sendFile, delImg } = require('./adb.function');
-const { sendFile } = require('./adb.function');
+// const { sendFile } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
@@ -123,6 +123,14 @@ async function delImg  (device_id, devicePath, filename = '') {
       })
     await delay(100);
     client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    return { status: 200, message: 'Success' };
+}
+
+async function sendFile  (device_id, localPath, devicePath) {
+    await client.push(device_id, localPath, devicePath);
+    await delay(500);
+    await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    await delay(100);
     return { status: 200, message: 'Success' };
 }
 
