@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const io = require('socket.io-client');
 const { delay } = require('../helpers/functionHelper');
-const { listDevice, sendFile, delImg } = require('./adb.function');
+// const { listDevice, sendFile, delImg } = require('./adb.function');
+const { sendFile, delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 
@@ -15,6 +16,30 @@ const minutes = String(date.getMinutes()).padStart(2, '0');
 const seconds = String(date.getSeconds()).padStart(2, '0');
 const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
 let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+
+async function listDevice() {
+  try {
+    const devices = await client.listDevices();
+    for (let device of devices) {
+      const [screenSize, nameDevice, androidVersion, model] = await Promise.all([
+        getScreenSize(device.id),
+        getNameDevice(device.id),
+        getAndroidVersion(device.id),
+        getModel(device.id)
+      ])
+
+      device.screenSize = screenSize;
+      device.nameDevice = nameDevice;
+      device.androidVersion = androidVersion;
+      device.model = model;
+    }
+    console.log("Danh sách thiết bị ", devices?.length);
+    return devices;
+  } catch (error) {
+    console.error('Error getting connected devices:', error);
+    return [];
+  }
+}
 
 module.exports = {
   qrDevicePath,
