@@ -30,7 +30,7 @@ const ensureDirectoryExists = ( dirPath ) => {
 const { isMbAppRunning } = require('../functions/checkAppBankStatus');
 const { isOpenBankingAppRunning } = require('../functions/checkAppBankStatus');
 
-const { connectEndpoint } = require('../functions/endpoint');
+const { qrDevicePath, filename } = require('../functions/endpoint');
 
 async function clearTempFile( { device_id } ) {
   try {      
@@ -365,28 +365,32 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  copyQRImages: async ( { device_id } ) => {
-    console.log("📌 Đường dẫn QR hiện tại:", getQrDevicePath());    
-    let qrDevicePath = getQrDevicePath();
+  copyQRImages : async ({ device_id }) => {
     console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
-    const filename = path.basename(qrDevicePath);
+    
+    if (!qrDevicePath) {
+        console.error("❌ Không tìm thấy đường dẫn QR!");
+        return;
+    }
+
     console.log('log filename in copyQRImages:', filename);
-    const sourcePath = `/sdcard/DCIM/Camera/${filename}`;
+    const sourcePath = qrDevicePath; // Sử dụng biến đã import
     const destinationDir = `/sdcard/`;
 
     console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
 
     for (let i = 1; i <= 20; i++) {
-      const destinationPath = `${destinationDir}qr_copy_${i}.jpg`; // Tên ảnh sao chép
-      // const adbCommand = `adb -s ${device_id} shell cp ${sourcePath} ${destinationPath}`;
-      
+      const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
+
       try {
-        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-        console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
+          await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+          console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
       } catch (error) {
-        console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
+          console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
       }
     }
+
+    return { status: 200, message: 'Success' };
   },
 
   clickScanQROCB: async ({ device_id }) => {    

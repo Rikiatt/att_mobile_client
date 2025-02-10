@@ -6,21 +6,7 @@ const { listDevice, sendFile, delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 
-const date = new Date();
-const year = date.getFullYear();
-const month = String(date.getMonth() + 1).padStart(2, '0');
-const day = String(date.getDate()).padStart(2, '0');
-const hours = String(date.getHours()).padStart(2, '0');
-const minutes = String(date.getMinutes()).padStart(2, '0');
-const seconds = String(date.getSeconds()).padStart(2, '0');
-const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
-
 module.exports = {
-  qrDevicePath,
-
-  filename,
-
   connectEndpoint: async ({ type, disconnect }) => {
     const ipPublic = await getIpPublic();
     const lastReceived = {};
@@ -101,7 +87,8 @@ module.exports = {
             const seconds = String(date.getSeconds()).padStart(2, '0');
 
             const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-            let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg')            
+            let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg')
+            let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
             if (vietqr_url) {
               await delImg(findId, '/sdcard/DCIM/Camera/');
