@@ -6,6 +6,8 @@ const { delay } = require('../helpers/functionHelper');
 const { sendFile, delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
+const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
+const client = adb.createClient({ bin: adbPath });
 
 const date = new Date();
 const year = date.getFullYear();
