@@ -3,7 +3,8 @@ const path = require('path');
 const io = require('socket.io-client');
 const { delay } = require('../helpers/functionHelper');
 // const { listDevice, sendFile, delImg } = require('./adb.function');
-const { sendFile, delImg } = require('./adb.function');
+// const { sendFile, delImg } = require('./adb.function');
+const { sendFile } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
@@ -105,6 +106,24 @@ async function listDevice() {
     console.error('Error getting connected devices:', error);
     return [];
   }
+}
+
+async function delImg  (device_id, devicePath, filename = '') {
+    const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+    client.shell(device_id, listCommand)
+      .then(adb.util.readAll)
+      .then((files) => {
+        const fileList = files.toString().trim().split('\n');
+        if (fileList.length === 0) {
+          console.log('No files to delete.');
+          return;
+        }
+        const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+        return client.shell(device_id, deleteCommands);
+      })
+    await delay(100);
+    client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    return { status: 200, message: 'Success' };
 }
 
 module.exports = {
