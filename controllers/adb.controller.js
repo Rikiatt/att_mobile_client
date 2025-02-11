@@ -1,14 +1,15 @@
 const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINBIDV, inputPINVTB, 
   copyQRImages, clickSelectImageBAB, clickSelectImageVTB, clickScanQRVTB, 
-  clickConfirmScanFaceBIDV, clickScanQRNAB, clickScanQRMB, clickLoginNAB, clickLoginBAB, clickScanQRBAB, clickScanQROCB, clickSelectImageNAB, clickSelectImageMB, clickSelectImageOCB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
-  stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
-  tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
+  clickConfirmScanFaceBIDV, clickScanQRNAB, clickScanQRMB, clickScanQRNCB, clickLoginNAB, clickLoginBAB, clickScanQRBAB, clickScanQROCB, clickSelectImageNAB, clickSelectImageNCB, clickSelectImageMB, clickSelectImageOCB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
+  stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
+  tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceNCB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  trackNABApp, trackMBApp } = require('../functions/adb.function');
+  trackOCBApp, trackNABApp, trackMBApp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
 const mapAction = {
+  trackOCBApp: trackOCBApp,
   trackNABApp: trackNABApp,
   trackMBApp: trackMBApp,
   start: startADB,
@@ -23,8 +24,10 @@ const mapAction = {
   clickConfirmScanFaceBIDV: clickConfirmScanFaceBIDV, 
   clickScanQRNAB: clickScanQRNAB,
   clickScanQRMB: clickScanQRMB,
+  clickScanQRNCB: clickScanQRNCB,
   clickSelectImageNAB: clickSelectImageNAB,
   clickSelectImageMB: clickSelectImageMB,
+  clickSelectImageNCB: clickSelectImageNCB,
   clickLoginNAB: clickLoginNAB,
   clickLoginBAB: clickLoginBAB,
   clickScanQRBAB: clickScanQRBAB,
@@ -45,6 +48,8 @@ const mapAction = {
   startNAB: startAppADBNAB,
   stopMB: stopAppADBMB,
   startMB: startAppADBMB,
+  stopNCB: stopAppADBNCB,
+  startNCB: startAppADBNCB,
   stopVCB: stopAppADBVCB,
   startVCB: startAppADBVCB,
   stopVTB: stopAppADBVTB,
@@ -56,6 +61,7 @@ const mapAction = {
   inputVTB: inputADBVTB,
   checkDeviceNAB: checkDeviceNAB,
   checkDeviceMB: checkDeviceMB,
+  checkDeviceNCB: checkDeviceNCB,
   checkDeviceBAB: checkDeviceBAB,
   checkDeviceOCB: checkDeviceOCB,
   checkDeviceBIDV: checkDeviceBIDV,

@@ -50,6 +50,7 @@ import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleNAB from './sections/bank_handle/HandleNAB';
 import HandleMB from './sections/bank_handle/HandleMB';
+import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHB from './sections/bank_handle/HandleSHB';
@@ -281,11 +282,11 @@ function App() {
                         </>
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
-                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      {/* <HandleVcbOld item={item} X={X} Y={Y} setLoading={setLoading} /> */}
+                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} />

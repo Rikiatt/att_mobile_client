@@ -30,7 +30,7 @@ const HandleMB = ({ item, X, Y, setLoading }) => {
               fullWidth
               onClick={() => mbScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
-              Xuất bán tự động
+              Quét QR
             </Button>
           </Tooltip>
         </Stack>

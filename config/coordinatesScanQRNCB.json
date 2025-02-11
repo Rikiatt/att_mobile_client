@@ -1,0 +1,8 @@
+{
+    "SM-N960": {
+        "Select-ScanQR": [540, 2010],
+        "Select-Image": [540, 1720],
+        "Select-Target-Img": [180, 370],
+        "Finish": [540, 1951]
+    }
+}

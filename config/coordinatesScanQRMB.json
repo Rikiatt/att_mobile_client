@@ -1,25 +1,9 @@
 {
-    "SM-A155": {
-       "Select-ScanQR": [417, 779],
-        "Select-Image": [812, 1992],
-        "Select-Target-Img": [0, 0],
-        "Confirm": [0, 0]
-    },
-
-    "CPH2339": {
-       "Select-ScanQR": [414, 787],
-        "Select-Image": [810, 1868],
-        "Select-Target-Img": [210, 881],
-        "Confirm": [714, 2083]
-    },
-
     "SM-N960": {
         "Select-ScanQR": [414, 787],
         "Select-Image": [810, 1868],         
         "Select-Hamburgur-Menu": [92, 151],
-        "Select-Galaxy-Note9": [111, 789],
-        "Select-DCIM": [600, 751],
-        "Select-Camera": [111, 456],        
+        "Select-Galaxy-Note9": [111, 789],       
         "Select-Target-Img": [111, 482],
         "Finish": [888, 151]
     }

@@ -350,7 +350,6 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
 
 // ============== NAB ============== //
 
-// Bán tự động
 export const nabScanQR = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDeviceNAB', device_id: data.device_id }); 
 
@@ -363,15 +362,18 @@ export const nabScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
 
-  // console.log('1. Stop app NAB');
+  console.log('1. Copy QR images'); 
+  await actionADB({ action: 'copyQRImages', device_id: data.device_id });
+
+  console.log('2. Stop app NAB');
   await actionADB({ action: 'stopNAB', device_id: data.device_id });
 
-  // console.log('2. Start app NAB');
+  console.log('3. Start app NAB');
   await actionADB({ action: 'startNAB', device_id: data.device_id });
 
   await delay(12000);
   // Track NAB app while it is in process  
-  // const trackNABAppPromise = actionADB({ action: 'trackNABApp', device_id: data.device_id });
+  const trackNABAppPromise = actionADB({ action: 'trackNABApp', device_id: data.device_id });
 
   // console.log('3. Click Log in');   
   await actionADB({ action: 'clickLoginNAB', device_id: data.device_id });
@@ -384,26 +386,25 @@ export const nabScanQR = async (data, setLoading) => {
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await delay(2000);
+  await delay(2000);  
 
   // console.log('5. Scan QR, select img');
   await actionADB({ action: 'clickScanQRNAB', device_id: data.device_id });
   await delay(500);
   await actionADB({ action: 'clickSelectImageNAB', device_id: data.device_id });
-  // await delay(3000); 
+  await delay(3000); 
 
-  // Đợi trackNABApp hoàn thành (nếu app NAB bị thoát)
-  // const trackResult = await trackNABAppPromise;
-  // if (!trackResult) {
-  //   console.log('📢 Theo dõi NAB đã kết thúc.');
-  // }
+  //Đợi trackNABApp hoàn thành (nếu app NAB bị thoát)
+  const trackResult = await trackNABAppPromise;
+  if (!trackResult) {
+    console.log('📢 Theo dõi NAB đã kết thúc.');
+  }
 
   setLoading(false);
 };
 
 // ============== MB BANK ============== //
 
-// Bán tự động
 export const mbScanQR = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDeviceMB', device_id: data.device_id }); 
 
@@ -416,17 +417,20 @@ export const mbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
   if (!text) return;
 
-  // console.log('1. Stop app MB Bank');
-  await actionADB({ action: 'stopMB', device_id: data.device_id });
+  // console.log('1. Copy QR images'); 
+  // await actionADB({ action: 'copyQRImages', device_id: data.device_id });
 
-  // console.log('2. Start app MB Bank');
+  console.log('2. Stop app MB Bank');
+  await actionADB({ action: 'stopMB', device_id: data.device_id });  
+
+  console.log('3. Start app MB Bank');
   await actionADB({ action: 'startMB', device_id: data.device_id });
 
   await delay(10000);
   // Track MB App while it is in process  
   const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
 
-  // console.log('3. Input password and login');  
+  console.log('4. Input password and login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
@@ -434,7 +438,7 @@ export const mbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
   await delay(9000);
 
-  // console.log('4. Scan QR, select img');
+  console.log('5. Scan QR, select img');
   await actionADB({ action: 'clickScanQRMB', device_id: data.device_id });
   await delay(500);
   await actionADB({ action: 'clickSelectImageMB', device_id: data.device_id });
@@ -446,36 +450,62 @@ export const mbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi MB Bank đã kết thúc.');
   }
 
+  console.log('6. Delete all of imgs in /sdcard and sdcard/DCIM/CAMERA');
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+
   setLoading(false);
 };
 
-// export const mbLogin = async (data, setLoading) => {
-//   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-//   if (!text) return;
+// ============== NCB ============== //
 
-//   setLoading(true);
+export const ncbScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceNCB', device_id: data.device_id }); 
 
-//   try {      
-//     // Start app  
-//     await actionADB({ action: 'stopMB', device_id: data.device_id });
-//     await actionADB({ action: 'startMB', device_id: data.device_id });
-//     await delay(9000);
+  if (deviceCoordinates.status == 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
 
-//     // Nhập mật khẩu và click nút Đăng nhập
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-//     await delay(1000);
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  setLoading(true);    
 
-//     setLoading(false);
-//   } catch (error) {
-//     swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
-//     console.error(error);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  if (!text) return;
+
+  console.log('1. Stop app NCB');
+  await actionADB({ action: 'stopNCB', device_id: data.device_id });  
+
+  console.log('2. Start app NCB');
+  await actionADB({ action: 'startNCB', device_id: data.device_id });
+
+  await delay(10000);
+  // Track NCB App while it is in process  
+  // const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
+
+  console.log('3. Input password and login');  
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(1000);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  await delay(9000);
+
+  console.log('4. Scan QR, select img');
+  await actionADB({ action: 'clickScanQRNCB', device_id: data.device_id });
+  await delay(500);
+  await actionADB({ action: 'clickSelectImageNCB', device_id: data.device_id });
+  await delay(3000); 
+
+  // Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
+  // const trackResult = await trackNCBAppPromise;
+  // if (!trackResult) {
+  //   console.log('📢 Theo dõi MB Bank đã kết thúc.');
+  // }
+
+  // console.log('5. Delete all of imgs in /sdcard and sdcard/DCIM/CAMERA');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+
+  setLoading(false);
+};
 
 // ============== VCB ============== //
 

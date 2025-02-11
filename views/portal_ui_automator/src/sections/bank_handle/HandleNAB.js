@@ -19,7 +19,7 @@ const HandleNAB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>Nam A Bank</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>NAB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Start >> Login >> ScanQR" arrow>
@@ -30,7 +30,7 @@ const HandleNAB = ({ item, X, Y, setLoading }) => {
               fullWidth
               onClick={() => nabScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
-              Xuất bán tự động
+              Quét QR
             </Button>
           </Tooltip>
         </Stack>
