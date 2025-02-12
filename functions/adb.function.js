@@ -1082,21 +1082,63 @@ module.exports = {
   },
 
   delImg: async (device_id, devicePath, filename = '') => {
-    const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
-    client.shell(device_id, listCommand)
-      .then(adb.util.readAll)
-      .then((files) => {
-        const fileList = files.toString().trim().split('\n');
-        if (fileList.length === 0) {
-          console.log('No files to delete.');
-          return;
+    // const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+    // client.shell(device_id, listCommand)
+    //   .then(adb.util.readAll)
+    //   .then((files) => {
+    //     const fileList = files.toString().trim().split('\n');
+    //     if (fileList.length === 0) {
+    //       console.log('No files to delete.');
+    //       return;
+    //     }
+    //     const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+    //     return client.shell(device_id, deleteCommands);
+    //   })
+    // await delay(100);
+    // client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    // return { status: 200, message: 'Success' };
+    const devicePaths = [
+      "/sdcard/",
+      "/storage/emulated/",
+      "/sdcard/DCIM/Camera/",
+      "/sdcard/DCIM/",
+      "/sdcard/DCIM/Screenshots/",
+      "/sdcard/Pictures/",
+      "/sdcard/Pictures/Download/",
+      "/sdcard/Pictures/Download/",
+      "/sdcard/Android/.Trash/com.sec.android.gallery3d/"
+    ];
+
+    try {
+        for (const devicePath of devicePaths) {
+            console.log(`Processing path: ${devicePath}`);
+            const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;
+            const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
+            const fileList = files.toString().trim().split('\n');
+
+            if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
+                console.log(`No files to delete in ${devicePath}.`);
+                continue; // Skip to the next path
+            }
+
+            const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+            console.log(`Delete command for ${devicePath}:`, deleteCommands);
+
+            await client.shell(device_id, deleteCommands);
+
+            // Trigger a media scanner update
+            await delay(100);
+            await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+            // android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/
+            await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/`);
         }
-        const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
-        return client.shell(device_id, deleteCommands);
-      })
-    await delay(100);
-    client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
-    return { status: 200, message: 'Success' };
+
+        console.log('Deleted images successfully!');
+        return { status: 200, message: 'Success' };
+    } catch (error) {
+        console.error('Error deleting images:', error);
+        return { status: 500, message: 'Error deleting images', error };
+    }
   }
 };
 
