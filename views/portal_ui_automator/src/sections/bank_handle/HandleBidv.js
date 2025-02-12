@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { anotherBankCheckQR, bidvLogin, bidvScanQR, bidvConfirm, bidvConfirmBeforeFace, bidvConfirmAfterFace } from '../../services/handle.service';
+import { bidvLogin, bidvScanQR, bidvConfirm, bidvConfirmBeforeFace, bidvConfirmAfterFace } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 

@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vietinLogin, vietinScanQR, vietinConfirm, vietinConfirmAfterFace } from '../../services/handle.service';
+import { vietinLogin, vietinConfirm, vietinConfirmAfterFace } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 

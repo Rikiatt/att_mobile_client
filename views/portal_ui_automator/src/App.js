@@ -2,10 +2,8 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import { getListDevice, } from './api/adb';
 import { connectEndpoint, getVersion, postLocalData } from './api/bridge';
-import { AddLink, Key, KeyOff, KeyRounded, Link, LinkOff, DeveloperMode } from '@mui/icons-material';
+import { AddLink, LinkOff, DeveloperMode } from '@mui/icons-material';
 import Loading from './components/Loading';
-import { swalInputPass } from './utils/swal';
-import { actionADB } from './services/adb.service';
 
 import {
   Avatar,
@@ -29,7 +27,6 @@ import {
 } from '@mui/material';
 
 import {
-  SettingsInputAntenna,
   Save,
   Edit,
   Cancel,
@@ -38,12 +35,11 @@ import {
   Phonelink,
   PhonelinkOff,
   Settings,
-  WifiTetheringError,
-  WifiTethering
+  WifiTetheringError  
 } from '@mui/icons-material';
 
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
-import { connect, connectTcpIp, disconnectTcpIp, enter, home, unlockScreen, delImg, typeText } from './services/handle.service';
+import { connect, connectTcpIp, disconnectTcpIp, enter, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleBAB from './sections/bank_handle/HandleBAB';
 import HandleOCB from './sections/bank_handle/HandleOCB';
@@ -349,7 +345,7 @@ function TitleComp({ title, item, setMutate }) {
     if (!q) return;
 
     const conn = await connectTcpIp({ device_id: item.id, type: q });
-    if (conn?.status == 200) {
+    if (conn?.status === 200) {
       sessionStorage.setItem(`tcpip-${item.id}`, 'connect');
       window.location.reload()
     }
@@ -360,7 +356,7 @@ function TitleComp({ title, item, setMutate }) {
     if (!q) return;
 
     const conn = await disconnectTcpIp({ device_id: item.id });
-    if (conn?.status == 200) {
+    if (conn?.status === 200) {
       sessionStorage.setItem(`tcpip-${item.id}`, 'disconnect');
       window.location.reload()
     }
@@ -432,7 +428,7 @@ function SetupConnect({ setMutate, seting, setSeting }) {
 
   const handleEndpoint = async (type) => {
     const endpoint = await swalInputText('Cập nhật Url cho '
-      + type.toUpperCase(), type == 'att'
+      + type.toUpperCase(), type === 'att'
       ? 'URL có dạng (https://de****.att****.net/ui_manual/connect/ + tên đài)'
       : 'URL có dạng: (https://de****.att***.org/ + tên đài)', 'Url truy cập ... ');
     if (endpoint) {
@@ -440,7 +436,7 @@ function SetupConnect({ setMutate, seting, setSeting }) {
       const data = { [type]: { endpoint: parsedUrl.origin, site: parsedUrl.pathname.replace('/', '') } };
       setMutate((prev) => !prev);
       const result = await postLocalData(data);
-      if (result?.valid == true) {
+      if (result?.valid === true) {
         return swalToast('success', 'Thành công');
       } else {
         return swalToast('error', "Lỗi hệ thống");
@@ -454,7 +450,7 @@ function SetupConnect({ setMutate, seting, setSeting }) {
       if (result) {
         const data = { type, disconnect };
         const result = await connectEndpoint(data);
-        if (result?.valid == true) {
+        if (result?.valid === true) {
           return swalToast('success', 'Thành công');
         } else {
           return swalToast('error', "Lỗi hệ thống");
@@ -464,10 +460,10 @@ function SetupConnect({ setMutate, seting, setSeting }) {
       const acction = await swalQuestionConfirms('warning', 'Thao tác kết nối', 'Thay Url ' + type.toUpperCase(), 'Kết nối ' + type.toUpperCase(), 'Hủy');
 
       if (acction) {
-        if (acction == 'confirm') { return handleEndpoint(type) };
+        if (acction === 'confirm') { return handleEndpoint(type) };
         const data = { type, disconnect };
         const result = await connectEndpoint(data);
-        if (result?.valid == true) {
+        if (result?.valid === true) {
           setSeting((pre) => ({ ...pre, connect: type, [type]: { ...pre[type], connected: !disconnect } }))
           return swalToast('success', 'Thành công');
         } else {
@@ -481,7 +477,7 @@ function SetupConnect({ setMutate, seting, setSeting }) {
   return (
     <Stack direction="row" alignItems="center" spacing={2}>
       <FormControlLabel sx={{
-        background: seting.connect == 'org' ? (seting.org.connected == true ? '#5ced5c' : 'red') : 'unset',
+        background: seting.connect === 'org' ? (seting.org.connected === true ? '#5ced5c' : 'red') : 'unset',
         p: "0 8px",
         borderRadius: 12,
         boxShadow: "rgba(50, 50, 93, 0.25) 0px 30px 60px - 12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset"
@@ -501,7 +497,7 @@ function SetupConnect({ setMutate, seting, setSeting }) {
             </Tooltip>)
       } label="ORG" labelPlacement="start" />
       <FormControlLabel sx={{
-        background: seting.connect == 'att' ? (seting.att.connected ? '#5ced5c' : 'red') : 'unset',
+        background: seting.connect === 'att' ? (seting.att.connected ? '#5ced5c' : 'red') : 'unset',
         p: "0 8px",
         borderRadius: 12,
         boxShadow: "rgba(50, 50, 93, 0.25) 0px 30px 60px - 12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset"
@@ -530,7 +526,7 @@ function SetupIP({ setMutate }) {
     if (!q) return;
     setMutate((prev) => !prev);
     const conn = await connectTcpIp({ device_id: q, type: 'tailscale' });
-    if (conn?.valid == true) {
+    if (conn?.valid === true) {
       return swalToast('success', 'Thành công');
     } else {
       return swalToast('error', "Lỗi hệ thống");
