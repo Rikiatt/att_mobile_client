@@ -223,12 +223,10 @@ module.exports = {
 
             if (vietqr_url) {
               await delImg(findId, '/sdcard/');
-              await delay(300);
+              await delay(1000);
               await delImg(findId, '/sdcard/DCIM/Camera/');
               console.log("Deleted old QR - " + filename);
-              await delay(300);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(300);
+              await delay(1000);
               await downloadQr(vietqr_url, qrLocalPath);
             } else {
               await transToQr(data, qrLocalPath);
