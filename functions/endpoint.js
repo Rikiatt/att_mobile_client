@@ -241,6 +241,25 @@ module.exports = {
             // await delay(100);
 
             await sendFile(findId, qrLocalPath, qrDevicePath);            
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
             
             setTimeout(async () => {              
               await delImg(findId, '/sdcard/', filename); 
