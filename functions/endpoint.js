@@ -22,6 +22,34 @@ const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
 // let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 let qrDevicePath = '/sdcard/' + filename + '.jpg';
 
+const copyQRImages = async ( device_id ) => {
+    console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
+    
+    if (!qrDevicePath) {
+        console.error("❌ Không tìm thấy đường dẫn QR!");
+        return;
+    }
+
+    console.log('log filename in copyQRImages:', filename);
+    const sourcePath = qrDevicePath; // Sử dụng biến đã import
+    const destinationDir = `/sdcard/`;
+
+    console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
+
+    for (let i = 1; i <= 20; i++) {
+      const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
+
+      try {
+          await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+          console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
+      } catch (error) {
+          console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
+      }
+    }
+
+    return { status: 200, message: 'Success' };
+}
+
 const getScreenSize = async (device_id) => {
   try {
     // Thực thi lệnh `wm size` trên thiết bị
@@ -232,26 +260,8 @@ module.exports = {
               // await delImg(findId, '/sdcard/DCIM/Camera/');
               console.log("Deleted old QR - " + filename);
               await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);
-              await delay(1000);
+              await downloadQr(vietqr_url, qrLocalPath);  
+              await copyQRImages(findId);
             } else {
               await transToQr(data, qrLocalPath);
             }
