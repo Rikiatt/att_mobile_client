@@ -262,6 +262,8 @@ module.exports = {
               await delay(1000);
               await downloadQr(vietqr_url, qrLocalPath);  
               await copyQRImages(findId);
+              await delay(2000);
+              await copyQRImages(findId);              
             } else {
               await transToQr(data, qrLocalPath);
             }
