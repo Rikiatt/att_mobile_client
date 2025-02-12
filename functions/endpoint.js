@@ -19,7 +19,8 @@ const hours = String(date.getHours()).padStart(2, '0');
 const minutes = String(date.getMinutes()).padStart(2, '0');
 const seconds = String(date.getSeconds()).padStart(2, '0');
 const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+// let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+let qrDevicePath = '/sdcard/' + filename + '.jpg';
 
 const getScreenSize = async (device_id) => {
   try {
