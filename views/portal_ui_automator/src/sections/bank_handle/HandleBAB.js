@@ -20,7 +20,7 @@ const HandleBAB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>Bac A Bank</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>BAB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
             <Tooltip title="Thao tác đăng nhập (nhập mật khẩu và click đăng nhập)" arrow>
