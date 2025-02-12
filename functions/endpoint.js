@@ -228,6 +228,8 @@ module.exports = {
               console.log("Deleted old QR - " + filename);
               await delay(300);
               await downloadQr(vietqr_url, qrLocalPath);
+              await delay(300);
+              await downloadQr(vietqr_url, qrLocalPath);
             } else {
               await transToQr(data, qrLocalPath);
             }
