@@ -31,7 +31,7 @@ const copyQRImages = async ( device_id ) => {
     }
 
     console.log('log filename in copyQRImages:', filename);
-    const sourcePath = qrDevicePath; // Sử dụng biến đã import
+    const sourcePath = qrDevicePath;
     const destinationDir = `/sdcard/`;
 
     console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
@@ -253,27 +253,16 @@ module.exports = {
             if (vietqr_url) {
               await delImg(findId, '/sdcard/');
               await delay(1000);
-              await delImg(findId, '/sdcard/');
-              await delay(1000);
-              await delImg(findId, '/sdcard/');
-              await delay(1000);
               // await delImg(findId, '/sdcard/DCIM/Camera/');
               console.log("Deleted old QR - " + filename);
               await delay(1000);
-              await downloadQr(vietqr_url, qrLocalPath);  
-              await copyQRImages(findId);
-              await delay(2000);
-              await copyQRImages(findId);              
+              await downloadQr(vietqr_url, qrLocalPath);                                                      
             } else {
               await transToQr(data, qrLocalPath);
             }
             let jsonPath = path.join(__dirname, '..', 'database', findId.split(':')[0] + '_url.json');
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
-
-            // await delImg(findId, '/sdcard/DCIM/Camera/');
-            // console.log("Deleted old QR - " + filename);
-            // await delay(100);
 
             await sendFile(findId, qrLocalPath, qrDevicePath);            
             
