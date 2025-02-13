@@ -181,7 +181,7 @@ module.exports = {
         await dumpXmlToLocal( device_id, localPath );
             
         if (checkXmlContentNAB( localPath )) {    
-          // console.log('Stop NAB app');
+          console.log('Stop NAB app');
           await stopNABApp ( { device_id } );          
 
           await sendTelegramAlert(
@@ -225,44 +225,44 @@ module.exports = {
     let running = await isOpenBankingAppRunning( { device_id } );
 
     if (!running) {
-        console.log("App NAB is not running.");
-        return;
+      console.log("App NAB is not running.");
+      return;
     }
         
     await clearTempFile( { device_id } );
     
     while (running) {
-        console.log('App NAB is in process');
-        const timestamp = Math.floor(Date.now() / 1000).toString();
-        const localPath = path.join(targetDir, `${timestamp}.xml`);
+      console.log('App NAB is in process');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
     
-        await dumpXmlToLocal( device_id, localPath );
+      await dumpXmlToLocal( device_id, localPath );
             
-        if (checkXmlContentNAB( localPath )) {    
-          // console.log('Stop NAB app');
-          await stopNABApp ( { device_id } );          
+      if (checkXmlContentNAB( localPath )) {    
+        // console.log('Stop NAB app');
+        await stopNABApp ( { device_id } );          
 
-          await sendTelegramAlert(
-            telegramToken,
-            chatId,
-            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
 
-            await saveAlertToDatabase({
-              timestamp: new Date().toISOString(),
-              reason: 'Detected sensitive content',
-              filePath: localPath 
-            });
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: 'Detected sensitive content',
+            filePath: localPath 
+          });
 
-            return false;
-        }
+          return false;
+      }
     
-        running = await isOpenBankingAppRunning( { device_id } );
+      running = await isOpenBankingAppRunning( { device_id } );
     
-        if (!running) {            
-          console.log('🚫 App NAB đã tắt. Dừng theo dõi.');
-          await clearTempFile( { device_id } );      
-          return false;          
-        }
+      if (!running) {            
+        console.log('🚫 App NAB đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
     }
   },
 
@@ -921,23 +921,23 @@ module.exports = {
         
     for (const char of text) {
       if (isUpperCase(char)) {
-          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['CapsLock']);
-          await sleep(50); 
-          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char]);
-          console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
-          await sleep(50);
+        await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['CapsLock']);
+        await sleep(50); 
+        await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char]);
+        console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
+        await sleep(50);
       }
       else if (isSpecialChar(char)) {
-          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['!#1']);
-          await sleep(50); 
-          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char]);
-          console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
-          await sleep(50); 
-          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['ABC']);
+        await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['!#1']);
+        await sleep(50); 
+        await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char]);
+        console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
+        await sleep(50); 
+        await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB['ABC']);
       }        
       else {
-          await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char.toLowerCase()]);
-          console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
+        await adbHelper.tapADBVTB(device_id, ...coordinatesLoginVTB[char.toLowerCase()]);
+        console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
       }
               
       await sleep(50); 
@@ -1038,47 +1038,47 @@ module.exports = {
   },
   
   delADBImg: async ({ device_id }) => {
-      const devicePaths = [
-        "/sdcard/",
-        "/sdcard/DCIM/Camera/",
-        "/sdcard/DCIM/",
-        "/sdcard/DCIM/Screenshots/",
-        "/sdcard/Pictures/",
-        "/sdcard/Pictures/Download/",
-        "/sdcard/Pictures/Download/",
-        "/sdcard/Android/.Trash/com.sec.android.gallery3d/"
-      ];
+    const devicePaths = [
+      "/sdcard/",
+      "/sdcard/DCIM/Camera/",
+      "/sdcard/DCIM/",
+      "/sdcard/DCIM/Screenshots/",
+      "/sdcard/Pictures/",
+      "/sdcard/Pictures/Download/",
+      "/sdcard/Pictures/Download/",
+      "/sdcard/Android/.Trash/com.sec.android.gallery3d/"
+    ];
   
-      try {
-          for (const devicePath of devicePaths) {
-              console.log(`Processing path: ${devicePath}`);
-              const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;
-              const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
-              const fileList = files.toString().trim().split('\n');
+    try {
+        for (const devicePath of devicePaths) {
+          console.log(`Processing path: ${devicePath}`);
+            const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;
+            const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
+            const fileList = files.toString().trim().split('\n');
   
-              if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
-                  console.log(`No files to delete in ${devicePath}.`);
-                  continue; // Skip to the next path
-              }
+            if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
+              console.log(`No files to delete in ${devicePath}.`);
+              continue; // Skip to the next path
+            }
   
-              const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
-              console.log(`Delete command for ${devicePath}:`, deleteCommands);
+            const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+            console.log(`Delete command for ${devicePath}:`, deleteCommands);
   
-              await client.shell(device_id, deleteCommands);
+            await client.shell(device_id, deleteCommands);
   
-              // Trigger a media scanner update
-              await delay(100);
-              await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
-              // android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/
-              await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/`);
-          }
+            // Trigger a media scanner update
+            await delay(100);
+            await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+            // android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/
+            await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/`);
+        }
   
-          console.log('Deleted images successfully!');
-          return { status: 200, message: 'Success' };
-      } catch (error) {
+        console.log('Deleted images successfully!');
+        return { status: 200, message: 'Success' };        
+        } catch (error) {
           console.error('Error deleting images:', error);
           return { status: 500, message: 'Error deleting images', error };
-      }
+    }
   },
 
   delImg: async (device_id, devicePath, filename = '') => {
@@ -1183,8 +1183,8 @@ const startFirstAvailableBank = async (device_id) => {
     console.log(`${firstBank.name} started successfully.`);
     return { status: 200, message: `Started ${firstBank.name} successfully.` };
   } catch (error) {
-      console.error("Error in startFirstAvailableBank:", error.message);
-      return { status: 500, message: "Internal error occurred." };
+    console.error("Error in startFirstAvailableBank:", error.message);
+    return { status: 500, message: "Internal error occurred." };
   }
 };
 
