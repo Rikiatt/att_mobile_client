@@ -447,23 +447,23 @@ module.exports = {
     
     if (!qrDevicePath) {
       console.error("❌ Cannot find the directory of QR!");
-        return;
+      return;
     }
 
     console.log('log filename in copyQRImages:', filename);
     const sourcePath = qrDevicePath; // Sử dụng biến đã import
     const destinationDir = `/sdcard/`;
 
-    console.log(`Copying imgages from ${sourcePath} in device: ${device_id}...`);
+    console.log(`Copying img from ${sourcePath} in device: ${device_id}...`);
 
     for (let i = 1; i <= 20; i++) {
       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
       try {
-          await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-          console.log(`✅ Copied img to: ${destinationPath}`);
+        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+        console.log(`✅ Copied img to: ${destinationPath}`);
       } catch (error) {
-          console.error(`❌ Got an error when copying img ${destinationPath}: ${error}`);
+        console.error(`❌ Got an error when copying img ${destinationPath}: ${error}`);
       }
     }
 
