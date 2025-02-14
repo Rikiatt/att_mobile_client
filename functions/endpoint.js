@@ -23,45 +23,19 @@ let qrDevicePath = '/sdcard/' + filename + '.jpg';
 console.log('log qrDevicePath in endpoint (1st time):', qrDevicePath);
 
 const copyQRImages = async ( device_id ) => {    
-    if (!qrDevicePath) {
-        console.error("❌ Không tìm thấy đường dẫn QR!");
-        return;
-    }
-
-    console.log('log filename in copyQRImages:', filename);
-    const sourcePath = qrDevicePath;
-    const destinationDir = `/sdcard/DCIM/`;
-
-    console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
-
-    for (let i = 1; i <= 1; i++) {
-      const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
-
-      try {
-          await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-          console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
-      } catch (error) {
-          console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
-      }
-    }
-
-    return { status: 200, message: 'Success' };
-}
-
-const copyQRImages2 = async ( device_id ) => {    
   if (!qrDevicePath) {
       console.error("❌ Không tìm thấy đường dẫn QR!");
       return;
   }
 
   console.log('log filename in copyQRImages:', filename);
-  const sourcePath = `/sdcard/DCIM/`;
-  const destinationDir = `/sdcard/`;
+  const sourcePath = qrDevicePath;
+  const destinationDir = `/sdcard/DCIM/`;
 
-  console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
+  console.log(`Copying imgages from ${sourcePath} in device: ${device_id}...`);
 
   for (let i = 1; i <= 1; i++) {
-    const destinationPath = `${destinationDir}${filename}_copy_${i+1}.jpg`;
+    const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
     try {
         await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
@@ -72,7 +46,33 @@ const copyQRImages2 = async ( device_id ) => {
   }
 
   return { status: 200, message: 'Success' };
-}
+};
+
+const copyQRImages2 = async (device_id) => {
+  if (!qrDevicePath) {
+      console.error("❌ Cannot find the directory of QR!");
+      return;
+  }
+
+  console.log('log filename in copyQRImages2:', filename);
+  const sourceDir = `/sdcard/DCIM/`;
+  const destinationPath = qrDevicePath;
+
+  console.log(`Copying imgages from ${sourceDir} to ${destinationPath} in device ${device_id}...`);
+
+  for (let i = 1; i <= 1; i++) {
+      const sourcePath = `${sourceDir}${filename}_copy_${i}.jpg`;
+
+      try {
+          await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+          console.log(`✅ Copied img from: ${sourcePath} to ${destinationPath}`);
+      } catch (error) {
+          console.error(`❌ Got an error when coppying img ${sourcePath} to ${destinationPath}: ${error}`);
+      }
+  }
+
+  return { status: 200, message: 'Success' };
+};
 
 const getScreenSize = async (device_id) => {
   try {

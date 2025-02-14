@@ -446,7 +446,7 @@ module.exports = {
     console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
     
     if (!qrDevicePath) {
-        console.error("❌ Không tìm thấy đường dẫn QR!");
+      console.error("❌ Cannot find the directory of QR!");
         return;
     }
 
@@ -461,9 +461,9 @@ module.exports = {
 
       try {
           await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-          console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
+          console.log(`✅ Copied img to: ${destinationPath}`);
       } catch (error) {
-          console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
+          console.error(`❌ Got an error when copying img ${destinationPath}: ${error}`);
       }
     }
 
