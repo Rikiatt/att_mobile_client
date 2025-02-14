@@ -34,7 +34,7 @@ const copyQRImages = async ( device_id ) => {
 
     console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 2; i++) {
       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
       try {
@@ -254,7 +254,8 @@ module.exports = {
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
             console.log('log qrDevicePath before it sent to device:',qrDevicePath);
-            await sendFile(findId, qrLocalPath, qrDevicePath);            
+            await sendFile(findId, qrLocalPath, qrDevicePath); 
+            copyQRImages(findId);        
             
             setTimeout(async () => {              
               await delImg(findId, '/sdcard/', filename);                                
