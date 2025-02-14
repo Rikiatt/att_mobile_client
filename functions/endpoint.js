@@ -18,7 +18,7 @@ const day = String(date.getDate()).padStart(2, '0');
 const hours = String(date.getHours()).padStart(2, '0');
 const minutes = String(date.getMinutes()).padStart(2, '0');
 const seconds = String(date.getSeconds()).padStart(2, '0');
-const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+let filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
 let qrDevicePath = '/sdcard/' + filename + '.jpg';
 console.log('log qrDevicePath in endpoint (1st time):', qrDevicePath);
 
