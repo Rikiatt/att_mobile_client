@@ -23,98 +23,30 @@ let qrDevicePath = '/sdcard/' + filename + '.jpg';
 console.log('log qrDevicePath in endpoint (1st time):', qrDevicePath);
 
 const copyQRImages = async ( device_id ) => {    
-  if (!qrDevicePath) {
-      console.error("❌ Không tìm thấy đường dẫn QR!");
-      return;
-  }
-
-  console.log('log filename in copyQRImages:', filename);
-  const sourcePath = qrDevicePath;
-  const destinationDir = `/sdcard/DCIM/`;
-
-  console.log(`Copying imgages from ${sourcePath} in device: ${device_id}...`);
-
-  for (let i = 1; i <= 2; i++) {
-    const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
-
-    try {
-        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-        console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
-    } catch (error) {
-        console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
+    if (!qrDevicePath) {
+        console.error("❌ Không tìm thấy đường dẫn QR!");
+        return;
     }
-  }
 
-  return { status: 200, message: 'Success' };
-};
+    console.log('log filename in copyQRImages:', filename);
+    const sourcePath = qrDevicePath;
+    const destinationDir = `/sdcard/`;
 
-const copyQRImages2 = async (device_id) => {
-  if (!qrDevicePath) {
-    console.error("❌ Cannot find the directory of QR!");
-    return;
-  }
+    console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
 
-  console.log('log filename in copyQRImages2:', filename);
-  const sourcePath = `/sdcard/DCIM/${filename}_copy_1.jpg`; 
-  const destinationDir = `/sdcard/`; 
+    for (let i = 1; i <= 20; i++) {
+      const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
-  try {    
-    const output = await client.shell(device_id, `ls ${destinationDir}`);
-    const result = await adb.util.readAll(output);
-    const fileList = result.toString().split("\n");
-    
-    let maxIndex = 0;
-    const regex = new RegExp(`${filename}_copy_(\\d+)\\.jpg`);
-
-    fileList.forEach(file => {
-      const match = file.match(regex);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > maxIndex) {
-          maxIndex = num;
-        }
+      try {
+          await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+          console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
+      } catch (error) {
+          console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
       }
-    });
-
-    const newIndex = maxIndex + 1;
-    const destinationPath = `${destinationDir}${filename}_copy_${newIndex}.jpg`;
-
-    console.log(`Copying img from ${sourcePath} to ${destinationPath} in device ${device_id}...`);
-      
-    await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-    console.log(`✅ Copied img to: ${destinationPath}`);
-  } catch (error) {
-    console.error(`❌ Got an error when copying img ${destinationPath}: ${error}`);
-  }
-
-  return { status: 200, message: 'Success' };
-};
-
-const copyQRImages3 = async ( device_id ) => {    
-  if (!qrDevicePath) {
-      console.error("❌ Không tìm thấy đường dẫn QR!");
-      return;
-  }
-
-  console.log('log filename in copyQRImages:', filename);
-  const sourcePath = qrDevicePath;
-  const destinationDir = `/sdcard/DCIM/Camera/`;
-
-  console.log(`Copying imgages from ${sourcePath} in device: ${device_id}...`);
-
-  for (let i = 1; i <= 2; i++) {
-    const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
-
-    try {
-        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-        console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
-    } catch (error) {
-        console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
     }
-  }
 
-  return { status: 200, message: 'Success' };
-};
+    return { status: 200, message: 'Success' };
+}
 
 const getScreenSize = async (device_id) => {
   try {
@@ -322,20 +254,11 @@ module.exports = {
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
             console.log('log qrDevicePath before it sent to device:',qrDevicePath);
-            await sendFile(findId, qrLocalPath, qrDevicePath); 
-            copyQRImages(findId);        
-            await delay(1000);
-            copyQRImages2(findId);  
-            await delay(1000);   
-            copyQRImages3(findId);   
+            await sendFile(findId, qrLocalPath, qrDevicePath);            
             
             setTimeout(async () => {              
-              await delImg(findId, '/sdcard/', filename);                 
-              await delay(1000);
-              await delImg(findId, '/sdcard/DCIM/', filename); 
-              await delay(1000);              
-              await delImg(findId, '/sdcard/DCIM/Camera/', filename); 
-              console.log("Deleted old QR after 5 minutes - " + filename);
+              await delImg(findId, '/sdcard/', filename);                                
+              console.log("Deleted QR old - " + filename);
             }, 300000);
 
             // Thành công !!!
