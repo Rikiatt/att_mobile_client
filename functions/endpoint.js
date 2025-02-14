@@ -30,7 +30,7 @@ const copyQRImages = async ( device_id ) => {
 
     console.log('log filename in copyQRImages:', filename);
     const sourcePath = qrDevicePath;
-    const destinationDir = `/sdcard/`;
+    const destinationDir = `/sdcard/DCIM/`;
 
     console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
 
