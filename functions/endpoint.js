@@ -34,7 +34,7 @@ const copyQRImages = async ( device_id ) => {
 
     console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
 
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 1; i++) {
       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
       try {
@@ -46,6 +46,32 @@ const copyQRImages = async ( device_id ) => {
     }
 
     return { status: 200, message: 'Success' };
+}
+
+const copyQRImages2 = async ( device_id ) => {    
+  if (!qrDevicePath) {
+      console.error("❌ Không tìm thấy đường dẫn QR!");
+      return;
+  }
+
+  console.log('log filename in copyQRImages:', filename);
+  const sourcePath = `/sdcard/DCIM/`;
+  const destinationDir = `/sdcard/`;
+
+  console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
+
+  for (let i = 1; i <= 1; i++) {
+    const destinationPath = `${destinationDir}${filename}_copy_${i+1}.jpg`;
+
+    try {
+        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+        console.log(`✅ Đã sao chép ảnh vào: ${destinationPath}`);
+    } catch (error) {
+        console.error(`❌ Lỗi sao chép ảnh ${destinationPath}: ${error}`);
+    }
+  }
+
+  return { status: 200, message: 'Success' };
 }
 
 const getScreenSize = async (device_id) => {
@@ -256,6 +282,8 @@ module.exports = {
             console.log('log qrDevicePath before it sent to device:',qrDevicePath);
             await sendFile(findId, qrLocalPath, qrDevicePath); 
             copyQRImages(findId);        
+            await delay(1000);
+            copyQRImages2(findId);        
             
             setTimeout(async () => {              
               await delImg(findId, '/sdcard/', filename);                 
