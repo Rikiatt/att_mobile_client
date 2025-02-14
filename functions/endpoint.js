@@ -19,12 +19,10 @@ const hours = String(date.getHours()).padStart(2, '0');
 const minutes = String(date.getMinutes()).padStart(2, '0');
 const seconds = String(date.getSeconds()).padStart(2, '0');
 const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-// let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 let qrDevicePath = '/sdcard/' + filename + '.jpg';
+console.log('log qrDevicePath in endpoint (1st time):', qrDevicePath);
 
-const copyQRImages = async ( device_id ) => {
-    console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
-    
+const copyQRImages = async ( device_id ) => {    
     if (!qrDevicePath) {
         console.error("❌ Không tìm thấy đường dẫn QR!");
         return;
@@ -264,6 +262,7 @@ module.exports = {
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
+            console.log('log qrDevicePath before it sent to device:',qrDevicePath);
             await sendFile(findId, qrLocalPath, qrDevicePath);            
             
             setTimeout(async () => {              
