@@ -18,7 +18,7 @@ const day = String(date.getDate()).padStart(2, '0');
 const hours = String(date.getHours()).padStart(2, '0');
 const minutes = String(date.getMinutes()).padStart(2, '0');
 const seconds = String(date.getSeconds()).padStart(2, '0');
-let filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
 let qrDevicePath = '/sdcard/' + filename + '.jpg';
 console.log('log qrDevicePath in endpoint (1st time):', qrDevicePath);
 
@@ -237,15 +237,6 @@ module.exports = {
               return;
             }
 
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-
-            const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
             let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');            
 
             if (vietqr_url) {
@@ -266,9 +257,7 @@ module.exports = {
             await sendFile(findId, qrLocalPath, qrDevicePath);            
             
             setTimeout(async () => {              
-              await delImg(findId, '/sdcard/', filename); 
-              await delay(300);              
-              await delImg(findId, '/sdcard/DCIM/Camera/', filename);                                
+              await delImg(findId, '/sdcard/', filename);                                
               console.log("Deleted QR old - " + filename);
             }, 300000);
 
