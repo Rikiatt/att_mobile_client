@@ -454,7 +454,7 @@ module.exports = {
     const sourcePath = qrDevicePath; // Sử dụng biến đã import
     const destinationDir = `/sdcard/`;
 
-    console.log(`Bắt đầu sao chép ảnh từ ${sourcePath} trên thiết bị ${device_id}...`);
+    console.log(`Copying imgages from ${sourcePath} in device: ${device_id}...`);
 
     for (let i = 1; i <= 20; i++) {
       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;

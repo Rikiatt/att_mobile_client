@@ -258,8 +258,10 @@ module.exports = {
             copyQRImages(findId);        
             
             setTimeout(async () => {              
-              await delImg(findId, '/sdcard/', filename);                                
-              console.log("Deleted QR old - " + filename);
+              await delImg(findId, '/sdcard/', filename);                 
+              await delay(1000);
+              await delImg(findId, '/sdcard/DCIM/', filename);               
+              console.log("Deleted old QR after 5 minutes - " + filename);
             }, 300000);
 
             // Thành công !!!
