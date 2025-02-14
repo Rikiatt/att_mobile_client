@@ -34,7 +34,7 @@ const copyQRImages = async ( device_id ) => {
 
   console.log(`Copying imgages from ${sourcePath} in device: ${device_id}...`);
 
-  for (let i = 1; i <= 1; i++) {
+  for (let i = 1; i <= 2; i++) {
     const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
     try {
