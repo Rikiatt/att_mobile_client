@@ -48,32 +48,6 @@ const copyQRImages = async ( device_id ) => {
   return { status: 200, message: 'Success' };
 };
 
-// const copyQRImages2 = async (device_id) => {
-//   if (!qrDevicePath) {
-//       console.error("❌ Cannot find the directory of QR!");
-//       return;
-//   }
-
-//   console.log('log filename in copyQRImages2:', filename);
-//   const sourceDir = `/sdcard/DCIM/`;
-//   const destinationPath = qrDevicePath;
-
-//   console.log(`Copying imgages from ${sourceDir} to ${destinationPath} in device ${device_id}...`);
-
-//   for (let i = 1; i <= 1; i++) {
-//       const sourcePath = `${sourceDir}${filename}_copy_${i}.jpg`;
-
-//       try {
-//           await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-//           console.log(`✅ Copied img from: ${sourcePath} to ${destinationPath}`);
-//       } catch (error) {
-//           console.error(`❌ Got an error when coppying img ${sourcePath} to ${destinationPath}: ${error}`);
-//       }
-//   }
-
-//   return { status: 200, message: 'Success' };
-// };
-
 const copyQRImages2 = async (device_id) => {
   if (!qrDevicePath) {
     console.error("❌ Cannot find the directory of QR!");
@@ -325,7 +299,9 @@ module.exports = {
             await sendFile(findId, qrLocalPath, qrDevicePath); 
             copyQRImages(findId);        
             await delay(1000);
-            copyQRImages2(findId);        
+            copyQRImages2(findId);  
+            await delay(1000);   
+            copyQRImages(findId);   
             
             setTimeout(async () => {              
               await delImg(findId, '/sdcard/', filename);                 
