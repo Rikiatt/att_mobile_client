@@ -451,7 +451,7 @@ module.exports = {
     }
 
     console.log('log filename in copyQRImages:', filename);
-    const sourcePath = qrDevicePath; // Sử dụng biến đã import
+    const sourcePath = qrDevicePath;
     const destinationDir = `/sdcard/`;
 
     console.log(`Copying img from ${sourcePath} in device: ${device_id}...`);

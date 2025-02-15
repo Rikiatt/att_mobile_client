@@ -227,8 +227,7 @@ module.exports = {
               return;
             };
             lastReceived[findId] = now;
-
-            // fake data for testing
+            
             const { vietqr_url, trans_id, bin, account_number, amount, trans_mess, PIN, bank_pass } = data;
 
             if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess || PIN || bank_pass)) {
@@ -240,6 +239,7 @@ module.exports = {
             let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');            
 
             if (vietqr_url) {
+              console.log('log vietqr_url:', vietqr_url);
               await delImg(findId, '/sdcard/');
               await delay(1000);
               // await delImg(findId, '/sdcard/DCIM/Camera/');
