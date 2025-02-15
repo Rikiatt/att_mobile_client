@@ -377,7 +377,7 @@ module.exports = {
     await delay(800); 
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
     await delay(800); 
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Finish']); 
+    // await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },

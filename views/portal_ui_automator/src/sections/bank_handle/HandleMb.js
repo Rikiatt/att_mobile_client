@@ -19,7 +19,7 @@ const HandleMB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>MB Bank</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>MB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Start >> Login >> ScanQR" arrow>

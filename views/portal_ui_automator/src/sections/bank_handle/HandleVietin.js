@@ -19,7 +19,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>Vietin</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>VTB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Thao tác đăng nhập" arrow>
