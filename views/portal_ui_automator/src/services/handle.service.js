@@ -51,7 +51,7 @@ export const babLogin = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
@@ -84,7 +84,7 @@ export const babScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   setLoading(true);
@@ -110,7 +110,7 @@ export const ocbScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceOCB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ OCB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   setLoading(true);  
@@ -159,7 +159,7 @@ export const anotherBankCheckQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu đăng nhập bank khác bất kỳ');
@@ -184,7 +184,7 @@ export const bidvLogin = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
@@ -229,7 +229,7 @@ export const bidvScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   setLoading(true);
@@ -255,7 +255,7 @@ export const bidvConfirm = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
@@ -280,7 +280,7 @@ export const bidvConfirmBeforeFace = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   } 
 
   // Click vào Next
@@ -292,7 +292,7 @@ export const bidvConfirmAfterFace = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
@@ -315,7 +315,7 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }
 
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
@@ -354,7 +354,7 @@ export const nabScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceNAB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ NAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   setLoading(true);    
@@ -409,7 +409,7 @@ export const mbScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceMB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ MB Bank", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   setLoading(true);    
@@ -456,13 +456,63 @@ export const mbScanQR = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== MSB ============== //
+
+export const msbScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceMSB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status === 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ MB Bank", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  if (!text) return;
+
+  console.log('1. Stop app MSB');
+  await actionADB({ action: 'stopMB', device_id: data.device_id });  
+
+  console.log('2. Start app MSB');
+  await actionADB({ action: 'startMB', device_id: data.device_id });
+
+  await delay(10000);
+  // Track MB App while it is in process  
+  const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
+
+  console.log('4. Input password and login');  
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(1000);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  await delay(9000);
+
+  console.log('5. Scan QR, select img');
+  await actionADB({ action: 'clickScanQRMB', device_id: data.device_id });
+  await delay(500);
+  await actionADB({ action: 'clickSelectImageMB', device_id: data.device_id });
+  await delay(3000); 
+
+  // Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
+  const trackResult = await trackMBAppPromise;
+  if (!trackResult) {
+    console.log('📢 Theo dõi MB Bank đã kết thúc.');
+  }
+
+  console.log('6. Delete all of imgs in /sdcard and sdcard/DCIM/CAMERA');
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+
+  setLoading(false);
+};
+
 // ============== NCB ============== //
 
 export const ncbScanQR = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDeviceNCB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ NCB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   setLoading(true);    
@@ -603,7 +653,7 @@ export const vietinLogin = async (data, setLoading) => {
     const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
             
     if (deviceCoordinates.status === 500) {
-      return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+      return swalNotification("error", "Thiết bị chưa hỗ trợ VTB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
     }    
 
     if (checkDeviceFHDOrNot.status === 500) {
@@ -647,7 +697,7 @@ export const vietinScanQR = async (data, setLoading) => {
     const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
             
     if (deviceCoordinates.status === 500) {
-      return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+      return swalNotification("error", "Thiết bị chưa hỗ trợ VTB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
     }    
 
     if (checkDeviceFHDOrNot.status === 500) {
@@ -673,7 +723,7 @@ export const vietinConfirm = async (data, setLoading) => {
     const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
             
     if (deviceCoordinates.status === 500) {
-      return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+      return swalNotification("error", "Thiết bị chưa hỗ trợ VTB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
     }    
 
     if (checkDeviceFHDOrNot.status === 500) {
@@ -713,7 +763,7 @@ export const vietinConfirmAfterFace = async (data, setLoading) => {
     const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
             
     if (deviceCoordinates.status === 500) {
-      return swalNotification("error", "Thiết bị chưa hỗ trợ", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+      return swalNotification("error", "Thiết bị chưa hỗ trợ VTB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
     }    
 
     if (checkDeviceFHDOrNot.status === 500) {

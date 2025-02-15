@@ -13,6 +13,7 @@ const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
 const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
 const coordinatesScanQRNCB = require('../config/coordinatesScanQRNCB.json');
+const coordinatesScanQRMSB = require('../config/coordinatesScanQRMSB.json');
 const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
@@ -675,6 +676,20 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  startAppADBMSB: async ({ device_id }) => {
+    console.log('Starting App MSB...');
+    await client.shell(device_id, 'monkey -p vn.com.msb.smartBanking -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  stopAppADBMSB: async ({ device_id }) => {
+    console.log('Stopping App MSB...');
+    await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
   stopAppADBVCB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.VCB');
@@ -785,6 +800,24 @@ module.exports = {
       
       if (deviceCoordinates == undefined) {        
         console.log(`No coordinatesScanQRNCB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceMSB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRMSB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRMSB found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   

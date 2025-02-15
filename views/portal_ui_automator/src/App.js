@@ -47,6 +47,7 @@ import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleNAB from './sections/bank_handle/HandleNAB';
 import HandleMB from './sections/bank_handle/HandleMB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
+import HandleMSB from './sections/bank_handle/HandleMSB';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHB from './sections/bank_handle/HandleSHB';
@@ -282,6 +283,7 @@ function App() {
                       <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />

@@ -1,8 +1,8 @@
 const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINBIDV, inputPINVTB, 
   copyQRImages, clickSelectImageBAB, clickSelectImageVTB, clickScanQRVTB, 
   clickConfirmScanFaceBIDV, clickScanQRNAB, clickScanQRMB, clickScanQRNCB, clickLoginNAB, clickLoginBAB, clickScanQRBAB, clickScanQROCB, clickSelectImageNAB, clickSelectImageNCB, clickSelectImageMB, clickSelectImageOCB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
-  stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
-  tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceNCB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
+  stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, startAppADBMSB, stopAppADBMSB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
+  tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
   trackOCBApp, trackNABApp, trackMBApp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
@@ -50,6 +50,8 @@ const mapAction = {
   startMB: startAppADBMB,
   stopNCB: stopAppADBNCB,
   startNCB: startAppADBNCB,
+  stopMSB: stopAppADBMSB,
+  startMSB: startAppADBMSB,
   stopVCB: stopAppADBVCB,
   startVCB: startAppADBVCB,
   stopVTB: stopAppADBVTB,
@@ -62,6 +64,7 @@ const mapAction = {
   checkDeviceNAB: checkDeviceNAB,
   checkDeviceMB: checkDeviceMB,
   checkDeviceNCB: checkDeviceNCB,
+  checkDeviceMSB: checkDeviceMSB,
   checkDeviceBAB: checkDeviceBAB,
   checkDeviceOCB: checkDeviceOCB,
   checkDeviceBIDV: checkDeviceBIDV,
