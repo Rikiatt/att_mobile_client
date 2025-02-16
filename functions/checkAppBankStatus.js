@@ -5,11 +5,9 @@ const path = require('path');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
-async function isOCBAppRunning({ device_id }) {        
-    const device_id_here = device_id;   
-    console.log('log device_id_here in isOCBAppRunning: ', device_id_here); 
+async function isOCBAppRunning({ device_id }) {                 
     try {
-        const output = await client.shell(device_id_here, 'pidof com.ocb.mobile')
+        const output = await client.shell(device_id, 'pidof com.ocb.mobile')
             .then(adb.util.readAll)
             .then(buffer => buffer.toString().trim());                
         if (output !== '') return true;        
@@ -19,11 +17,9 @@ async function isOCBAppRunning({ device_id }) {
     }
 }
 
-async function isMbAppRunning( { device_id } ) {        
-    const device_id_here = device_id;   
-    console.log('log device_id_here in isMbAppRunning: ', device_id_here); 
+async function isMbAppRunning( { device_id } ) {             
     try {
-        const output = await client.shell(device_id_here, 'pidof com.mbmobile')
+        const output = await client.shell(device_id, 'pidof com.mbmobile')
             .then(adb.util.readAll)
             .then(buffer => buffer.toString().trim());                
         if (output !== '') return true;        
@@ -33,9 +29,19 @@ async function isMbAppRunning( { device_id } ) {
     }
 }
 
-async function isOpenBankingAppRunning( { device_id } ) {
-    const device_id_here = device_id;   
-    console.log('log device_id_here in isOpenBankingAppRunning: ', device_id_here);
+async function isMsbAppRunning( { device_id } ) {                  
+    try {
+        const output = await client.shell(device_id, 'pidof vn.com.msb.smartBanking')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());                
+        if (output !== '') return true;        
+    } catch (error) {
+        console.error("Error checking MSB app status:", error.message);
+        return false;
+    }
+}
+
+async function isOpenBankingAppRunning( { device_id } ) {      
     try {
         const output = await client.shell(device_id, 'pidof ops.namabank.com.vn')
             .then(adb.util.readAll)
@@ -47,4 +53,4 @@ async function isOpenBankingAppRunning( { device_id } ) {
     }
 }
 
-module.exports = { isOCBAppRunning, isMbAppRunning, isOpenBankingAppRunning };
+module.exports = { isMbAppRunning, isMsbAppRunning, isOCBAppRunning, isOpenBankingAppRunning };

@@ -4,7 +4,7 @@ const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINMSB, inputPINB
   stopAppADBBAB, stopAppADBOCB, startAppADBBAB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBNAB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, startAppADBMSB, stopAppADBMSB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHB, startAppADBSHB, 
   tapADB, inputADB, inputADBVTB, checkDeviceNAB, checkDeviceMB, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  trackOCBApp, trackNABApp, trackMBApp } = require('../functions/adb.function');
+  trackOCBApp, trackNABApp, trackMSBApp, trackMBApp } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
@@ -12,6 +12,7 @@ const mapAction = {
   trackOCBApp: trackOCBApp,
   trackNABApp: trackNABApp,
   trackMBApp: trackMBApp,
+  trackMSBApp: trackMSBApp,
   start: startADB,
   delImg: delADBImg,
   clickConfirmVTB: clickConfirmVTB,

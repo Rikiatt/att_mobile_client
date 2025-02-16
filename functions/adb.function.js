@@ -30,6 +30,8 @@ const ensureDirectoryExists = ( dirPath ) => {
 }
 
 const { isMbAppRunning } = require('../functions/checkAppBankStatus');
+const { isMsbAppRunning } = require('../functions/checkAppBankStatus');
+const { isOCBAppRunning } = require('../functions/checkAppBankStatus');
 const { isOpenBankingAppRunning } = require('../functions/checkAppBankStatus');
 
 const { qrDevicePath, filename } = require('../functions/endpoint');
@@ -147,6 +149,13 @@ async function stopMBApp ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function stopMSBApp ({ device_id }) {    
+  await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
+  console.log('App MSB has been stopped');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
@@ -209,7 +218,7 @@ module.exports = {
     }
   },
 
-  trackNABApp : async ( { device_id } ) => {
+  trackNABApp : async ( { device_id } ) => {    
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -239,7 +248,7 @@ module.exports = {
     
       await dumpXmlToLocal( device_id, localPath );
             
-      if (checkXmlContentNAB( localPath )) {    
+      if (checkXmlContentNAB( localPath )) {            
         // console.log('Stop NAB app');
         await stopNABApp ( { device_id } );          
 
@@ -248,13 +257,13 @@ module.exports = {
           chatId,
           `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
 
-          await saveAlertToDatabase({
-            timestamp: new Date().toISOString(),
-            reason: 'Detected sensitive content',
-            filePath: localPath 
-          });
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: 'Detected sensitive content',
+          filePath: localPath 
+        });
 
-          return false;
+        return false;
       }
     
       running = await isOpenBankingAppRunning( { device_id } );
@@ -265,6 +274,7 @@ module.exports = {
         return false;          
       }
     }
+    return { status: 200, message: 'Success' };
   },
 
   trackMBApp : async ( { device_id } ) => {
@@ -291,38 +301,98 @@ module.exports = {
     await clearTempFile( { device_id } );
     
     while (running) {
-        console.log('App MB Bank is in process');
-        const timestamp = Math.floor(Date.now() / 1000).toString();
-        const localPath = path.join(targetDir, `${timestamp}.xml`);
+      console.log('App MB Bank is in process');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
     
-        await dumpXmlToLocal( device_id, localPath );
+      await dumpXmlToLocal( device_id, localPath );
             
-        if (checkXmlContentMB( localPath )) {    
-          // console.log('Stop MB Bank app');
-          await stopMBApp ( { device_id } );          
+      if (checkXmlContentMB( localPath )) {    
+        console.log('Stop MB Bank app');
+        await stopMBApp ( { device_id } );          
 
-          await sendTelegramAlert(
-            telegramToken,
-            chatId,
-            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
 
-            await saveAlertToDatabase({
-              timestamp: new Date().toISOString(),
-              reason: 'Detected sensitive content',
-              filePath: localPath 
-            });
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: 'Detected sensitive content',
+            filePath: localPath 
+          });
 
-            return false;
-        }
+          return false;
+      }
     
-        running = await isMbAppRunning( { device_id } );
+      running = await isMbAppRunning( { device_id } );
     
-        if (!running) {            
-          console.log('🚫 App MB Bank đã tắt. Dừng theo dõi.');
-          await clearTempFile( { device_id } );      
-          return false;          
-        }
+      if (!running) {            
+        console.log('🚫 App MB Bank đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
     }
+    return { status: 200, message: 'Success' };
+  },
+
+  trackMSBApp : async ( { device_id } ) => {
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi MSB...');
+    
+    const chatId = '7098096854';
+    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    if (!chatId) {
+      console.error("Cannot continue cause of invalid chat ID.");
+      return;
+    } 
+
+    let running = await isMsbAppRunning( { device_id } );
+
+    if (!running) {
+        console.log("MSB app is not running.");
+        return;
+    }
+        
+    await clearTempFile( { device_id } );
+    
+    while (running) {
+      console.log('MSB app is in process');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+      await dumpXmlToLocal( device_id, localPath );
+            
+      if (checkXmlContentMSB( localPath )) {    
+        console.log('Stop MSB app');
+        await stopMSBApp ({ device_id });          
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: 'Detected sensitive content',
+          filePath: localPath 
+        });
+
+        return false;
+      }
+    
+      running = await isMsbAppRunning( { device_id } );
+    
+      if (!running) {            
+        console.log('🚫 App MB Bank đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
+    }
+    return { status: 200, message: 'Success' };
   },
 
   listDevice: async () => {
@@ -406,17 +476,19 @@ module.exports = {
   clickSelectImageMSB: async ({ device_id }) => {    
     const coordinatesScanQRMSB = await loadCoordinatesForDeviceScanQRMSB(device_id);
     
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Image']);
+    await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB['Select-Image']);
     await delay(800);                  
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Hamburgur-Menu']);           
+    await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB['Select-Hamburgur-Menu']);           
     await delay(800); 
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Galaxy-Note9']); 
+    await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB['Select-Galaxy-Note9']); 
     await delay(800);
     await client.shell(device_id, `input swipe 500 1800 500 300`);
     await delay(800); 
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Target-Img']); 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
     await delay(800); 
-    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Finish']); 
+    await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB['Select-Target-Img']); 
+    await delay(800); 
+    await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },
@@ -483,7 +555,7 @@ module.exports = {
 
     console.log(`Copying img from ${sourcePath} in device: ${device_id}...`);
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 10; i++) {
       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
 
       try {
@@ -958,7 +1030,7 @@ module.exports = {
         
     for (const char of text) {
       await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB[char]);
-      console.log('Log char of text:', char);
+      console.log('Log char of PIN:', char);
     }  
 
     return { status: 200, message: 'Success' };
@@ -969,7 +1041,7 @@ module.exports = {
         
     for (const char of text) {
       await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV[char]);
-      console.log('Log char of text:', char);
+      console.log('Log char of PIN:', char);
     }  
 
     return { status: 200, message: 'Success' };
@@ -980,7 +1052,7 @@ module.exports = {
         
     for (const char of text) {
       await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB[char]);
-      console.log('Log char of text:', char);
+      console.log('Log char of PIN:', char);
     }  
 
     return { status: 200, message: 'Success' };
