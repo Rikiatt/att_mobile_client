@@ -363,7 +363,15 @@ module.exports = {
     await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMB['Select-ScanQR']);      
 
     return { status: 200, message: 'Success' };
-  },  
+  }, 
+  
+  clickScanQRMSB: async ({ device_id }) => {    
+    const coordinatesScanQRMSB = await loadCoordinatesForDeviceScanQRMSB(device_id);
+    
+    await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB['ScanQR']);      
+
+    return { status: 200, message: 'Success' };
+  },
 
   clickSelectImageMB: async ({ device_id }) => {    
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
@@ -391,6 +399,24 @@ module.exports = {
     await adbHelper.tapADBNCB(device_id, ...coordinatesScanQRNCB['Select-Target-Img']); 
     await delay(800); 
     await adbHelper.tapADBNCB(device_id, ...coordinatesScanQRNCB['Finish']); 
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageMSB: async ({ device_id }) => {    
+    const coordinatesScanQRMSB = await loadCoordinatesForDeviceScanQRMSB(device_id);
+    
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Image']);
+    await delay(800);                  
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Hamburgur-Menu']);           
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Galaxy-Note9']); 
+    await delay(800);
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Select-Target-Img']); 
+    await delay(800); 
+    await adbHelper.tapADBMB(device_id, ...coordinatesScanQRMSB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },
@@ -927,6 +953,17 @@ module.exports = {
     }
   },
 
+  inputPINMSB: async ({ device_id, text }) => {  
+    const coordinatesScanQRMSB = await loadCoordinatesForDeviceScanQRMSB(device_id);
+        
+    for (const char of text) {
+      await adbHelper.tapADBMSB(device_id, ...coordinatesScanQRMSB[char]);
+      console.log('Log char of text:', char);
+    }  
+
+    return { status: 200, message: 'Success' };
+  },
+
   inputPINBIDV: async ({ device_id, text }) => {  
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
         
@@ -1259,6 +1296,20 @@ async function loadCoordinatesForDeviceScanQRMB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRMB for device: ${error.message}`);
+    throw error; // Re-throw error for the caller to handle
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRMSB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRMSB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRMSB for device: ${error.message}`);
     throw error; // Re-throw error for the caller to handle
   }
 };

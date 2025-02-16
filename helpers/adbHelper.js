@@ -11,6 +11,12 @@ async function tapADBMB(device_id, x, y) {
     return { status: 200, message: 'Success' };
 };
 
+async function tapADBMSB(device_id, x, y) {
+    await client.shell(device_id, `input tap ${x} ${y}`);
+    await sleep(500);
+    return { status: 200, message: 'Success' };
+};
+
 async function tapADBNCB(device_id, x, y) {
     await client.shell(device_id, `input tap ${x} ${y}`);
     await sleep(500);
@@ -47,4 +53,4 @@ async function tapADBBIDV(device_id, x, y) {
     return { status: 200, message: 'Success' };
 };
 
-module.exports = { tapADBMB, tapADBNCB, tapADBNAB, tapADBBAB, tapADBOCB,tapADBVTB, tapADBBIDV };
+module.exports = { tapADBMB, tapADBMSB, tapADBNCB, tapADBNAB, tapADBBAB, tapADBOCB,tapADBVTB, tapADBBIDV };
