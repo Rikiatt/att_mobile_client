@@ -96,7 +96,7 @@ const checkXmlContentMB = (localPath) => {
 
     return foundVI || foundEN;
   } catch (error) {
-    console.error("❌ Lỗi khi đọc XML:", error.message);
+    console.error("❌ Got an error when reading XML:", error.message);
     return false;
   }
 };
@@ -129,7 +129,52 @@ const checkXmlContentNAB = (localPath) => {
 
     return foundVI || foundEN;
   } catch (error) {
-    console.error("❌ Lỗi khi đọc XML:", error.message);
+    console.error("❌ Got an error when reading XML:", error.message);
+    return false;
+  }
+};
+
+const checkXmlContentMSB = (localPath) => {
+  try {
+    const content = fs.readFileSync(localPath, "utf-8");
+    
+    const keywordsVI = [
+      "Chuyển khoản",
+      "Chuyển khoản liên ngân hàng",
+      "Chuyển nhanh",
+      "Chuyển qua thẻ",
+      "Chuyển thường",
+      "Tài khoản",
+      "Tài khoản thụ hưởng",
+      "Chọn tài khoản",
+      "Số tiền",
+      "Nhập số tiền",
+      "Nội dung chuyển khoản",
+      "Nhập nội dung"
+    ];
+    
+    const keywordsEN = [
+      "Transfer",
+      "Interbank Transfer",
+      "Quick Transfer",
+      "Card Transfer",
+      "Normal interbank",
+      "Current account",
+      "Beneficiary Account",
+      "Select Account",
+      "Amount",
+      "Enter amount",
+      "Content",
+      "Enter content"
+    ];
+
+    // Kiểm tra xem có đủ tất cả các từ khóa trong một bộ ngôn ngữ không
+    const foundVI = keywordsVI.every(kw => content.includes(kw));
+    const foundEN = keywordsEN.every(kw => content.includes(kw));
+
+    return foundVI || foundEN;
+  } catch (error) {
+    console.error("❌ Got an error when reading XML:", error.message);
     return false;
   }
 };
@@ -387,7 +432,7 @@ module.exports = {
       running = await isMsbAppRunning( { device_id } );
     
       if (!running) {            
-        console.log('🚫 App MB Bank đã tắt. Dừng theo dõi.');
+        console.log('🚫 App MSB đã tắt. Dừng theo dõi.');
         await clearTempFile( { device_id } );      
         return false;          
       }
