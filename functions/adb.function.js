@@ -49,20 +49,20 @@ async function clearTempFile( { device_id } ) {
 
 async function dumpXmlToLocal ( device_id, localPath ) {
   try {      
-      console.log('log device_id in dumpXmlToLocal: ', device_id);
-      const tempPath = `/sdcard/temp_dump.xml`;
+    console.log('log device_id in dumpXmlToLocal: ', device_id);
+    const tempPath = `/sdcard/temp_dump.xml`;
       
-      await client.shell(device_id, `uiautomator dump ${tempPath}`);
-      console.log(`XML dump saved temporarily to device as ${tempPath}`);       
+    await client.shell(device_id, `uiautomator dump ${tempPath}`);
+    console.log(`XML dump saved temporarily to device as ${tempPath}`);       
       
-      await client.pull( device_id , tempPath)
-          .then(stream => new Promise((resolve, reject) => {
-              const fileStream = fs.createWriteStream(localPath);
-              stream.pipe(fileStream);
-              fileStream.on('finish', resolve);
-              fileStream.on('error', reject);
-          }));
-      console.log(`XML dump pulled directly to local: ${localPath}`);
+    await client.pull( device_id , tempPath)
+      .then(stream => new Promise((resolve, reject) => {        
+        const fileStream = fs.createWriteStream(localPath);
+        stream.pipe(fileStream);
+        fileStream.on('finish', resolve);
+        fileStream.on('error', reject);
+    }));
+    console.log(`XML dump pulled directly to local: ${localPath}`);
   } catch (error) {
       console.error(`Error during XML dump to local. ${error.message}`);
   }
@@ -184,37 +184,37 @@ module.exports = {
     await clearTempFile( { device_id } );
     
     while (running) {
-        console.log('App NAB is in process');
-        const timestamp = Math.floor(Date.now() / 1000).toString();
-        const localPath = path.join(targetDir, `${timestamp}.xml`);
+      console.log('App NAB is in process');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
     
-        await dumpXmlToLocal( device_id, localPath );
+      await dumpXmlToLocal( device_id, localPath );
             
-        if (checkXmlContentNAB( localPath )) {    
-          console.log('Stop NAB app');
-          await stopNABApp ( { device_id } );          
+      if (checkXmlContentNAB( localPath )) {    
+        console.log('Stop NAB app');
+        await stopNABApp ( { device_id } );          
 
-          await sendTelegramAlert(
-            telegramToken,
-            chatId,
-            `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
 
-            await saveAlertToDatabase({
-              timestamp: new Date().toISOString(),
-              reason: 'Detected sensitive content',
-              filePath: localPath 
-            });
+        await saveAlertToDatabase({          
+          timestamp: new Date().toISOString(),
+          reason: 'Detected sensitive content',
+          filePath: localPath 
+        });
 
-            return false;
-        }
+        return false;
+      }
     
-        running = await isOpenBankingAppRunning( { device_id } );
+      running = await isOpenBankingAppRunning( { device_id } );
     
-        if (!running) {            
-          console.log('🚫 App NAB đã tắt. Dừng theo dõi.');
-          await clearTempFile( { device_id } );      
-          return false;          
-        }
+      if (!running) {            
+        console.log('🚫 App NAB đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
     }
   },
 
@@ -249,7 +249,7 @@ module.exports = {
       await dumpXmlToLocal( device_id, localPath );
             
       if (checkXmlContentNAB( localPath )) {            
-        // console.log('Stop NAB app');
+        console.log('Stop NAB app');
         await stopNABApp ( { device_id } );          
 
         await sendTelegramAlert(
@@ -316,13 +316,13 @@ module.exports = {
           chatId,
           `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
 
-          await saveAlertToDatabase({
-            timestamp: new Date().toISOString(),
-            reason: 'Detected sensitive content',
-            filePath: localPath 
-          });
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: 'Detected sensitive content',
+          filePath: localPath 
+        });
 
-          return false;
+        return false;
       }
     
       running = await isMbAppRunning( { device_id } );
@@ -353,8 +353,8 @@ module.exports = {
     let running = await isMsbAppRunning( { device_id } );
 
     if (!running) {
-        console.log("MSB app is not running.");
-        return;
+      console.log("MSB app is not running.");
+      return;
     }
         
     await clearTempFile( { device_id } );
@@ -625,26 +625,20 @@ module.exports = {
   },
 
   clickConfirmOCB: async ({ device_id }) => {    
-    const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
-    
+    const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);  
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Confirm']);      
-
     return { status: 200, message: 'Success' };
   },
 
   clickConfirmBIDV: async ({ device_id }) => {  
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
-          
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']); 
-  
     return { status: 200, message: 'Success' };
   },
 
   clickScanQRVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
-    
     await adbHelper.tapADBVTB(device_id, ...coordinatesScanQRVTB['Select-ScanQR']);      
-
     return { status: 200, message: 'Success' };
   },
 
@@ -662,25 +656,19 @@ module.exports = {
 
   clickConfirmScanFaceBIDV: async ({ device_id }) => {    
     const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
-
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Confirm']);
-
     return { status: 200, message: 'Success' };
   },
 
   clickScanQRBIDV: async ({ device_id }) => {    
-    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
-    
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);    
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['ScanQR']);      
-
     return { status: 200, message: 'Success' };
   },
 
   clickSelectImageBIDV: async ({ device_id }) => {    
-    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);
-     
+    const coordinatesScanQRBIDV = await loadCoordinatesForDeviceScanQRBIDV(device_id);     
     await adbHelper.tapADBBIDV(device_id, ...coordinatesScanQRBIDV['Select-Image']);    
-
     return { status: 200, message: 'Success' };
   }, 
 
@@ -1192,35 +1180,35 @@ module.exports = {
     ];
   
     try {
-        for (const devicePath of devicePaths) {
-          console.log(`Processing path: ${devicePath}`);
-            const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;
-            const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
-            const fileList = files.toString().trim().split('\n');
+      for (const devicePath of devicePaths) {
+        console.log(`Processing path: ${devicePath}`);        
+        const listCommand = `ls ${devicePath} | grep -E '\\.(png|jpg)$'`;
+        const files = await client.shell(device_id, listCommand).then(adb.util.readAll);
+        const fileList = files.toString().trim().split('\n');
   
-            if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
-              console.log(`No files to delete in ${devicePath}.`);
-              continue; // Skip to the next path
-            }
-  
-            const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
-            console.log(`Delete command for ${devicePath}:`, deleteCommands);
-  
-            await client.shell(device_id, deleteCommands);
-  
-            // Trigger a media scanner update
-            await delay(100);
-            await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
-            // android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/
-            await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/`);
+        if (fileList.length === 0 || (fileList.length === 1 && fileList[0] === '')) {
+          console.log(`No files to delete in ${devicePath}.`);
+          continue; // Skip to the next path
         }
   
-        console.log('Deleted images successfully!');
-        return { status: 200, message: 'Success' };        
-        } catch (error) {
-          console.error('Error deleting images:', error);
-          return { status: 500, message: 'Error deleting images', error };
-    }
+        const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+        console.log(`Delete command for ${devicePath}:`, deleteCommands);
+  
+        await client.shell(device_id, deleteCommands);
+  
+        // Trigger a media scanner update
+        await delay(100);
+        await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+        // android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/
+        await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///storage/emulated/0/`);
+      }
+  
+      console.log('Deleted images successfully!');
+      return { status: 200, message: 'Success' };        
+      } catch (error) {        
+        console.error('Error deleting images:', error);
+        return { status: 500, message: 'Error deleting images', error };        
+      }
   },
 
   delImg: async (device_id, devicePath, filename = '') => {
@@ -1238,8 +1226,7 @@ module.exports = {
       })
     await delay(100);
     client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
-    return { status: 200, message: 'Success' };
-    
+    return { status: 200, message: 'Success' };    
   }
 };
 
@@ -1368,7 +1355,7 @@ async function loadCoordinatesForDeviceScanQRMB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRMB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1382,7 +1369,7 @@ async function loadCoordinatesForDeviceScanQRMSB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRMSB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1396,7 +1383,7 @@ async function loadCoordinatesForDeviceScanQRNCB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRNCB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1410,7 +1397,7 @@ async function loadCoordinatesForDeviceScanQRBAB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQROCB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1424,7 +1411,7 @@ async function loadCoordinatesForDeviceScanQROCB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQROCB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1438,11 +1425,10 @@ async function loadCoordinatesForDeviceScanQRVTB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRVTB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
-// Dùng cho inputADBVTB bên trên
 async function loadCoordinatesForDeviceLoginVTB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
@@ -1453,7 +1439,7 @@ async function loadCoordinatesForDeviceLoginVTB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginVTB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1467,7 +1453,7 @@ async function loadCoordinatesForDeviceLoginBAB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginBAB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
@@ -1481,16 +1467,16 @@ async function loadCoordinatesForDeviceLoginNAB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginNAB for device: ${error.message}`);
-    throw error; // Re-throw error for the caller to handle
+    throw error;
   }
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isSpecialChar = (char) => {
-  return ['@', '#', '$', '%', '&', '*', '-', '+', '(', ')', 
-          '~', '^', '<', '>', '|', '\\', '{', '}', '[', ']', 
-          '=', '!', '"', "'", ':', ';', '/', '?'].includes(char);
+  return ['@', '#', '$', '%', '&', '*', '-', '+', '(', ')',         
+    '~', '^', '<', '>', '|', '\\', '{', '}', '[', ']',     
+    '=', '!', '"', "'", ':', ';', '/', '?'].includes(char);
 };
 
 const isUpperCase = (char) => {
