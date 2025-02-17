@@ -19,7 +19,7 @@ module.exports = {
       // Khởi tạo file json
       let localPath = path.join(__dirname, '..', 'database', 'localdata.json');
       const localData = await getDataJson(localPath);
-      console.log("---> Listen on server <---", type, localData, localData[type]?.endpoint, localData[type]?.site);
+      console.log("---> Listening on server <---", type, localData, localData[type]?.endpoint, localData[type]?.site);
       if (localData && localData[type]?.endpoint && localData[type]?.site) {
         // reset
         await setDataJson(localPath, { ...localData, connect: '', att: { ...localData.att, connected: false }, org: { ...localData.org, connected: false } });
@@ -27,7 +27,7 @@ module.exports = {
         if (!disconnect) {
           const { site, endpoint } = localData[type];
 
-          console.log("---> Listen on server <---");
+          console.log("---> Listening on server <---");
           // Cấu hình kết nối socket tới attpays+ và attpay.org
           let handPath = '/socket.io';
           if (site.includes('ui_manual')) {
