@@ -22,7 +22,7 @@ const HandleVCB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>VCB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Thao tác đăng nhập (nhập mật khẩu và click đăng nhập)" arrow>
+          <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
             <Button
               size="small"
               variant="contained"
@@ -33,7 +33,7 @@ const HandleVCB = ({ item, X, Y, setLoading }) => {
               Đăng nhập
             </Button>
           </Tooltip>
-          <Tooltip title="Bước xác nhận cuối cùng (nhập mã PIN >> Xác nhận)" arrow>
+          <Tooltip title="Mã PIN và xác nhận" arrow>
             <Button
               size="small"
               variant="contained"
@@ -41,7 +41,7 @@ const HandleVCB = ({ item, X, Y, setLoading }) => {
               fullWidth
               onClick={() => vcbNewClickConfirm({ device_id: item.id, X, Y }, setLoading)}
             >
-              Nhập PIN và xác nhận
+              Xác nhận
             </Button>
           </Tooltip>
           <Tooltip title="Lấy mã OTP" arrow>

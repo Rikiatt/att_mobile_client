@@ -23,7 +23,7 @@ const HandleBAB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>BAB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-            <Tooltip title="Thao tác đăng nhập (nhập mật khẩu và click đăng nhập)" arrow>
+            <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
                 <Button
                     size="small"
                     variant="contained"

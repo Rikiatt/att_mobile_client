@@ -33,7 +33,7 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
               Check QR
             </Button>
           </Tooltip> */}
-          <Tooltip title="Thao tác đăng nhập" arrow>
+          <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
             <Button
               size="small"
               variant="contained"
