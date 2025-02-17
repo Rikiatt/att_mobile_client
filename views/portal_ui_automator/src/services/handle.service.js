@@ -699,6 +699,9 @@ export const vietinConfirmAfterFace = async (data, setLoading) => {
     if (checkDeviceFHDOrNot.status === 500) {
       return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
     }    
+
+    const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
+    if (!text) return;
     
     setLoading(true);
 
@@ -706,8 +709,8 @@ export const vietinConfirmAfterFace = async (data, setLoading) => {
     await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
     await delay(10000); // chờ quét mặt hoặc video loading...
     
-    // Nhập mã PIN và xác nhận ... xóa luôn ảnh trong thư viện
-    // await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text.trim() });    
+    // Nhập mã PIN và xác nhận ... xóa luôn ảnh trong thư viện    
+    await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text.trim() });    
     await actionADB({ action: 'delImg', device_id: data.device_id });    
     await delay(1000);
 
