@@ -204,10 +204,10 @@ module.exports = {
 
             const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
             let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg')
-            let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+            let qrDevicePath = '/sdcard/' + filename + '.jpg';
 
             if (vietqr_url) {
-              await delImg(findId, '/sdcard/DCIM/Camera/');
+              await delImg(findId, '/sdcard/');
               console.log("Deleted old QR - " + filename);
               await delay(100);
               await downloadQr(vietqr_url, qrLocalPath);
@@ -218,15 +218,11 @@ module.exports = {
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
-            // await delImg(findId, '/sdcard/DCIM/Camera/');
-            // console.log("Deleted old QR - " + filename);
-            // await delay(100);
-
             await sendFile(findId, qrLocalPath, qrDevicePath);            
             
             setTimeout(async () => {
-              await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-              console.log("Deleted QR old - " + filename);
+              await delImg(findId, '/sdcard/', filename);
+              console.log("Deleted old QR - " + filename);
             }, 300000);
 
             // Thành công !!!
