@@ -2,9 +2,59 @@ const fs = require('fs');
 const path = require('path');
 const io = require('socket.io-client');
 const { delay } = require('../helpers/functionHelper');
-const { listDevice, sendFile, delImg } = require('./adb.function');
+const { delImg } = require('./adb.function');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
+
+async function listDevice() {
+  try {
+    const devices = await client.listDevices();
+    for (let device of devices) {
+      const [screenSize, nameDevice, androidVersion, model] = await Promise.all([
+        getScreenSize(device.id),
+        getNameDevice(device.id),
+        getAndroidVersion(device.id),
+        getModel(device.id)
+      ])
+
+      device.screenSize = screenSize;
+      device.nameDevice = nameDevice;
+      device.androidVersion = androidVersion;
+      device.model = model;
+    }
+    console.log("Danh sách thiết bị ", devices?.length);
+    return devices;
+  } catch (error) {
+    console.error('Error getting connected devices:', error);
+    return [];
+  }
+}
+
+async function sendFile  (device_id, localPath, devicePath) {
+    await client.push(device_id, localPath, devicePath);
+    await delay(500);
+    await client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    await delay(100);
+    return { status: 200, message: 'Success' };
+}
+
+async function delImg  (device_id, devicePath, filename = '') {
+    const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
+    client.shell(device_id, listCommand)
+      .then(adb.util.readAll)
+      .then((files) => {
+        const fileList = files.toString().trim().split('\n');
+        if (fileList.length === 0) {
+          console.log('No files to delete.');
+          return;
+        }
+        const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');
+        return client.shell(device_id, deleteCommands);
+      })
+    await delay(100);
+    client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
+    return { status: 200, message: 'Success' };
+}
 
 module.exports = {
   connectEndpoint: async ({ type, disconnect }) => {
