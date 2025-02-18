@@ -9,6 +9,69 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const adb = require('adbkit');
 const client = adb.createClient({ bin: adbPath });
 
+const getScreenSize = async (device_id) => {
+  try {
+    // Thực thi lệnh `wm size` trên thiết bị
+    const output = await client.shell(device_id, 'wm size');
+    const resultBuffer = await adb.util.readAll(output);
+    const result = resultBuffer.toString();
+
+    // Sử dụng regex để tìm kiếm Override size và Physical size
+    const overrideSizeMatch = result.match(/Override size: (\d+x\d+)/);
+    const physicalSizeMatch = result.match(/Physical size: (\d+x\d+)/);
+
+    // Nếu có Override size, trả về nó, nếu không trả về Physical size
+    if (overrideSizeMatch) {
+      return overrideSizeMatch[1];
+    } else if (physicalSizeMatch) {
+      return physicalSizeMatch[1];
+    } else {
+      return '';
+    }
+  } catch (error) {
+    console.error('Error getting screen size:', error);
+    return '';
+  }
+};
+
+const getNameDevice = async (device_id) => {
+  try {
+    const output = await client.shell(device_id, 'dumpsys bluetooth_manager | grep name');
+    const resultBuffer = await adb.util.readAll(output);
+    const result = resultBuffer.toString();
+    const match = result.match(/name:\s*(.*)\r?\n/);
+    const name = match ? match[1].trim() : '';
+    return name;
+  } catch (error) {
+    console.error('Error getting Bluetooth device name:', error);
+    return '';
+  }
+};
+
+const getAndroidVersion = async (device_id) => {
+  try {
+    const output = await client.shell(device_id, 'getprop ro.build.version.release');
+    const resultBuffer = await adb.util.readAll(output);
+    const result = parseInt(resultBuffer.toString().trim());
+    return result;
+  } catch (error) {
+    console.error('Error getting Android version:', error);
+    return '';
+  }
+};
+
+const getModel = async (device_id) => {
+  try {
+    const output = await client.shell(device_id, 'getprop ro.product.model');
+    const resultBuffer = await adb.util.readAll(output);
+    const result = resultBuffer.toString().trim();
+    return result;
+  } catch (error) {
+    console.error('Error getting model:', error);
+    return '';
+  }
+};
+
 async function listDevice() {
   try {
     const devices = await client.listDevices();
