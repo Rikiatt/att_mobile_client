@@ -259,11 +259,11 @@ module.exports = {
             
             setTimeout(async () => {              
               await delImg(findId, '/sdcard/', filename);                                
-              console.log("Deleted QR old - " + filename);
+              console.log("Deleted old QR - " + filename);
             }, 300000);
 
             // Thành công !!!
-            console.log("Success !!");
+            console.log("Success!");
             currentSocket.emit('callback', { ...data, success: true });
           });
 

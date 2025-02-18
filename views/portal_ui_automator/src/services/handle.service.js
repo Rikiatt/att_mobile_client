@@ -119,7 +119,7 @@ export const ncbScanQR = async (data, setLoading) => {
 
   await delay(10000);
   // Track NCB App while it is in process  
-  // const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
+  // const trackNCBAppPromise = actionADB({ action: 'trackNCBApp', device_id: data.device_id });
 
   console.log('4. Input password and login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -136,10 +136,10 @@ export const ncbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'clickSelectImageNCB', device_id: data.device_id });
   await delay(3000); 
 
-  // Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
+  // Đợi trackNCBApp hoàn thành (nếu app NCB bị thoát)
   // const trackResult = await trackNCBAppPromise;
   // if (!trackResult) {
-  //   console.log('📢 Theo dõi MB Bank đã kết thúc.');
+  //   console.log('📢 Theo dõi NCB đã kết thúc.');
   // }
 
   console.log('6. Delete all of imgs in device');

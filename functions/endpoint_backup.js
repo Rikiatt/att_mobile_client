@@ -114,7 +114,7 @@ module.exports = {
             }, 300000);
 
             // Thành công !!!
-            console.log("Success !!");
+            console.log("Success!");
             currentSocket.emit('callback', { ...data, success: true });
           });
 
