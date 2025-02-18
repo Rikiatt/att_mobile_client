@@ -5,6 +5,10 @@ const { delay } = require('../helpers/functionHelper');
 const { transToQr, downloadQr, setDataJson, getDataJson, getIpPublic } = require('./function');
 let currentSocket = null;
 
+const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
+const adb = require('adbkit');
+const client = adb.createClient({ bin: adbPath });
+
 async function listDevice() {
   try {
     const devices = await client.listDevices();
