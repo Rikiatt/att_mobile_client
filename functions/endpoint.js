@@ -184,8 +184,7 @@ module.exports = {
               return;
             };
             lastReceived[findId] = now;
-
-            // fake data for testing
+            
             const { vietqr_url, trans_id, bin, account_number, amount, trans_mess, PIN, bank_pass } = data;
 
             if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess || PIN || bank_pass)) {
