@@ -210,6 +210,20 @@ module.exports = {
               console.log("Deleted old QR - " + filename);
               await delay(100);
               await downloadQr(vietqr_url, qrLocalPath);
+
+              // Lưu vietqr_url vào file info-qr.json
+              let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');              
+              console.log('log qrInfoPath:', qrInfoPath);
+              let qrData = { vietqr_url, timestamp: new Date().toISOString() };              
+              console.log('log qrData:', qrData);
+
+              try {
+                fs.writeFileSync(qrInfoPath, JSON.stringify(qrData, null, 2));
+                console.log("Saved vietqr_url to info-qr.json");
+              } catch (error) {
+                console.error("Got an error when saving vietqr_url:", error);
+              }
+
             } else {
               await transToQr(data, qrLocalPath);
             }
