@@ -1,12 +1,47 @@
 require('dotenv').config();
 const adb = require('adbkit');
-const fs = require('fs');
+
 const path = require('path');
+const fs = require('fs');
+const xml2js = require('xml2js');
+// Lấy đường dẫn file XML đầu vào
+const xmlFilePath = path.join(__dirname, '..', 'logs', 'window_dump.xml');
+const jsonFilePath = path.join(__dirname, '..', 'info-qr-xml.json');
+
 const { delay } = require('../helpers/functionHelper');
 const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
 
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
+
+async function parseXML() {
+  try {
+      // Đọc nội dung XML từ file
+      const xmlData = fs.readFileSync(xmlFilePath, 'utf8');
+
+      // Chuyển đổi XML sang JSON
+      xml2js.parseString(xmlData, (err, result) => {
+          if (err) {
+              console.error("Lỗi khi phân tích XML:", err);
+              return;
+          }
+
+          // Duyệt cây XML để tìm dữ liệu cần thiết
+          const extractedData = extractNodes(result);
+
+          // Nếu lấy đủ dữ liệu thì ghi vào file JSON
+          if (extractedData.bin && extractedData.account_number && extractedData.amount) {
+              fs.writeFileSync(jsonFilePath, JSON.stringify(extractedData, null, 4), 'utf8');
+              console.log("Đã cập nhật dữ liệu:", extractedData);
+          } else {
+              console.log("Không tìm thấy đầy đủ dữ liệu cần thiết.");
+          }
+      });
+
+  } catch (error) {
+      console.error("Lỗi khi đọc file XML:", error);
+  }
+}
 
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
@@ -205,6 +240,8 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
+
+  
   trackOCBApp : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
