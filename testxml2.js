@@ -6,6 +6,16 @@ const path = require('path');
 const xmlFilePath = path.join(__dirname, 'logs', 'window_dump.xml');
 const jsonFilePath = path.join(__dirname, 'database', 'info-qr-xml.json');
 
+// Bảng ánh xạ tên ngân hàng sang mã BIN
+const bankBinMap = {
+    "Asia (ACB)": "970416",
+    "Vietnam Foreign Trade (VCB)": "970436",
+    "Technology and Trade (TCB)": "970407",
+    "Investment and development (BIDV)": "970418",
+    "Military (MB)": "970422",
+    "NCB": "970419"
+};
+
 function parseXML() {
     try {
         const xmlData = fs.readFileSync(xmlFilePath, 'utf8');
@@ -34,7 +44,7 @@ function parseXML() {
 
 function extractNodes(obj) {
     let bin = null, account_number = null, amount = null;
-    const bankList = ["Asia (ACB)", "Vietcombank", "Techcombank", "BIDV", "MB Bank", "Sacombank"];
+    const bankList = ["Asia (ACB)", "Vietnam Foreign Trade (VCB)", "Technology and Trade (TCB)", "Investment and development (BIDV)", "Military (MB)", "NCB"];
     let foundBank = false;
     let possibleAmounts = []; // Danh sách số tiền tìm thấy
     let lastText = "";
@@ -66,7 +76,7 @@ function extractNodes(obj) {
             if (!bin) {
                 for (let bank of bankList) {
                     if (text.includes(bank)) {
-                        bin = bank;
+                        bin = bankBinMap[bank] || bank; // Chuyển đổi sang mã BIN nếu có
                         foundBank = true;
                         console.log(`🏦 Tìm thấy BIN: ${bin}`);
                         return;
@@ -86,7 +96,7 @@ function extractNodes(obj) {
             }
 
             // Kiểm tra số tiền giao dịch (ưu tiên số lớn nhất)
-            const amountMatch = text.match(/\b\d{1,3}([,\.]\d{3})*\b/);
+            const amountMatch = text.match(/\b\d{1,3}([,.]\d{3})*\b/);
             if (amountMatch) {
                 let extractedAmount = amountMatch[0].replace(/[,.]/g, ''); // Loại bỏ dấu phân cách ngàn
 
