@@ -6,6 +6,9 @@ const path = require('path');
 const xmlFilePath = path.join(__dirname, 'logs', 'window_dump.xml');
 const jsonFilePath = path.join(__dirname, 'database', 'info-qr-xml.json');
 
+const jsonFilePath1 = path.join(__dirname, 'database', 'info-qr-xml.json');
+const jsonFilePath2 = path.join(__dirname, 'database', 'info-qr.json');
+
 // Bảng ánh xạ tên ngân hàng sang mã BIN
 const bankBinMap = {
     "Asia (ACB)": "970416",
@@ -124,7 +127,37 @@ function extractNodes(obj) {
     return { bin, account_number, amount };
 }
 
+function compareAndHandle() {
+    try {
+        const data1 = JSON.parse(fs.readFileSync(jsonFilePath1, 'utf8'));
+        const data2 = JSON.parse(fs.readFileSync(jsonFilePath2, 'utf8'));
+        
+        const bin1 = data1.bin || "";
+        const account1 = data1.account_number || "";
+        const amount1 = data1.amount || "";
+        
+        const bin2 = data2.data.bin || "";
+        const account2 = data2.data.account_number || "";
+        const amount2 = data2.data.amount || "";
+        // const device_id = data2.data.device_id || "Unknown_Device";
+        
+        if (bin1 !== bin2 || account1 !== account2 || amount1 !== amount2) {
+            console.log("🚨 Phát hiện dữ liệu khác biệt! Thực hiện các bước xử lý...");
+            
+            console.log('stop app\n');
+            console.log('sendTelegramAlert\n');
+            console.log('saveAlertToDatabase\n');
+        } else {
+            console.log("✅ Dữ liệu hợp lệ, không có thay đổi đáng ngờ.");
+        }
+        
+    } catch (error) {
+        console.error("❌ Lỗi khi so sánh JSON:", error);
+    }
+}
+
 // Chạy hàm parseXML
 console.log('📂 log xmlFilePath:', xmlFilePath);
 console.log('📂 log jsonFilePath:', jsonFilePath);
 parseXML();
+compareAndHandle();
