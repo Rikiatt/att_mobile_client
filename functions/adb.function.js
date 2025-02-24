@@ -353,7 +353,7 @@ module.exports = {
       await dumpXmlToLocal( device_id, localPath );
             
       if (checkXmlContentMB( localPath )) {    
-        console.log('Stop MB Bank app');
+        console.log('App MB Bank has been stopped');
         await stopMBApp ( { device_id } );          
 
         await sendTelegramAlert(
