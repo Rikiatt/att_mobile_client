@@ -47,13 +47,11 @@ async function clearTempFile( { device_id } ) {
   }
 }
 
-async function dumpXmlToLocal ( device_id, localPath ) {
-  try {      
-    console.log('log device_id in dumpXmlToLocal: ', device_id);
+async function dumpXmlToLocal ( device_id, localPath ) {  
+  try {          
     const tempPath = `/sdcard/temp_dump.xml`;
       
-    await client.shell(device_id, `uiautomator dump ${tempPath}`);
-    console.log(`XML dump saved temporarily to device as ${tempPath}`);       
+    await client.shell(device_id, `uiautomator dump ${tempPath}`);    
       
     await client.pull( device_id , tempPath)
       .then(stream => new Promise((resolve, reject) => {        
@@ -73,22 +71,13 @@ const checkXmlContentMB = (localPath) => {
     const content = fs.readFileSync(localPath, "utf-8");
     
     const keywordsVI = [
-      "Số tài&#10;khoản",
-      "Số&#10;điện thoại",
-      "&#10;Số thẻ",
-      "Truy vấn giao dịch giá trị lớn",
-      "Đối tác MB",
-      "Chuyển tiền"
-    ];
-    
-    const keywordsEN = [
-      "Account",
-      "Phone number",
-      "Card",
-      "Large-value transaction inquiry",
-      "MB partner",
-      "Transfer"
-    ];
+      "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
+      "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
+  ];
+  const keywordsEN = [
+      "Account", "Phone number", "Card",
+      "Large-value transaction inquiry", "MB partner", "Transfer"
+  ];
 
     // Kiểm tra xem có đủ tất cả các từ khóa trong một bộ ngôn ngữ không
     const foundVI = keywordsVI.every(kw => content.includes(kw));
@@ -229,15 +218,15 @@ module.exports = {
     await clearTempFile( { device_id } );
     
     while (running) {
-      console.log('App NAB is in process');
+      console.log('App OCB is in process');
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
             
-      if (checkXmlContentNAB( localPath )) {    
+      if (checkXmlContentOCB( localPath )) {    
         console.log('Stop NAB app');
-        await stopNABApp ( { device_id } );          
+        await stopOCBApp ( { device_id } );          
 
         await sendTelegramAlert(
           telegramToken,
@@ -338,9 +327,9 @@ module.exports = {
 
     let running = await isMbAppRunning( { device_id } );
 
-    if (!running) {
-        console.log("App MB Bank is not running.");
-        return;
+    if (!running) {      
+      console.log("App MB Bank is not running.");
+      return;
     }
         
     await clearTempFile( { device_id } );
@@ -359,7 +348,8 @@ module.exports = {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`);
+          `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`
+        );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),

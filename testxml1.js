@@ -22,8 +22,7 @@ const bankBinMap = {
 const checkXmlContentMB = async (localPath) => {
     try {
         const content = fs.readFileSync(localPath, "utf-8");
-
-        // Từ khóa cần tìm
+        
         const keywordsVI = [
             "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
             "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
