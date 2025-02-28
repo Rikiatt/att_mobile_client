@@ -66,29 +66,49 @@ async function dumpXmlToLocal ( device_id, localPath ) {
   }
 }
 
-const checkXmlContentMB = (localPath) => {
-  try {
-    const content = fs.readFileSync(localPath, "utf-8");
-    
-    const keywordsVI = [
-      "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
-      "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
-  ];
-  const keywordsEN = [
-      "Account", "Phone number", "Card",
-      "Large-value transaction inquiry", "MB partner", "Transfer"
-  ];
+const checkXmlContentMB = async (localPath) => {
+    try {
+        const content = fs.readFileSync(localPath, "utf-8");
+        
+        const keywordsVI = [
+            "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
+            "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
+        ];
+        const keywordsEN = [
+            "Account", "Phone number", "Card",
+            "Large-value transaction inquiry", "MB partner", "Transfer"
+        ];
 
-    // Kiểm tra xem có đủ tất cả các từ khóa trong một bộ ngôn ngữ không
-    const foundVI = keywordsVI.every(kw => content.includes(kw));
-    const foundEN = keywordsEN.every(kw => content.includes(kw));
+        // Nếu phát hiện từ khóa, trả về true ngay lập tức
+        if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
+            console.log("🚨 Phát hiện nội dung nghi vấn!");
+            // handleAlert(differences.join("\n"), jsonFilePath1);
+            console.log('stop app');
+            console.log('sendTelegramAlert');
+            console.log('saveAlertToDatabase');
+            return true;
+        }        
 
-    return foundVI || foundEN;
-  } catch (error) {
-    console.error("❌ Got an error when reading XML:", error.message);
-    return false;
-  }
-};
+        const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
+        const extractedData = extractNodes(parsed);
+
+        if (extractedData.bin || extractedData.account_number || extractedData.amount) {
+            fs.writeFileSync(jsonFilePath1, JSON.stringify(extractedData, null, 4), 'utf8');
+            console.log("✅ Dữ liệu extract từ XML:", extractedData);
+
+            // Kiểm tra sự khác biệt giữa dữ liệu mới và dữ liệu cũ
+            if (!compareAndHandle(extractedData, jsonFilePath2)) return false;
+
+            return true;
+        }
+
+        console.log("⚠ Không tìm thấy dữ liệu hợp lệ trong XML.");
+        return false;
+    } catch (error) {
+        console.error("❌ Got an error:", error.message);
+        return false;
+    }
+}
 
 const checkXmlContentNAB = (localPath) => {
   try {
