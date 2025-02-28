@@ -293,7 +293,7 @@ export const mbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'clickSelectImageMB', device_id: data.device_id });  
   await delay(3000); 
 
-  // Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
+  //Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
   // const trackResult = await trackMBAppPromise;
   // if (!trackResult) {
   //   console.log('📢 Theo dõi MB Bank đã kết thúc.');
