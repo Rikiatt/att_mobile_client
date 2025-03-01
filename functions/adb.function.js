@@ -96,8 +96,11 @@ const compareData = (xmlData, jsonData) => {
     return differences;
 };
 
-const checkXmlContentMB = async (localPath) => {
+const checkXmlContentMB = async (device_id, localPath) => {
   try {
+    const chatId = '7098096854';
+    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+    
     if (!fs.existsSync(localPath)) {
       console.log("⚠ File XML không tồn tại, dừng luôn.");
       return;
@@ -115,22 +118,22 @@ const checkXmlContentMB = async (localPath) => {
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      triggerAlert("🚨 Phát hiện nội dung nghi vấn!");
+      console.log("🚨 Phát hiện nội dung nghi vấn!");
 
-      // console.log('App MB Bank has been stopped');
-      // await stopMBApp ( { device_id } );          
+      console.log('App MB Bank has been stopped');
+      // await stopMBApp ( { device_id } );                
 
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`
-      // );
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `🚨 Cảnh báo! Phát hiện nội dung cấm trên thiết bị ${device_id}`
+      );
 
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: 'Detected sensitive content',
-      //   filePath: localPath 
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: 'Detected sensitive content',
+        filePath: localPath 
+      });
 
       return;
     }
@@ -156,7 +159,7 @@ const checkXmlContentMB = async (localPath) => {
 
       const differences = compareData(extractedData, jsonData);
       if (differences.length > 0) {
-        triggerAlert(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+        console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
 
         console.log('App MB Bank has been stopped');
         await stopMBApp ( { device_id } );          
@@ -190,7 +193,7 @@ function extractNodes(obj) {
   let foundBank = false;
   let possibleAmounts = []; // Danh sách số tiền tìm thấy
   let lastText = "";
-  let skipNextAmount = false; // Cờ để bỏ qua số tiền nếu dòng trước là PAYMENT ACCOUNT
+  let balanceAmount = null; // Lưu số dư tài khoản
 
   function traverse(node) {
       if (!node) return;
@@ -215,17 +218,29 @@ function extractNodes(obj) {
               return;
           }
 
-          // Kiểm tra nếu dòng trước là PAYMENT ACCOUNT -> bỏ qua số tiền tiếp theo
-          if (lastText.includes("PAYMENT ACCOUNT")) {
-            console.log(`🚫 Bỏ qua số dư tài khoản gửi: ${text}`);
-            skipNextAmount = true;
+          // Nhận diện số dư tài khoản (PAYMENT ACCOUNT)
+          if (/PAYMENT ACCOUNT|BALANCE/.test(text.toUpperCase())) {
+              console.log(`📌 Nhận diện số dư tài khoản: ${text}`);
+              lastText = text;
+              return;
+          }
+
+          // Nếu ngay sau "PAYMENT ACCOUNT" có số thì lưu làm số dư tài khoản
+          if (lastText.includes("PAYMENT ACCOUNT") || lastText.includes("BALANCE")) {
+              const balanceMatch = text.match(/\b\d{1,3}([,.]\d{3})*\b/);
+              if (balanceMatch) {
+                  balanceAmount = parseInt(balanceMatch[0].replace(/[,.]/g, ''));
+                  console.log(`💰 Số dư tài khoản: ${balanceAmount}`);
+              }
+              lastText = ""; // Reset trạng thái
+              return;
           }
 
           // Tìm ngân hàng thụ hưởng
           if (!bin) {
               for (let bank of bankList) {
                   if (text.includes(bank)) {
-                      bin = bankBinMap[bank] || bank; // Chuyển đổi sang mã BIN nếu có
+                      bin = bank;
                       foundBank = true;
                       console.log(`🏦 Tìm thấy BIN: ${bin}`);
                       return;
@@ -237,42 +252,31 @@ function extractNodes(obj) {
           if (foundBank && !account_number) {
               const accountMatch = text.match(/\b\d{6,}\b/);
               if (accountMatch) {
-                  account_number = accountMatch[0]; // Không hỗ trợ định dạng có dấu `-` hoặc `.`
+                  account_number = accountMatch[0];
                   console.log(`💳 Tìm thấy Số tài khoản thụ hưởng: ${account_number}`);
                   foundBank = false; // Reset trạng thái
                   return;
               }
           }
 
-          // Kiểm tra số tiền giao dịch (ưu tiên số lớn nhất)
+          // Kiểm tra số tiền giao dịch (chỉ lấy số tiền >= 50,000)
           const amountMatch = text.match(/\b\d{1,3}([,.]\d{3})*\b/);
           if (amountMatch) {
-              let extractedAmount = amountMatch[0].replace(/[,.]/g, ''); // Loại bỏ dấu phân cách ngàn     
-              
-              if (skipNextAmount) {
-                console.log(`🚫 Bỏ qua số dư tài khoản: ${extractedAmount}`);
-                skipNextAmount = false; // Reset cờ sau khi bỏ qua
+              let extractedAmount = parseInt(amountMatch[0].replace(/[,.]/g, ''));
+
+              if (extractedAmount >= 50000) {
+                  console.log(`💰 Tìm thấy số tiền hợp lệ: ${extractedAmount}`);
+                  possibleAmounts.push(extractedAmount);
               } else {
-                  console.log(`💰 Tìm thấy số tiền: ${extractedAmount}`);
-                  possibleAmounts.push(parseInt(extractedAmount)); // Lưu vào danh sách số tiền
+                  console.log(`🚫 Bỏ qua số tiền quá nhỏ: ${extractedAmount}`);
               }
-
-              // // Bỏ qua số dư tài khoản gửi (nếu có nhãn "PAYMENT ACCOUNT")
-              // if (lastText.includes("PAYMENT ACCOUNT")) {
-              //     console.log(`🚫 Bỏ qua số dư tài khoản gửi: ${extractedAmount}`);
-              // } else {
-              //     console.log(`💰 Tìm thấy số tiền: ${extractedAmount}`);
-              //     possibleAmounts.push(parseInt(extractedAmount)); // Lưu vào danh sách số tiền
-              // }
           }
-
-          lastText = text; // Lưu lại dòng trước để kiểm tra
       }
   }
 
   traverse(obj);
 
-  // Chọn số tiền lớn nhất vì đó thường là số tiền giao dịch
+  // Chọn số tiền lớn nhất từ danh sách, không quan tâm đến số dư tài khoản
   if (possibleAmounts.length > 0) {
       amount = Math.max(...possibleAmounts);
       console.log(`✅ Số tiền giao dịch chính xác: ${amount}`);
@@ -532,7 +536,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentMB( localPath );
+      await checkXmlContentMB( device_id, localPath );
             
       // if (checkXmlContentMB( localPath )) {    
       //   console.log('App MB Bank has been stopped');
