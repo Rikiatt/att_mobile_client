@@ -3,7 +3,7 @@ const adb = require('adbkit');
 const fs = require('fs');
 const path = require('path');
 
-const jsonFilePath = path.join(__dirname, 'database', 'info-qr.json');
+const jsonFilePath = "C:\\att_mobile_client\\database\\info-qr.json";
 
 // Bảng ánh xạ tên ngân hàng sang mã BIN
 const bankBinMap = {
@@ -87,6 +87,66 @@ const checkXmlContentMB = async (localPath) => {
         return false;
     }
 }
+
+/*
+const checkXmlContentMB = async (localPath) => {
+  try {  
+    const content = fs.readFileSync(localPath, "utf-8");
+        
+    const keywordsVI = [
+      "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
+      "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
+    ];
+    const keywordsEN = [          
+      "Account", "Phone number", "Card",
+      "Large-value transaction inquiry", "MB partner", "Transfer"
+    ];
+
+    // Phát hiện bất thường, trả về true ngay lập tức
+    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {          
+      console.log("🚨 Phát hiện nội dung nghi vấn!");
+      // handleAlert(differences.join("\n"), jsonFilePath1);
+      console.log('stop app');
+      console.log('sendTelegramAlert');
+      console.log('saveAlertToDatabase');
+      return true;
+    }        
+
+    const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
+    const extractedData = extractNodes(parsed);    
+
+    console.log('log extractedData:', extractedData);
+    
+    let oldData = {};
+    console.log('log jsonFilePath:', jsonFilePath);
+
+    console.log('fs.existsSync(jsonFilePath):...',fs.existsSync(jsonFilePath));
+    if (fs.existsSync(jsonFilePath)) {
+      try {
+            const rawData = fs.readFileSync(jsonFilePath, "utf8");
+            oldData = JSON.parse(rawData).data || {};
+            console.log('log oldData:', oldData);
+      } catch (error) {        
+        console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
+        oldData = {};        
+      }
+    }    
+    const differences = compareData(extractedData, oldData);
+    if (differences.length > 0) {
+      triggerAlert(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);        
+      return true;
+    } else {
+      console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+      return false;
+    }
+  } catch (error) {      
+    console.error("❌ Got an error:", error.message);
+    return false;
+  }
+}
+
+// backup
+*/
 
 function extractNodes(obj) {
     let bin = null, account_number = null, amount = null;

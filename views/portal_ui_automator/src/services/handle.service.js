@@ -56,7 +56,7 @@ export const ocbScanQR = async (data, setLoading) => {
 
   setLoading(true);  
 
-  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mật khẩu OCB cần truyền vào thiết bị');
   if (!text) return;    
 
   // console.log('1. Copy QR images'); 
@@ -103,7 +103,7 @@ export const ncbScanQR = async (data, setLoading) => {
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NCB cần truyền vào thiết bị');
   if (!text) return;
 
   // console.log('1. Copy QR images'); 
@@ -157,7 +157,7 @@ export const nabScanQR = async (data, setLoading) => {
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NAB cần truyền vào thiết bị');
   if (!text) return;
 
   // console.log('1. Copy QR images'); 
@@ -212,7 +212,7 @@ export const msbScanQR = async (data, setLoading) => {
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mật khẩu MSB cần truyền vào thiết bị');
   if (!text) return;
 
   // console.log('1. Copy QR images'); 
@@ -263,7 +263,7 @@ export const mbScanQR = async (data, setLoading) => {
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mã PIN cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu MB Bank cần truyền vào thiết bị');
   if (!text) return;
 
   // console.log('1. Copy QR images'); 
@@ -277,7 +277,7 @@ export const mbScanQR = async (data, setLoading) => {
 
   await delay(10000);
   // Track MB App while it is in process  
-  // const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
+  const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
 
   console.log('3. Input password and login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -294,10 +294,10 @@ export const mbScanQR = async (data, setLoading) => {
   await delay(3000); 
 
   //Đợi trackMBApp hoàn thành (nếu app MB Bank bị thoát)
-  // const trackResult = await trackMBAppPromise;
-  // if (!trackResult) {
-  //   console.log('📢 Theo dõi MB Bank đã kết thúc.');
-  // }
+  const trackResult = await trackMBAppPromise;
+  if (!trackResult) {
+    console.log('📢 Theo dõi MB Bank đã kết thúc.');
+  }
 
   console.log('5. Delete all of imgs in /sdcard and sdcard/DCIM/CAMERA');
   await actionADB({ action: 'delImg', device_id: data.device_id }); 
