@@ -8,7 +8,7 @@ const nodeCmd = require('../helpers/nodeCmdHelper');
 module.exports = {
   updateSource: async () => {
     console.log('----- TIẾN TRÌNH CẬP NHẬT -----');
-    nodeCmd.runSync('');
+    // nodeCmd.runSync('');
     nodeCmd.runSync('git reset --hard');
 
     const pull = nodeCmd.runSync('git pull');

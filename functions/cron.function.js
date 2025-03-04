@@ -9,7 +9,8 @@ const cronUpdate = new cron.CronJob(
   '*/30 * * * *',
   async () => {
     try {
-      await updateSource();
+      // await updateSource();
+      console.log('updateSource() has been hidden');
     } catch (error) {
       console.error('Lỗi khi cron:', error);
     }
