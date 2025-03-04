@@ -19,21 +19,26 @@ module.exports = {
       // Khởi tạo file json
       let localPath = path.join(__dirname, '..', 'database', 'localdata.json');
       const localData = await getDataJson(localPath);
-      console.log("---> Listening on server <---", type, localData, localData[type]?.endpoint, localData[type]?.site);
+      console.log('---> Listening on server <---', type, localData, localData[type]?.endpoint, localData[type]?.site);
       if (localData && localData[type]?.endpoint && localData[type]?.site) {
         // reset
-        await setDataJson(localPath, { ...localData, connect: '', att: { ...localData.att, connected: false }, org: { ...localData.org, connected: false } });
-        // 
+        await setDataJson(localPath, {
+          ...localData,
+          connect: '',
+          att: { ...localData.att, connected: false },
+          org: { ...localData.org, connected: false }
+        });
+        //
         if (!disconnect) {
           const { site, endpoint } = localData[type];
 
-          console.log("---> Listening on server <---");
+          console.log('---> Listening on server <---');
           // Cấu hình kết nối socket tới attpays+ và attpay.org
           let handPath = '/socket.io';
           if (site.includes('ui_manual')) {
-            handPath = "/ui_manual/connect/socket.io";
+            handPath = '/ui_manual/connect/socket.io';
           }
-          currentSocket = io(endpoint + "/" + site, {
+          currentSocket = io(endpoint + '/' + site, {
             path: handPath,
             transports: ['websocket']
           });
@@ -41,12 +46,20 @@ module.exports = {
           // Khi kết nối thành công
           currentSocket.on('connect', async () => {
             console.log('Connected to server:', currentSocket.id);
-            await setDataJson(localPath, { ...localData, connect: type, [type]: { ...localData[type], connected: true, message: 'Success' } });
+            await setDataJson(localPath, {
+              ...localData,
+              connect: type,
+              [type]: { ...localData[type], connected: true, message: 'Success' }
+            });
           });
 
           currentSocket.on('connect_error', async (error) => {
             console.error('Socket Fail:: ', error.message);
-            await setDataJson(localPath, { ...localData, connect: type, [type]: { ...localData[type], connected: false, message: error.message } });
+            await setDataJson(localPath, {
+              ...localData,
+              connect: type,
+              [type]: { ...localData[type], connected: false, message: error.message }
+            });
           });
 
           // Nhận phản hồi từ server
@@ -58,7 +71,7 @@ module.exports = {
             const findId = data.device_id.split('$')[0];
             const findIp = data.device_id.split('$')[1];
 
-            const findDevice = devices.find((item) => ((!findIp || findIp == ipPublic) && item.id == findId));
+            const findDevice = devices.find((item) => (!findIp || findIp == ipPublic) && item.id == findId);
             if (!findDevice) {
               return;
             }
@@ -66,14 +79,14 @@ module.exports = {
             // Đúng thiết bị
             if (lastReceived[findId] && now - lastReceived[findId] < 5000) {
               return;
-            };
+            }
             lastReceived[findId] = now;
 
             // fake data for testing
             const { vietqr_url, trans_id, bin, account_number, amount, trans_mess, PIN, bank_pass } = data;
 
             if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess || PIN || bank_pass)) {
-              console.log("Mix Data");
+              console.log('Mix Data');
               currentSocket.emit('callback', { ...data, success: false });
               return;
             }
@@ -87,18 +100,22 @@ module.exports = {
             const seconds = String(date.getSeconds()).padStart(2, '0');
 
             const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-            let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg')
+            let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');
             let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
             if (vietqr_url) {
               await delImg(findId, '/sdcard/DCIM/Camera/');
-              console.log("Deleted old QR - " + filename);
+              console.log('Deleted old QR - ' + filename);
               await delay(100);
-              await downloadQr(vietqr_url, qrLocalPath);
+              const downloaded = await downloadQr(vietqr_url, qrLocalPath);
+              if (!downloaded) {
+                console.log('Download Failed -> create QR by library:', qrInfoPath);
+                await transToQr(data, qrLocalPath);
+              }
             } else {
               await transToQr(data, qrLocalPath);
             }
-            let jsonPath = path.join(__dirname, '..', 'database', findId.split(':')[0] + '_url.json')
+            let jsonPath = path.join(__dirname, '..', 'database', findId.split(':')[0] + '_url.json');
 
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
 
@@ -106,27 +123,31 @@ module.exports = {
             // console.log("Deleted old QR - " + filename);
             // await delay(100);
 
-            await sendFile(findId, qrLocalPath, qrDevicePath);            
-            
+            await sendFile(findId, qrLocalPath, qrDevicePath);
+
             setTimeout(async () => {
               await delImg(findId, '/sdcard/DCIM/Camera/', filename);
-              console.log("Deleted QR old - " + filename);
+              console.log('Deleted QR old - ' + filename);
             }, 300000);
 
             // Thành công !!!
-            console.log("Success!");
+            console.log('Success!');
             currentSocket.emit('callback', { ...data, success: true });
           });
 
           // Khi bị ngắt kết nối
           currentSocket.on('disconnect', async () => {
             console.log('Disconnected from server');
-            await setDataJson(localPath, { ...localData, connect: type, [type]: { ...localData[type], connected: false, message: 'Disconnected' } });
+            await setDataJson(localPath, {
+              ...localData,
+              connect: type,
+              [type]: { ...localData[type], connected: false, message: 'Disconnected' }
+            });
           });
         }
-      }      
+      }
     } catch (e) {
       console.log(e);
     }
-  }  
+  }
 };

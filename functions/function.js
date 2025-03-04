@@ -1,5 +1,5 @@
 const fs = require('fs');
-const axios = require("axios");
+const axios = require('axios');
 const QRCode = require('qrcode');
 const dataPath = './localdata.json';
 const { QRPay } = require('vietnam-qr-pay');
@@ -23,8 +23,8 @@ module.exports = {
       bankBin: data.bin,
       bankNumber: data.account_number,
       amount: data.amount,
-      purpose: data.trans_mess,
-    })
+      purpose: data.trans_mess
+    });
     const content = qrPay.build();
 
     QRCode.toFile(filename, content, function (err) {
@@ -38,14 +38,26 @@ module.exports = {
   },
 
   downloadQr: async (qrCodeUrl, localFilePath) => {
-    await new Promise((resolve, reject) => {
-      axios({ url: qrCodeUrl, responseType: 'stream', })
-        .then((response) => response.data.pipe(fs.createWriteStream(localFilePath))
-          .on('finish', () => { console.log('QR code downloaded.'); resolve(true) })
-          .on('error', (err) => { console.error('Error saving QR: ', err); reject(false) }))
-        .catch(err => { console.error('Error downloading QR code:', err); reject(false) })
-    })
-    return;
+    const res = await new Promise((resolve, reject) => {
+      axios({ url: qrCodeUrl, responseType: 'stream' })
+        .then((response) =>
+          response.data
+            .pipe(fs.createWriteStream(localFilePath))
+            .on('finish', () => {
+              console.log('QR code downloaded.');
+              resolve(true);
+            })
+            .on('error', (err) => {
+              console.error('Error saving QR: ', err);
+              reject(false);
+            })
+        )
+        .catch((err) => {
+          console.error('Error downloading QR code:', err);
+          reject(false);
+        });
+    });
+    return res;
   },
 
   saveLocalData: async (data) => {
@@ -55,7 +67,7 @@ module.exports = {
 
   getLocalData: async () => {
     if (!fs.existsSync(dataPath)) {
-      const defaultData = { pusher_key: "" };
+      const defaultData = { pusher_key: '' };
       fs.writeFileSync(dataPath, JSON.stringify(defaultData, null, 2), 'utf-8');
       console.log('File created with default content.');
       return defaultData;
