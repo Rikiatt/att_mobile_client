@@ -77,7 +77,15 @@ const bankBinMapMB = {
     "Technology and Trade (TCB)": "970407",
     "Investment and development (BIDV)": "970418",
     "Military (MB)": "970422",
-    "NCB": "970419"
+    "NCB": "970419",
+    
+    "Á Châu (ACB)": "970416",
+    "Ngoại thương Việt Nam (VCB)": "970436",
+    "Công Thương Việt Nam (VIETINBANK)": "970415",
+    "Kỹ Thương (TCB)": "970407",
+    "Đầu tư và phát triển (BIDV)": "970418",
+    "Quân đội (MB)": "970422",
+    "Quốc Dân (NCB)": "970419"
 };
 
 // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng OCB
@@ -121,7 +129,7 @@ const checkXmlContentMB = async (device_id, localPath) => {
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện thao tác chuyển thường!");
+      console.log("🚨 Phát hiện có thao tác bất thường!");
 
       console.log('App MB Bank has been stopped');
       await stopMBApp ( { device_id } );                
@@ -129,7 +137,7 @@ const checkXmlContentMB = async (device_id, localPath) => {
       await sendTelegramAlert(
         telegramToken,
         chatId,
-        `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`
+        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
       );
 
       await saveAlertToDatabase({
@@ -170,7 +178,7 @@ const checkXmlContentMB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
         );
 
         await saveAlertToDatabase({
@@ -221,7 +229,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện thao tác chuyển thường!");
+      console.log("🚨 Phát hiện có thao tác bất thường!");
 
       console.log('App OCB OMNI has been stopped');
       await stopMBApp ( { device_id } );                
@@ -229,7 +237,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
       await sendTelegramAlert(
         telegramToken,
         chatId,
-        `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`
+        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
       );
 
       await saveAlertToDatabase({
@@ -271,7 +279,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
     //     await sendTelegramAlert(
     //       telegramToken,
     //       chatId,
-    //       `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`
+    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
     //     );
 
     //     await saveAlertToDatabase({
@@ -293,98 +301,72 @@ const checkXmlContentOCB = async (device_id, localPath) => {
 
 function extractNodesMB(obj) {
   let bin = null, account_number = null, amount = null;
-  const bankList = ["Asia (ACB)", "Vietnam Foreign Trade (VCB)", "Vietnam Industry and Trade (VIETINBANK)", "Technology and Trade (TCB)", "Investment and development (BIDV)", "Military (MB)", "NCB"];
-  let foundBank = false;
-  let possibleAmounts = []; // Danh sách số tiền tìm thấy
-  let lastText = "";
-  let balanceAmount = null; // Lưu số dư tài khoản
+  const bankList = [
+      "Asia (ACB)", "Á Châu (ACB)", 
+      "Vietnam Foreign Trade (VCB)", "Ngoại thương Việt Nam (VCB)", 
+      "Vietnam Industry and Trade (VIETINBANK)", "Công Thương Việt Nam (VIETINBANK)",
+      "Technology and Trade (TCB)", "Kỹ Thương (TCB)", 
+      "Investment and development (BIDV)", "Đầu tư và phát triển (BIDV)", 
+      "Military (MB)", "Quân đội (MB)", 
+      "NCB", "Quốc Dân (NCB)"
+  ];
+  
+  let foundBank = false; 
+  let foundAccount = false;
+  let maxAmount = 0;
 
   function traverse(node) {
       if (!node) return;
 
       if (typeof node === 'object') {
           for (let key in node) {
-              traverse(node[key]); // Đệ quy vào các node con
+              traverse(node[key]);
           }
       }
 
       if (typeof node === 'string') {
           let text = node.trim();
-
-          // Bỏ qua dữ liệu không quan trọng
           if (!text || text === "false" || text === "true") return;
 
           console.log(`🔍 Scanning: "${text}"`);
 
-          // Bỏ qua tọa độ dạng [x,y][x,y]
-          if (/\[\d+,\d+\]\[\d+,\d+\]/.test(text)) {
-              console.log(`🚫 Bỏ qua tọa độ: ${text}`);
-              return;
-          }
-
-          // Nhận diện số dư tài khoản (PAYMENT ACCOUNT)
-          if (/PAYMENT ACCOUNT/.test(text.toUpperCase())) {
-              console.log(`📌 Nhận diện số dư tài khoản: ${text}`);
-              lastText = text;
-              return;
-          }
-
-          // Nếu ngay sau "PAYMENT ACCOUNT" có số thì lưu làm số dư tài khoản
-          if (lastText.includes("PAYMENT ACCOUNT")) {
-              const balanceMatch = text.match(/\b\d{1,3}([,.]\d{3})*\b/);
-              if (balanceMatch) {
-                  balanceAmount = parseInt(balanceMatch[0].replace(/[,.]/g, ''));
-                  console.log(`💰 Số dư tài khoản: ${balanceAmount}`);
-              }
-              lastText = ""; // Reset trạng thái
-              return;
-          }
-
-          // Tìm ngân hàng thụ hưởng
+          // 1️⃣ Tìm ngân hàng trước
           if (!bin) {
               for (let bank of bankList) {
                   if (text.includes(bank)) {
                       bin = bankBinMapMB[bank] || bank;
                       foundBank = true;
-                      console.log(`🏦 Tìm thấy BIN: ${bin}`);
-                      return;
+                      console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+                      return; 
                   }
               }
           }
 
-          // Tìm số tài khoản thụ hưởng
+          // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
           if (foundBank && !account_number) {
-              const accountMatch = text.match(/\b\d{6,}\b/);
+              const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
               if (accountMatch) {
                   account_number = accountMatch[0];
-                  console.log(`💳 Tìm thấy Số tài khoản thụ hưởng: ${account_number}`);
-                  foundBank = false; // Reset trạng thái
+                  foundAccount = true;
+                  console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
                   return;
               }
           }
 
-          //Kiểm tra số tiền giao dịch (chỉ lấy số tiền >= 50,000)
-          const amountMatch = text.match(/\b\d{1,3}([,.]\d{3})*\b/);
+          // 3️⃣ Tìm số tiền giao dịch lớn nhất
+          const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
           if (amountMatch) {
-              let extractedAmount = parseInt(amountMatch[0].replace(/[,.]/g, ''));
-
-              if (extractedAmount >= 50000) {
-                  console.log(`💰 Tìm thấy số tiền hợp lệ: ${extractedAmount}`);
-                  possibleAmounts.push(extractedAmount);
-              } else {
-                  console.log(`🚫 Bỏ qua số tiền quá nhỏ: ${extractedAmount}`);
+              let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
+              if (extractedAmount > maxAmount) {
+                  maxAmount = extractedAmount;
+                  console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
               }
           }
       }
   }
 
   traverse(obj);
-
-  // Chọn số tiền lớn nhất từ danh sách, không quan tâm đến số dư tài khoản
-  if (possibleAmounts.length > 0) {
-      amount = Math.max(...possibleAmounts);
-      console.log(`✅ Số tiền giao dịch chính xác: ${amount}`);
-  }
+  amount = maxAmount;
 
   return { bin, account_number, amount };
 }
@@ -632,7 +614,7 @@ module.exports = {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`);
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`);
 
         await saveAlertToDatabase({          
           timestamp: new Date().toISOString(),
@@ -690,7 +672,7 @@ module.exports = {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`);
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`);
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
@@ -741,26 +723,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentMB( device_id, localPath );
-            
-      if (checkXmlContentMB( localPath )) {    
-        console.log('App MB Bank has been stopped');
-        await stopMBApp ( { device_id } );          
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác chuyển thường',
-          filePath: localPath 
-        });
-
-        return false;
-      }
+      await checkXmlContentMB( device_id, localPath );                
     
       running = await isMbAppRunning( { device_id } );
     
@@ -810,7 +773,7 @@ module.exports = {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện thao tác chuyển thường ${device_id}`);
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`);
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),

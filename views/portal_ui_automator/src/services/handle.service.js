@@ -299,8 +299,8 @@ export const mbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi MB Bank đã kết thúc.');
   }
 
-  console.log('5. Delete all of imgs in /sdcard and sdcard/DCIM/CAMERA');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('5. Delete all of imgs in /sdcard and sdcard/DCIM/CAMERA');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
