@@ -238,6 +238,7 @@ module.exports = {
               await delay(100);
               const downloaded = await downloadQr(vietqr_url, qrLocalPath);
               if (!downloaded) {
+                console.log('Download Failed -> create QR by library:', qrLocalPath);
                 await transToQr(data, qrLocalPath);
               }
               // // Lưu vietqr_url vào file info-qr.json
