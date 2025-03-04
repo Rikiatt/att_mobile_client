@@ -222,8 +222,13 @@ module.exports = {
               await delImg(findId, '/sdcard/');
               console.log("Deleted old QR - " + filename);
               await delay(100);
-              await downloadQr(vietqr_url, qrLocalPath);
-
+              
+              const downloaded = await downloadQr(vietqr_url, qrLocalPath);
+              if (!downloaded) {
+                console.log('Download Failed -> create QR by library:', qrLocalPath);
+                await transToQr(data, qrLocalPath);
+              }
+              
               // // Lưu vietqr_url vào file info-qr.json
               // let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');              
               // console.log('log qrInfoPath:', qrInfoPath);
