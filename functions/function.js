@@ -38,14 +38,19 @@ module.exports = {
   },
 
   downloadQr: async (qrCodeUrl, localFilePath) => {
-    await new Promise((resolve, reject) => {
-      axios({ url: qrCodeUrl, responseType: 'stream', })
-        .then((response) => response.data.pipe(fs.createWriteStream(localFilePath))
-          .on('finish', () => { console.log('QR code downloaded.'); resolve(true) })
-          .on('error', (err) => { console.error('Error saving QR: ', err); reject(false) }))
-        .catch(err => { console.error('Error downloading QR code:', err); reject(false) })
-    })
-    return;
+    let res = false;
+    try {
+      res = await new Promise(async (resolve, reject) => {
+        return await axios({ url: qrCodeUrl, responseType: 'stream', })
+          .then((response) => response.data.pipe(fs.createWriteStream(localFilePath))
+            .on('finish', () => { console.log('QR code downloaded.'); resolve(true) })
+            .on('error', (err) => { console.error('Error saving QR: ', err); reject(false) }))
+          .catch(err => { console.error('Error downloading QR code'); reject(false) })
+      })
+    } catch (e) {
+      res = false;
+    }
+    return res;
   },
 
   saveLocalData: async (data) => {
