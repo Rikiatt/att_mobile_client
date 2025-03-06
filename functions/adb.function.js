@@ -9,6 +9,7 @@ const xml2js = require('xml2js');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
+const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
@@ -311,13 +312,13 @@ const checkXmlContentOCB = async (device_id, localPath) => {
 function extractNodesMB(obj) {
   let bin = null, account_number = null, amount = null;
   const bankList = [
-      "Asia (ACB)", "Á Châu (ACB)", 
-      "Vietnam Foreign Trade (VCB)", "Ngoại thương Việt Nam (VCB)", 
-      "Vietnam Industry and Trade (VIETINBANK)", "Công Thương Việt Nam (VIETINBANK)",
-      "Technology and Trade (TCB)", "Kỹ Thương (TCB)", 
-      "Investment and development (BIDV)", "Đầu tư và phát triển (BIDV)", 
-      "Military (MB)", "Quân đội (MB)", 
-      "NCB", "Quốc Dân (NCB)"
+    "Asia (ACB)", "Á Châu (ACB)", 
+    "Vietnam Foreign Trade (VCB)", "Ngoại thương Việt Nam (VCB)", 
+    "Vietnam Industry and Trade (VIETINBANK)", "Công Thương Việt Nam (VIETINBANK)",
+    "Technology and Trade (TCB)", "Kỹ Thương (TCB)", 
+    "Investment and development (BIDV)", "Đầu tư và phát triển (BIDV)", 
+    "Military (MB)", "Quân đội (MB)", 
+    "NCB", "Quốc Dân (NCB)"
   ];
   
   let foundBank = false; 
@@ -325,53 +326,53 @@ function extractNodesMB(obj) {
   let maxAmount = 0;
 
   function traverse(node) {
-      if (!node) return;
+    if (!node) return;
 
-      if (typeof node === 'object') {
-          for (let key in node) {
-              traverse(node[key]);
+    if (typeof node === 'object') {
+      for (let key in node) {
+        traverse(node[key]);
+      }
+    }
+
+    if (typeof node === 'string') {
+      let text = node.trim();
+      if (!text || text === "false" || text === "true") return;
+
+      console.log(`🔍 Scanning: "${text}"`);
+
+      // 1️⃣ Tìm ngân hàng trước
+      if (!bin) {
+        for (let bank of bankList) {
+          if (text.includes(bank)) {
+            bin = bankBinMapMB[bank] || bank;
+            foundBank = true;
+            console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+            return; 
           }
+        }
       }
 
-      if (typeof node === 'string') {
-          let text = node.trim();
-          if (!text || text === "false" || text === "true") return;
-
-          console.log(`🔍 Scanning: "${text}"`);
-
-          // 1️⃣ Tìm ngân hàng trước
-          if (!bin) {
-              for (let bank of bankList) {
-                  if (text.includes(bank)) {
-                      bin = bankBinMapMB[bank] || bank;
-                      foundBank = true;
-                      console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
-                      return; 
-                  }
-              }
-          }
-
-          // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
-          if (foundBank && !account_number) {
-              const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
-              if (accountMatch) {
-                  account_number = accountMatch[0];
-                  foundAccount = true;
-                  console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
-                  return;
-              }
-          }
-
-          // 3️⃣ Tìm số tiền giao dịch lớn nhất
-          const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
-          if (amountMatch) {
-              let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
-              if (extractedAmount > maxAmount) {
-                  maxAmount = extractedAmount;
-                  console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
-              }
-          }
+      // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
+      if (foundBank && !account_number) {
+        const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
+        if (accountMatch) {
+          account_number = accountMatch[0];
+          foundAccount = true;
+          console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
+          return;
+        }
       }
+
+      // 3️⃣ Tìm số tiền giao dịch lớn nhất
+      const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
+      if (amountMatch) {
+        let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
+        if (extractedAmount > maxAmount) {
+          maxAmount = extractedAmount;
+          console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
+        }
+      }
+    }
   }
 
   traverse(obj);
@@ -388,14 +389,13 @@ function extractNodesOCB(obj) {
     "Vietcombank (Bank for Foreign Trade of Vietnam)", "Ngân hàng TMCP Ngoại Thương Việt Nam", 
     "Vietinbank (Vietnam Joint Stock Commercial Bank for Industry and Trade)", "Ngân hàng TMCP Công Thương Việt Nam",
     "Techcombank (Vietnam Technological and Commercial Joint Stock Bank)", "Ngân hàng TMCP Kỹ Thương Việt Nam", 
-    "BIDV (Bank for Investment and Development of Vietnam)", "Ngân hàng TMCP Đầu Tư và Phát Triển Việt Nam)", 
+    "BIDV (Bank for Investment and Development of Vietnam)", "Ngân hàng TMCP Đầu Tư và Phát Triển Việt Nam", 
     "Military Commercial Joint Stock Bank", "Ngân hàng TMCP Quân Đội", 
     "National Citizen Bank", "Ngân hàng TMCP Quốc Dân"
   ];
 
-  let foundBank = false; 
+  let foundBank = false;
   let foundAccount = false;
-  let maxAmount = 0;
 
   function traverse(node) {
       if (!node) return;
@@ -412,14 +412,14 @@ function extractNodesOCB(obj) {
 
           console.log(`🔍 Scanning: "${text}"`);
 
-          // 1️⃣ Tìm ngân hàng trước
+          // 1️⃣ Tìm ngân hàng
           if (!bin) {
               for (let bank of bankList) {
                   if (text.includes(bank)) {
                       bin = bankBinMapOCB[bank] || bank;
                       foundBank = true;
                       console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
-                      return; 
+                      return;
                   }
               }
           }
@@ -430,26 +430,20 @@ function extractNodesOCB(obj) {
               if (accountMatch) {
                   account_number = accountMatch[0];
                   foundAccount = true;
-                  console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
+                  console.log(`💳 Tìm thấy số tài khoản: ${account_number}`);
                   return;
               }
           }
+      }
 
-          // 3️⃣ Tìm số tiền giao dịch lớn nhất
-          const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
-          if (amountMatch) {
-              let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
-              if (extractedAmount > maxAmount) {
-                  maxAmount = extractedAmount;
-                  console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
-              }
-          }
+      // 3️⃣ Lấy số tiền từ đúng thẻ có resource-id="vn.com.ocb.awe:id/edtInput"
+      if (typeof node === 'object' && node['resource-id'] === 'vn.com.ocb.awe:id/edtInput' && node.text) {
+          amount = parseInt(node.text.replace(/,/g, ''), 10);
+          console.log(`✅ Tìm thấy số tiền giao dịch chính xác: ${amount}`);
       }
   }
 
   traverse(obj);
-  amount = maxAmount;
-
   return { bin, account_number, amount };
 }
 
@@ -520,11 +514,12 @@ function extractNodesNAB(obj) {
   return { bin, account_number, amount };
 }
 
-// chưa xong
+// ko dump duoc sau khi quet QR
 function extractNodesMSB(obj) {
   let bin = null, account_number = null, amount = null;
   const bankList = [
-    // chưa xong
+    "ACB - NH TMCP A CHAU",
+    "VIETCOMBANK -NH TMCP NGOAI THUONG VIET NAM (VCB)"
   ];
   
   let foundBank = false; 
@@ -651,7 +646,7 @@ const checkXmlContentNAB = async (device_id, localPath) => {
       if (differences.length > 0) {
         console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
 
-        console.log('App MB Bank has been stopped');
+        console.log('Dừng luôn app MB');
         await stopNABApp ( { device_id } );          
 
         await sendTelegramAlert(
@@ -770,21 +765,35 @@ const checkXmlContentMSB = async (device_id, localPath) => {
 async function stopNABApp ({ device_id }) {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
-  console.log('App NAB has been stopped');
+  console.log('Dừng luôn app NAB');
   await delay(500);
   return { status: 200, message: 'Success' };
 }
 
 async function stopMBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.mbmobile');
-  console.log('App MB has been stopped');
+  console.log('Đã dừng app MB');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
+async function stopOCBApp ({ device_id }) {    
+  await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
+  console.log('Đã dừng app OCB OMNI');
   await delay(500);
   return { status: 200, message: 'Success' };
 }
 
 async function stopMSBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
-  console.log('App MSB has been stopped');
+  console.log('Đã dừng app MSB');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
+async function stopACBApp ({ device_id }) {    
+  await client.shell(device_id, 'am force-stop mobile.acb.com.vn');
+  console.log('Đã dừng app ACB');
   await delay(500);
   return { status: 200, message: 'Success' };
 }
@@ -809,14 +818,14 @@ module.exports = {
     let running = await isOCBAppRunning( { device_id } );
 
     if (!running) {
-        console.log("OCB OMNI is not running.");
+        console.log("OCB đang không chạy.");
         return;
     }
         
     await clearTempFile( { device_id } );
     
     while (running) {
-      console.log('App OCB is in process');
+      console.log('App OCB đang chạy');
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
@@ -840,8 +849,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi NAB App...');
     
-    const chatId = '7098096854';
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+    const chatId = '7098096854';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1154,9 +1162,7 @@ module.exports = {
     await delay(800); 
 
     await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800);   
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800);   
+    await delay(800);     
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Select-Target-Img']);  
     await delay(800);   
     await adbHelper.tapADBOCB(device_id, ...coordinatesScanQROCB['Finish']);        
@@ -1215,14 +1221,14 @@ module.exports = {
   stopAppADBBAB: async ({ device_id }) => {   
     await client.shell(device_id, 'input keyevent 3'); 
     await client.shell(device_id, 'am force-stop com.bab.retailUAT');
-    console.log('App Bac A Bank has been stopped');
+    console.log('Đã dừng app Bac A Bank');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBBAB: async ({ device_id }) => {    
     await client.shell(device_id, 'am start -n com.bab.retailUAT/.MainActivity');
-    console.log('App Bac A Bank has been stopped');
+    console.log('Đang khởi động app Bac A Bank');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
@@ -1230,14 +1236,29 @@ module.exports = {
   stopAppADBOCB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
-    console.log('App OCB OMNI has been stopped');
+    console.log('Đã dừng app OCB');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBOCB: async ({ device_id }) => {    
     await client.shell(device_id, 'monkey -p vn.com.ocb.awe -c android.intent.category.LAUNCHER 1');
-    console.log('App OCB OMNI has been stopped');
+    console.log('Đang khởi động app OCB');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
+  stopAppADBACB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
+    await client.shell(device_id, 'am force-stop mobile.acb.com.vn');
+    console.log('Đã dừng app ACB');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBACB: async ({ device_id }) => {    
+    await client.shell(device_id, 'adb shell monkey -p mobile.acb.com.vn -c android.intent.category.LAUNCHER 1');
+    console.log('Đang khởi động app ACB');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
@@ -1245,13 +1266,13 @@ module.exports = {
   stopAppADBBIDV: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vnpay.bidv');
-    console.log('App BIDV has been stopped');
+    console.log('Đã dừng app BIDV');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBBIDV: async ({ device_id }) => {
-    console.log('Starting App BIDV...');
+    console.log('Đang khởi động app BIDV...');
     await client.shell(device_id, 'monkey -p com.vnpay.bidv -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1260,13 +1281,13 @@ module.exports = {
   stopAppADBNAB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
-    console.log('App NAB has been stopped');
+    console.log('Đã dừng app NAB');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBNAB: async ({ device_id }) => {
-    console.log('Starting App NAB...');
+    console.log('Đang khởi động app NAB...');
     await client.shell(device_id, 'monkey -p ops.namabank.com.vn -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1275,13 +1296,13 @@ module.exports = {
   stopAppADBMB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.mbmobile');
-    console.log('App MB has been stopped');
+    console.log('Đã dừng app MB');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBMB: async ({ device_id }) => {
-    console.log('Starting App MB...');
+    console.log('Đã dừng app MB...');
     await client.shell(device_id, 'monkey -p com.mbmobile -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1290,27 +1311,27 @@ module.exports = {
   stopAppADBNCB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.ncb.bank');
-    console.log('App NCB has been stopped');
+    console.log('Đã dừng app NCB');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBNCB: async ({ device_id }) => {
-    console.log('Starting App NCB...');
+    console.log('Đang khởi động app NCB...');
     await client.shell(device_id, 'monkey -p com.ncb.bank -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBMSB: async ({ device_id }) => {
-    console.log('Starting App MSB...');
+    console.log('Đang khởi động app MSB...');
     await client.shell(device_id, 'monkey -p vn.com.msb.smartBanking -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   stopAppADBMSB: async ({ device_id }) => {
-    console.log('Stopping App MSB...');
+    console.log('Đã dừng app MSB...');
     await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1319,13 +1340,13 @@ module.exports = {
   stopAppADBVCB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.VCB');
-    console.log('App VCB has been stopped');
+    console.log('Đã dừng app VCB');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBVCB: async ({ device_id }) => {
-    console.log('Starting App VCB...');
+    console.log('Đang khởi động app VCB...');
     await client.shell(device_id, 'monkey -p com.VCB -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1334,13 +1355,13 @@ module.exports = {
   stopAppADBVTB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
-    console.log('App VietinBank iPay has been stopped');
+    console.log('Đã dừng app VietinBank iPay');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBVTB: async ({ device_id }) => {
-    console.log('Starting App VietinBank iPay...');
+    console.log('Đang khởi động app VietinBank iPay...');
     await client.shell(device_id, 'monkey -p com.vietinbank.ipay -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1349,13 +1370,13 @@ module.exports = {
   stopAppADBSHB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop vn.shb.mbanking');
-    console.log('App SHB Mobile has been stopped');
+    console.log('Đã dừng app SHB Mobile');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
   startAppADBSHB: async ({ device_id }) => {
-    console.log('Starting App SHB Mobile...');
+    console.log('Đang khởi động app SHB Mobile...');
     await client.shell(device_id, 'monkey -p vn.shb.mbanking -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
@@ -1380,6 +1401,24 @@ module.exports = {
     // }
     await delay(1000);
     return { status: 200, message: 'Success' };
+  },
+
+  checkDeviceACB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRACB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRACB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
   },
 
   checkDeviceNAB: async ({ device_id }) => {
@@ -1702,8 +1741,7 @@ module.exports = {
   },
 
   startADB: async ({ device_id }) => {    
-    console.log("Starting app to check QR...");
-    await startFirstAvailableBank(device_id);    
+    console.log("Đang khởi động app to check QR...");    
     return { status: 200, message: 'Success' };
   },
   
@@ -1767,93 +1805,6 @@ module.exports = {
     await delay(100);
     client.shell(device_id, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`);
     return { status: 200, message: 'Success' };    
-  }
-};
-
-const banks = [
-  // { name: "ABBANK", package: "com.abbank.abditizen" },
-  // { name: "ACB", package: "mobile.acb.com.vn" }, // pending
-  // { name: "Agribank", package: "com.vnpay.Agribank3g" }, // pending
-  // { name: "BAOVIET Bank", package: "com.baovietbank.mobile" },
-  // { name: "Bac A Bank", package: "com.bacabank.smartbanking" },
-  // { name: "CB", package: "com.cbbank.mb" },
-  // { name: "CIMB", package: "com.cimb.vietnam" },
-  // { name: "Co-opBank", package: "vn.com.coopbank" },
-  // { name: "DongA Bank", package: "com.dongabank.mobile" },
-  // { name: "Eximbank", package: "com.eximbank.ebmobile" },
-  // { name: "GPBank", package: "com.gpb.smartbanking" },
-  // { name: "HDBank", package: "com.hdbank.hdbankapp" },
-  // { name: "Hong Leong Bank", package: "com.hlb.hongleongbankvn" },
-  // { name: "HSBC", package: "com.hsbc.mobilebanking" },
-  // { name: "Indovina Bank", package: "com.indovinabank.mobile" },
-  // { name: "KienLongBank", package: "com.kienlongbank.kienlongsmartbanking" },
-  // { name: "LienVietPostBank", package: "com.lienvietpostbank.mobilebanking" },
-  // { name: "MBBank", package: "com.mbmobile" }, // ok
-  // { name: "MSB", package: "vn.com.msb.smartBanking" }, // pending
-  // { name: "NAB", package: "ops.namabank.com.vn" }, // ok
-  // { name: "NCB", package: "com.ncb.bank" }, // ok
-  // { name: "OceanBank", package: "com.oceanbank.mobile" },
-  { name: "OCB", package: "vn.com.ocb.awe" }, // ok
-  // { name: "PBVN", package: "com.pbvn.app" },
-  // { name: "PG Bank", package: "com.pgbank.mobile" },
-  // { name: "PVcomBank", package: "com.pvcombank.retail" }, // pending
-  // { name: "Sacombank", package: "com.sacombank.sacombankapp" },
-  // { name: "Saigonbank", package: "com.saigonbank.mobile" },
-  // { name: "SCB", package: "com.scb.smartbanking" },
-  // { name: "SeABank", package: "vn.com.seabank.mb1" }, // pending
-  { name: "SHB", package: "vn.shb.mbanking" }, // pending
-  { name: "TPBank", package: "com.tpb.mb.gprsandroid" }, // pending  
-  // { name: "VCB", package: "com.VCB" }, // ok, but got blind
-  { name: "VIB", package: "com.vib.mobile" },
-  { name: "VPBank", package: "com.vpbank.smartbanking" }
-];
-
-const getInstalledPackages = async (device_id) => {
-  try {
-    const shellOutput = await client.shell(device_id, 'pm list packages');
-    const output = await adb.util.readAll(shellOutput);
-    return output
-        .toString('utf-8')
-        .split('\n')
-        .map(line => line.replace('package:', '').trim())
-        .filter(pkg => pkg); // Loại bỏ các dòng trống
-  } catch (error) {
-    console.error(`Error fetching installed packages for device ${device_id}:`, error.message);
-    throw error;
-  }
-};
-
-const startFirstAvailableBank = async (device_id) => {
-  try {
-    const installedPackages = await getInstalledPackages(device_id);
-
-    // Lọc ngân hàng có package name khớp và sắp xếp theo alphabet
-    const availableBanks = banks
-        .filter((bank) => installedPackages.includes(bank.package))
-        .sort((a, b) => a.name.localeCompare(b.name)); // Sắp xếp theo tên alphabet
-
-    if (availableBanks.length === 0) {
-        console.log("No bank apps available on the device.");
-        return { status: 404, message: "No bank apps found on the device." };
-    }
-
-    // Lấy ngân hàng đầu tiên và khởi chạy
-    const firstBank = availableBanks[0];
-    console.log(`Starting ${firstBank.name} on device ${device_id}...`);
-
-    // await client.startActivity(device_id, {
-    //     action: 'android.intent.action.MAIN',
-    //     category: ['android.intent.category.LAUNCHER'],
-    //     packageName: firstBank.package
-    // });
-
-    await client.shell(device_id, `monkey -p ${firstBank.package} -c android.intent.category.LAUNCHER 1`);
-
-    console.log(`${firstBank.name} started successfully.`);
-    return { status: 200, message: `Started ${firstBank.name} successfully.` };
-  } catch (error) {
-    console.error("Error in startFirstAvailableBank:", error.message);
-    return { status: 500, message: "Internal error occurred." };
   }
 };
 

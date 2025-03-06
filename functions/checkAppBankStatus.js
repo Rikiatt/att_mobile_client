@@ -7,7 +7,7 @@ const client = adb.createClient({ bin: adbPath });
 
 async function isOCBAppRunning({ device_id }) {                 
     try {
-        const output = await client.shell(device_id, 'pidof com.ocb.mobile')
+        const output = await client.shell(device_id, 'pidof vn.com.ocb.awe')
             .then(adb.util.readAll)
             .then(buffer => buffer.toString().trim());                
         if (output !== '') return true;        

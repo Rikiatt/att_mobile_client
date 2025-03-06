@@ -82,12 +82,75 @@ export const ocbScanQR = async (data, setLoading) => {
   console.log('4. Input PIN');  
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(5000);
+
+  // Track MB App while it is in process  
+  const trackOCBAppPromise = actionADB({ action: 'trackOCBApp', device_id: data.device_id });
   
   console.log('5. Scan QR, select img');
   await actionADB({ action: 'clickScanQROCB', device_id: data.device_id });
   await delay(500);
   await actionADB({ action: 'clickSelectImageOCB', device_id: data.device_id });
   await delay(2000);  
+
+  //Đợi trackOCBApp hoàn thành (nếu app OCB bị thoát)
+  const trackResult = await trackOCBAppPromise;
+  if (!trackResult) {
+    console.log('📢 Theo dõi OCB đã kết thúc.');
+  }
+
+  console.log('6. Delete all of imgs in /sdcard');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+
+  setLoading(false);
+};
+
+// ============== ACB ============== //
+
+export const acbScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceACB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status === 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ MSB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mật khẩu ACB cần truyền vào thiết bị');
+  if (!text) return;
+
+  // console.log('1. Copy QR images'); 
+  // await actionADB({ action: 'copyQRImages', device_id: data.device_id });
+
+  console.log('1. Stop app ACB');
+  await actionADB({ action: 'stopACB', device_id: data.device_id });  
+
+  console.log('2. Start app ACB');
+  await actionADB({ action: 'startACB', device_id: data.device_id });
+
+  await delay(10000);
+  // // Track MSB App while it is in process  
+  // const trackMSBAppPromise = actionADB({ action: 'trackMSBApp', device_id: data.device_id });
+
+  // console.log('3. Scan QR');
+  // await actionADB({ action: 'clickScanQRMSB', device_id: data.device_id }); 
+  // await delay(300); 
+
+  // console.log('4. Input PIN to login');    
+  // await actionADB({ action: 'inputPINMSB', device_id: data.device_id, text: text.trim() });   
+  // await delay(2000); 
+
+  // console.log('5. Select img');
+  // await actionADB({ action: 'clickSelectImageMSB', device_id: data.device_id });
+  // await delay(3000);
+   
+  // // Đợi trackMSBApp hoàn thành (nếu app MSB bị thoát)
+  // const trackResult = await trackMSBAppPromise;
+  // if (!trackResult) {
+  //   console.log('📢 Theo dõi MSB đã kết thúc.');
+  // }
+
+  // console.log('6. Delete all of imgs in device');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
