@@ -17,6 +17,18 @@ async function isOCBAppRunning({ device_id }) {
     }
 }
 
+async function isACBRunning( { device_id } ) {             
+    try {
+        const output = await client.shell(device_id, 'pidof mobile.acb.com.vn')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());                
+        if (output !== '') return true;        
+    } catch (error) {
+        console.error("Error checking MB Bank app status:", error.message);
+        return false;
+    }
+}
+
 async function isMbAppRunning( { device_id } ) {             
     try {
         const output = await client.shell(device_id, 'pidof com.mbmobile')
@@ -53,4 +65,4 @@ async function isOpenBankingAppRunning( { device_id } ) {
     }
 }
 
-module.exports = { isMbAppRunning, isMsbAppRunning, isOCBAppRunning, isOpenBankingAppRunning };
+module.exports = { isACBRunning, isMbAppRunning, isMsbAppRunning, isOCBAppRunning, isOpenBankingAppRunning };

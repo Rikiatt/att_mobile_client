@@ -127,30 +127,38 @@ export const acbScanQR = async (data, setLoading) => {
   console.log('2. Start app ACB');
   await actionADB({ action: 'startACB', device_id: data.device_id });
 
-  await delay(10000);
-  // // Track MSB App while it is in process  
-  // const trackMSBAppPromise = actionADB({ action: 'trackMSBApp', device_id: data.device_id });
+  await delay(15000);
 
-  // console.log('3. Scan QR');
-  // await actionADB({ action: 'clickScanQRMSB', device_id: data.device_id }); 
-  // await delay(300); 
+  console.log('3. Tab 4 times and enter to click login'); 
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  await delay(500);
 
-  // console.log('4. Input PIN to login');    
-  // await actionADB({ action: 'inputPINMSB', device_id: data.device_id, text: text.trim() });   
-  // await delay(2000); 
+  console.log('4. Click field password, input password and login'); 
+  await actionADB({ action: 'clickLoginACB', device_id: data.device_id });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await delay(2000);
 
-  // console.log('5. Select img');
-  // await actionADB({ action: 'clickSelectImageMSB', device_id: data.device_id });
-  // await delay(3000);
+  // Track ACB App while it is in process  
+  const trackACBAppPromise = actionADB({ action: 'trackACBApp', device_id: data.device_id });
+
+  console.log('5. Scan QR');
+  await actionADB({ action: 'clickSelectImageACB', device_id: data.device_id });   
    
-  // // Đợi trackMSBApp hoàn thành (nếu app MSB bị thoát)
-  // const trackResult = await trackMSBAppPromise;
-  // if (!trackResult) {
-  //   console.log('📢 Theo dõi MSB đã kết thúc.');
-  // }
+  // Đợi trackACBAppPromise hoàn thành (nếu app ACB bị thoát)
+  const trackResult = await trackACBAppPromise;
+  if (!trackResult) {
+    console.log('📢 Theo dõi ACB đã kết thúc.');
+  }
 
-  // console.log('6. Delete all of imgs in device');
-  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  console.log('6. Delete all of imgs in device');
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
