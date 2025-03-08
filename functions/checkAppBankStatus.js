@@ -5,7 +5,7 @@ const path = require('path');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
-async function isOCBAppRunning({ device_id }) {                 
+async function isOCBRunning({ device_id }) {                 
     try {
         const output = await client.shell(device_id, 'pidof vn.com.ocb.awe')
             .then(adb.util.readAll)
@@ -29,7 +29,7 @@ async function isACBRunning( { device_id } ) {
     }
 }
 
-async function isMbAppRunning( { device_id } ) {             
+async function isMBRunning( { device_id } ) {             
     try {
         const output = await client.shell(device_id, 'pidof com.mbmobile')
             .then(adb.util.readAll)
@@ -41,7 +41,7 @@ async function isMbAppRunning( { device_id } ) {
     }
 }
 
-async function isMsbAppRunning( { device_id } ) {                  
+async function isMSBRunning( { device_id } ) {                  
     try {
         const output = await client.shell(device_id, 'pidof vn.com.msb.smartBanking')
             .then(adb.util.readAll)
@@ -53,7 +53,7 @@ async function isMsbAppRunning( { device_id } ) {
     }
 }
 
-async function isOpenBankingAppRunning( { device_id } ) {      
+async function isNABRunning( { device_id } ) {      
     try {
         const output = await client.shell(device_id, 'pidof ops.namabank.com.vn')
             .then(adb.util.readAll)
@@ -65,4 +65,4 @@ async function isOpenBankingAppRunning( { device_id } ) {
     }
 }
 
-module.exports = { isACBRunning, isMbAppRunning, isMsbAppRunning, isOCBAppRunning, isOpenBankingAppRunning };
+module.exports = { isACBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning };

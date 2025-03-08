@@ -257,9 +257,10 @@ export const nabScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await delay(2000);  
 
-  console.log('5. Scan QR, select img');
-  await actionADB({ action: 'clickScanQRNAB', device_id: data.device_id });
-  await delay(500);
+  // console.log('5. Scan QR, select img');
+  // await actionADB({ action: 'clickScanQRNAB', device_id: data.device_id });
+  // await delay(500);
+  console.log('5. Select img');
   await actionADB({ action: 'clickSelectImageNAB', device_id: data.device_id });
   await delay(3000); 
 

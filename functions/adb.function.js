@@ -32,11 +32,11 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 }
 
-const { isMbAppRunning } = require('../functions/checkAppBankStatus');
-const { isMsbAppRunning } = require('../functions/checkAppBankStatus');
-const { isOCBAppRunning } = require('../functions/checkAppBankStatus');
+const { isMBRunning } = require('../functions/checkAppBankStatus');
+const { isMSBRunning } = require('../functions/checkAppBankStatus');
+const { isOCBRunning } = require('../functions/checkAppBankStatus');
 const { isACBRunning } = require('../functions/checkAppBankStatus');
-const { isOpenBankingAppRunning } = require('../functions/checkAppBankStatus');
+const { isNABRunning } = require('../functions/checkAppBankStatus');
 
 const { qrDevicePath, filename } = require('../functions/endpoint');
 
@@ -652,10 +652,21 @@ const checkXmlContentNAB = async (device_id, localPath) => {
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
     const keywordsVI = [
-      // chưa làm
+      "Tài khoản",
+      "Thẻ",
+      "Quét QR",
+      "Chuyển tiền quốc tế",
+      "Danh bạ &#10; người nhận",
+      "Danh sách &#10; lịch chuyển tiền"
     ];
+
     const keywordsEN = [
-      // chưa làm
+      "Account",
+      "Card",
+      "QR code",
+      "International payments",      
+      "Danh bạ &#10; người nhận",
+      "Danh sách &#10; lịch chuyển tiền"
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
@@ -679,50 +690,51 @@ const checkXmlContentNAB = async (device_id, localPath) => {
       return;
     }
 
-    const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesNAB(parsed);
+    // scan QR xong chi edit duoc description nen khong can extract data o day nua.
+    // const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
+    // const extractedData = extractNodesNAB(parsed);
 
-    console.log('log extractedData:', extractedData);
+    // console.log('log extractedData:', extractedData);
 
-    if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-      console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
+    // if (extractedData.bin && extractedData.account_number && extractedData.amount) {
+    //   console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
 
-      let jsonData = {};
-      if (fs.existsSync(jsonFilePath)) {
-        try {        
-          const rawData = fs.readFileSync(jsonFilePath, "utf8");
-          jsonData = JSON.parse(rawData).data || {};        
-        } catch (error) {          
-          console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-          jsonData = {};          
-        }
-      }
+    //   let jsonData = {};
+    //   if (fs.existsSync(jsonFilePath)) {
+    //     try {        
+    //       const rawData = fs.readFileSync(jsonFilePath, "utf8");
+    //       jsonData = JSON.parse(rawData).data || {};        
+    //     } catch (error) {          
+    //       console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
+    //       jsonData = {};          
+    //     }
+    //   }
 
-      const differences = compareData(extractedData, jsonData);
-      if (differences.length > 0) {
-        console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+    //   const differences = compareData(extractedData, jsonData);
+    //   if (differences.length > 0) {
+    //     console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
 
-        console.log('Dừng luôn app MB');
-        await stopNABApp ( { device_id } );          
+    //     console.log('Dừng luôn app MB');
+    //     await stopNABApp ( { device_id } );          
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-        );
+    //     await sendTelegramAlert(
+    //       telegramToken,
+    //       chatId,
+    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //     );
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác bất thường',
-          filePath: localPath 
-        });
+    //     await saveAlertToDatabase({
+    //       timestamp: new Date().toISOString(),
+    //       reason: 'Phát hiện có thao tác bất thường',
+    //       filePath: localPath 
+    //     });
 
-        return true;
-      } else {
-        console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-        return false;
-      }
-    }    
+    //     return true;
+    //   } else {
+    //     console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+    //     return false;
+    //   }
+    // }    
   } catch (error) {    
       console.error("❌ Lỗi xử lý XML:", error.message);
   }
@@ -871,7 +883,7 @@ module.exports = {
       return;
     } 
 
-    let running = await isOCBAppRunning( { device_id } );
+    let running = await isOCBRunning( { device_id } );
 
     if (!running) {
         console.log("OCB đang không chạy.");
@@ -888,7 +900,7 @@ module.exports = {
       await dumpXmlToLocal( device_id, localPath );
       await checkXmlContentOCB( device_id, localPath );   
                       
-      running = await isOCBAppRunning( { device_id } );
+      running = await isOCBRunning( { device_id } );
     
       if (!running) {            
         console.log('🚫 OCB OMNI đã tắt. Dừng theo dõi.');
@@ -944,7 +956,7 @@ module.exports = {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('🔍 Bắt đầu theo dõi NAB App...');
+    console.log('🔍 Bắt đầu theo dõi NAB...');
     
     const chatId = '7098096854';    
 
@@ -953,24 +965,24 @@ module.exports = {
       return;
     } 
 
-    let running = await isOpenBankingAppRunning( { device_id } );
+    let running = await isNABRunning( { device_id } );
 
     if (!running) {
-      console.log("NAB is not running.");
+      console.log("NAB đang không chạy");
       return;
     }
         
     await clearTempFile( { device_id } );
     
     while (running) {
-      console.log('NAB is in process');
+      console.log('NAB đang chạy...');
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
       await checkXmlContentNAB( device_id, localPath );                   
     
-      running = await isOpenBankingAppRunning( { device_id } );
+      running = await isNABRunning( { device_id } );
     
       if (!running) {            
         console.log('🚫 NAB đã tắt. Dừng theo dõi.');
@@ -985,7 +997,7 @@ module.exports = {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('🔍 Bắt đầu theo dõi MB Bank App...');
+    console.log('🔍 Bắt đầu theo dõi MB Bank...');
     
     const chatId = '7098096854';    
 
@@ -994,24 +1006,24 @@ module.exports = {
       return;
     } 
 
-    let running = await isMbAppRunning( { device_id } );
+    let running = await isMBRunning( { device_id } );
 
     if (!running) {      
-      console.log("MB Bank is not running.");
+      console.log("MB đang không chạy.");
       return;
     }
         
     await clearTempFile( { device_id } );
     
     while (running) {
-      console.log('MB Bank is in process');
+      console.log('MB đang chạy...');
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
       await checkXmlContentMB( device_id, localPath );                
     
-      running = await isMbAppRunning( { device_id } );
+      running = await isMBRunning( { device_id } );
     
       if (!running) {            
         console.log('🚫 MB Bank đã tắt. Dừng theo dõi.');
@@ -1035,7 +1047,7 @@ module.exports = {
       return;
     } 
 
-    let running = await isMsbAppRunning( { device_id } );
+    let running = await isMSBRunning( { device_id } );
 
     if (!running) {
       console.log("MSB app is not running.");
@@ -1052,7 +1064,7 @@ module.exports = {
       await dumpXmlToLocal( device_id, localPath );
       await checkXmlContentMSB( device_id, localPath );                       
     
-      running = await isMsbAppRunning( { device_id } );
+      running = await isMSBRunning( { device_id } );
     
       if (!running) {            
         console.log('🚫 MSB đã tắt. Dừng theo dõi.');
@@ -1249,11 +1261,13 @@ module.exports = {
   clickSelectImageNAB: async ({ device_id }) => {    
     const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-ScanQR']);           
+    await delay(800);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Image']);           
     await delay(800);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Hamburgur-Menu']);           
     await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Files']);  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Galaxy-Note9']);  
     await delay(800); 
     await client.shell(device_id, `input swipe 500 1800 500 300`);
     await delay(800);   
