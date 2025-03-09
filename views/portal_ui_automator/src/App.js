@@ -41,11 +41,12 @@ import {
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
 import { connect, connectTcpIp, disconnectTcpIp, enter, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
+import HandleACB from './sections/bank_handle/HandleACB';
 import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleNAB from './sections/bank_handle/HandleNAB';
+import HandleTPB from './sections/bank_handle/HandleTPB';
 import HandleVPB from './sections/bank_handle/HandleVPB';
-import HandleACB from './sections/bank_handle/HandleACB';
 import HandleMSB from './sections/bank_handle/HandleMSB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleMB from './sections/bank_handle/HandleMB';
@@ -281,16 +282,17 @@ function App() {
                         </>
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
-                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleACB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />  
-                      <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
+                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                        
+                      <HandleTPB item={item} X={X} Y={Y} setLoading={setLoading} />                    
+                      <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />                                              
                       <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} />
                       {/* <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                       {/* <HandleBAB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                       {/* <HandleABB item={item} X={X} Y={Y} setLoading={setLoading} /> */}

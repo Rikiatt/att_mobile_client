@@ -273,6 +273,47 @@ export const nabScanQR = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== TPB ============== //
+
+export const tpbScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceTPB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status === 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ TPB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu TPB cần truyền vào thiết bị');  
+  if (!text) return;
+
+  console.log('1. Stop app TPB');
+  await actionADB({ action: 'stopTPB', device_id: data.device_id });
+
+  console.log('2. Start app TPB');
+  await actionADB({ action: 'startTPB', device_id: data.device_id });
+  await delay(5000);
+
+  // // Track TPB while it is in process  
+  // const trackTPBAppPromise = actionADB({ action: 'trackTPBApp', device_id: data.device_id });
+
+  console.log('3. Scan QR, select img');  
+  await actionADB({ action: 'clickSelectImageTPB', device_id: data.device_id });
+  await delay(500);
+
+  console.log('4. Input password after selecting img, enter');  
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() }); 
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  
+  // // Đợi trackTPBApp hoàn thành (nếu app TPB bị thoát)
+  // const trackResult = await trackTPBAppPromise;
+  // if (!trackResult) {
+  //   console.log('📢 Theo dõi TPB đã kết thúc.');
+  // }
+
+  setLoading(false);
+};
+
 // ============== VPB ============== //
 
 export const vpbScanQR = async (data, setLoading) => {  

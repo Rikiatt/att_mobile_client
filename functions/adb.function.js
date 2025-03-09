@@ -14,6 +14,7 @@ const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
+const coordinatesScanQRTPB = require('../config/coordinatesScanQRTPB.json');
 const coordinatesScanQRVPB = require('../config/coordinatesScanQRVPB.json');
 const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
 const coordinatesScanQRNCB = require('../config/coordinatesScanQRNCB.json');
@@ -933,6 +934,14 @@ async function stopNABApp ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function stopTPBApp ({ device_id }) {    
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
+  console.log('Dừng luôn app TPB');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 async function stopVPBApp ({ device_id }) {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
@@ -1422,6 +1431,20 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  clickSelectImageTPB: async ({ device_id }) => {    
+    const coordinatesScanQRTPB = await loadCoordinatesForDeviceScanQRTPB(device_id);
+    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['ScanQR']); 
+    await delay(500);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Select-Image']); 
+    await delay(500);     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-1']); 
+    await delay(500);     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
+
+    return { status: 200, message: 'Success' };
+  },
+
   clickScanQRVPB: async ({ device_id }) => {    
     const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
     
@@ -1583,10 +1606,18 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  stopAppADBTPB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
+    await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
+    console.log('Đã dừng app TPB');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
   stopAppADBVPB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
-    console.log('Đã dừng app NAB');
+    console.log('Đã dừng app VPB');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
@@ -1594,6 +1625,13 @@ module.exports = {
   startAppADBNAB: async ({ device_id }) => {
     console.log('Đang khởi động app NAB...');
     await client.shell(device_id, 'monkey -p ops.namabank.com.vn -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBTPB: async ({ device_id }) => {
+    console.log('Đang khởi động app TPB...');
+    await client.shell(device_id, 'monkey -p com.tpb.mb.gprsandroid -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
@@ -1741,6 +1779,24 @@ module.exports = {
       
       if (deviceCoordinates == undefined) {        
         console.log(`No coordinatesScanQRNAB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceTPB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRTPB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRTPB found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -2173,6 +2229,20 @@ async function loadCoordinatesForDeviceScanQRNAB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRTPB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRTPB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRVPB for device: ${error.message}`);
     throw error;
   }
 };
