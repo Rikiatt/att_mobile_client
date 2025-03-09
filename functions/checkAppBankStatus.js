@@ -65,6 +65,18 @@ async function isNABRunning( { device_id } ) {
     }
 }
 
+async function isTPBRunning( { device_id } ) {      
+    try {
+        const output = await client.shell(device_id, 'pidof com.tpb.mb.gprsandroid')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());
+        if (output !== '') return true;        
+    } catch (error) {
+        console.error("Error checking TPB app status:", error.message);
+        return false;
+    }
+}
+
 async function isVPBRunning( { device_id } ) {      
     try {
         const output = await client.shell(device_id, 'pidof com.vnpay.vpbankonline')
@@ -77,4 +89,4 @@ async function isVPBRunning( { device_id } ) {
     }
 }
 
-module.exports = { isACBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isVPBRunning };
+module.exports = { isACBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning };

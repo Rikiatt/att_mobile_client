@@ -23,7 +23,6 @@ const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
 const coordinatesScanQRBAB = require('../config/coordinatesScanQRBAB.json');
-const coordinatesLoginBAB = require('../config/coordinatesLoginBAB.json');
 
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
@@ -39,6 +38,7 @@ const { isMSBRunning } = require('../functions/checkAppBankStatus');
 const { isOCBRunning } = require('../functions/checkAppBankStatus');
 const { isACBRunning } = require('../functions/checkAppBankStatus');
 const { isNABRunning } = require('../functions/checkAppBankStatus');
+const { isTPBRunning } = require('../functions/checkAppBankStatus');
 const { isVPBRunning } = require('../functions/checkAppBankStatus');
 
 const { qrDevicePath, filename } = require('../functions/endpoint');
@@ -742,6 +742,103 @@ const checkXmlContentNAB = async (device_id, localPath) => {
   }
 };
 
+const checkXmlContentTPB = async (device_id, localPath) => {
+  try {
+    const chatId = '7098096854';
+    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    if (!fs.existsSync(localPath)) {
+      console.log("⚠ File XML không tồn tại, dừng luôn.");
+      return;
+    }
+
+    const content = fs.readFileSync(localPath, "utf-8").trim();
+
+    const keywordsVI = [
+      "Chuyển tiền ChatPay",
+      "Người Nhận Mới - Trong TPBank",
+      "Người Nhận Mới - Liên Ngân Hàng/Thẻ",
+      "Dán Thông Tin Chuyển Tiền"
+    ];
+
+    const keywordsEN = [
+      "Transfer ChatPay",
+      "New Recipient Within TPBank",
+      "New Recipient Interbank/ATM Card",
+      "Paste To Pay"
+    ];
+
+    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
+      console.log("🚨 Phát hiện có thao tác bất thường!");
+
+      console.log('Đóng app TPB');
+      await stopTPBApp ( { device_id } );                
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: 'Phát hiện có thao tác bất thường',
+        filePath: localPath 
+      });
+
+      return;
+    }
+
+    // scan QR xong chi edit duoc description nen khong can extract data o day nua.
+    // const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
+    // const extractedData = extractNodesNAB(parsed);
+
+    // console.log('log extractedData:', extractedData);
+
+    // if (extractedData.bin && extractedData.account_number && extractedData.amount) {
+    //   console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
+
+    //   let jsonData = {};
+    //   if (fs.existsSync(jsonFilePath)) {
+    //     try {        
+    //       const rawData = fs.readFileSync(jsonFilePath, "utf8");
+    //       jsonData = JSON.parse(rawData).data || {};        
+    //     } catch (error) {          
+    //       console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
+    //       jsonData = {};          
+    //     }
+    //   }
+
+    //   const differences = compareData(extractedData, jsonData);
+    //   if (differences.length > 0) {
+    //     console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+
+    //     console.log('Dừng luôn app MB');
+    //     await stopNABApp ( { device_id } );          
+
+    //     await sendTelegramAlert(
+    //       telegramToken,
+    //       chatId,
+    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //     );
+
+    //     await saveAlertToDatabase({
+    //       timestamp: new Date().toISOString(),
+    //       reason: 'Phát hiện có thao tác bất thường',
+    //       filePath: localPath 
+    //     });
+
+    //     return true;
+    //   } else {
+    //     console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+    //     return false;
+    //   }
+    // }    
+  } catch (error) {    
+      console.error("❌ Lỗi xử lý XML:", error.message);
+  }
+};
+
 const checkXmlContentVPB = async (device_id, localPath) => {
   try {
     const chatId = '7098096854';
@@ -934,6 +1031,14 @@ async function stopNABApp ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function stopBABApp ({ device_id }) {    
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.bab.retailUAT');
+  console.log('Dừng luôn app BAB');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 async function stopTPBApp ({ device_id }) {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
@@ -1098,6 +1203,47 @@ module.exports = {
     
       if (!running) {            
         console.log('🚫 NAB đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
+    }
+    return { status: 200, message: 'Success' };
+  },
+
+  trackTPBApp : async ( { device_id } ) => {    
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi TPB...');
+    
+    const chatId = '7098096854';    
+
+    if (!chatId) {
+      console.error("Cannot continue cause of invalid chat ID.");
+      return;
+    } 
+
+    let running = await isTPBRunning( { device_id } );
+
+    if (!running) {
+      console.log("TPB đang không chạy");
+      return;
+    }
+        
+    await clearTempFile( { device_id } );
+    
+    while (running) {
+      console.log('TPB đang chạy...');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+      await dumpXmlToLocal( device_id, localPath );
+      await checkXmlContentTPB( device_id, localPath );                   
+    
+      running = await isTPBRunning( { device_id } );
+    
+      if (!running) {            
+        console.log('🚫 TPB đã tắt. Dừng theo dõi.');
         await clearTempFile( { device_id } );      
         return false;          
       }
@@ -1353,12 +1499,6 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickLoginBAB: async ({ device_id }) => {    
-    const coordinatesLoginBAB = await loadCoordinatesForDeviceLoginBAB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesLoginBAB['Login']);      
-    return { status: 200, message: 'Success' };
-  },
-
   clickLoginNAB: async ({ device_id }) => {    
     const coordinatesLoginNAB = await loadCoordinatesForDeviceLoginNAB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesLoginNAB['Login']);      
@@ -1368,12 +1508,6 @@ module.exports = {
   clickScanQRNAB: async ({ device_id }) => {    
     const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-ScanQR']);      
-    return { status: 200, message: 'Success' };
-  },
-
-  clickScanQRBAB: async ({ device_id }) => {    
-    const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Select-ScanQR']);      
     return { status: 200, message: 'Success' };
   },
 
@@ -1431,9 +1565,20 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  clickSelectImageBAB: async ({ device_id }) => {    
+    const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['ScanQR']); 
+    await delay(500);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Select-Image']); 
+    await delay(500);     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Select-Image-2']);             
+    await delay(500);     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Target-Image']);                 
+    return { status: 200, message: 'Success' };
+  },
+
   clickSelectImageTPB: async ({ device_id }) => {    
-    const coordinatesScanQRTPB = await loadCoordinatesForDeviceScanQRTPB(device_id);
-    
+    const coordinatesScanQRTPB = await loadCoordinatesForDeviceScanQRTPB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['ScanQR']); 
     await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Select-Image']); 
@@ -1441,7 +1586,6 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-1']); 
     await delay(500);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
-
     return { status: 200, message: 'Success' };
   },
 
@@ -1463,13 +1607,7 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image']); 
 
     return { status: 200, message: 'Success' };
-  },
-
-  clickSelectImageBAB: async ({ device_id }) => {    
-    const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Select-Image']);     
-    return { status: 200, message: 'Success' };
-  },
+  },  
 
   clickSelectImageOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
@@ -1541,7 +1679,7 @@ module.exports = {
   stopAppADBBAB: async ({ device_id }) => {   
     await client.shell(device_id, 'input keyevent 3'); 
     await client.shell(device_id, 'am force-stop com.bab.retailUAT');
-    console.log('Đã dừng app Bac A Bank');
+    console.log('Đã dừng app BAB');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
@@ -2383,20 +2521,6 @@ async function loadCoordinatesForDeviceLoginVTB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginVTB for device: ${error.message}`);
-    throw error;
-  }
-};
-
-async function loadCoordinatesForDeviceLoginBAB(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
-
-    const deviceCoordinates = coordinatesLoginBAB[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesLoginBAB for device: ${error.message}`);
     throw error;
   }
 };

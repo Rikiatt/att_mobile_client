@@ -45,6 +45,7 @@ import HandleACB from './sections/bank_handle/HandleACB';
 import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleNAB from './sections/bank_handle/HandleNAB';
+// import HandleBAB from './sections/bank_handle/HandleBAB';
 import HandleTPB from './sections/bank_handle/HandleTPB';
 import HandleVPB from './sections/bank_handle/HandleVPB';
 import HandleMSB from './sections/bank_handle/HandleMSB';
@@ -53,7 +54,6 @@ import HandleMB from './sections/bank_handle/HandleMB';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleVietin from './sections/bank_handle/HandleVietin';
 // import HandleSHB from './sections/bank_handle/HandleSHB';
-// import HandleBAB from './sections/bank_handle/HandleBAB';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import HandleShowQr from './sections/HandleShowQr';
@@ -285,7 +285,8 @@ function App() {
                       <HandleACB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                        
+                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} /> 
+                      {/* <HandleBAB item={item} X={X} Y={Y} setLoading={setLoading} />                        */}
                       <HandleTPB item={item} X={X} Y={Y} setLoading={setLoading} />                    
                       <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />                                              
                       <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
@@ -293,8 +294,7 @@ function App() {
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      {/* <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
-                      {/* <HandleBAB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
+                      {/* <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} /> */}                      
                       {/* <HandleABB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                       {/* <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                     </CardContent>
