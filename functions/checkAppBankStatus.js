@@ -65,4 +65,16 @@ async function isNABRunning( { device_id } ) {
     }
 }
 
-module.exports = { isACBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning };
+async function isVPBRunning( { device_id } ) {      
+    try {
+        const output = await client.shell(device_id, 'pidof com.vnpay.vpbankonline')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());
+        if (output !== '') return true;        
+    } catch (error) {
+        console.error("Error checking VPB app status:", error.message);
+        return false;
+    }
+}
+
+module.exports = { isACBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isVPBRunning };

@@ -273,6 +273,50 @@ export const nabScanQR = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== VPB ============== //
+
+export const vpbScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceVPB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status === 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ VPB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN VPB cần truyền vào thiết bị');  
+  if (!text) return;
+
+  console.log('1. Stop app VPB');
+  await actionADB({ action: 'stopVPB', device_id: data.device_id });
+
+  console.log('2. Start app VPB');
+  await actionADB({ action: 'startVPB', device_id: data.device_id });
+  await delay(6000);
+
+  // Track VPB while it is in process  
+  const trackVPBAppPromise = actionADB({ action: 'trackVPBApp', device_id: data.device_id });
+
+  console.log('3. Scan QR');  
+  await actionADB({ action: 'clickScanQRVPB', device_id: data.device_id });
+  await delay(500);
+
+  console.log('4. Input PIN after selecting img');
+  await actionADB({ action: 'inputPINVPB', device_id: data.device_id, text: text.trim() });   
+  await delay(3000); 
+
+  console.log('5. Select img after input PIN');  
+  await actionADB({ action: 'clickSelectImageVPB', device_id: data.device_id });
+
+  // Đợi trackVPBApp hoàn thành (nếu app VPB bị thoát)
+  const trackResult = await trackVPBAppPromise;
+  if (!trackResult) {
+    console.log('📢 Theo dõi VPB đã kết thúc.');
+  }
+
+  setLoading(false);
+};
+
 // ============== MSB ============== //
 
 export const msbScanQR = async (data, setLoading) => {  

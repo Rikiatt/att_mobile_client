@@ -14,6 +14,7 @@ const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
+const coordinatesScanQRVPB = require('../config/coordinatesScanQRVPB.json');
 const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
 const coordinatesScanQRNCB = require('../config/coordinatesScanQRNCB.json');
 const coordinatesScanQRMSB = require('../config/coordinatesScanQRMSB.json');
@@ -37,6 +38,7 @@ const { isMSBRunning } = require('../functions/checkAppBankStatus');
 const { isOCBRunning } = require('../functions/checkAppBankStatus');
 const { isACBRunning } = require('../functions/checkAppBankStatus');
 const { isNABRunning } = require('../functions/checkAppBankStatus');
+const { isVPBRunning } = require('../functions/checkAppBankStatus');
 
 const { qrDevicePath, filename } = require('../functions/endpoint');
 
@@ -638,7 +640,6 @@ function extractNodesMSB(obj) {
   return { bin, account_number, amount };
 }
 
-// chưa xong
 const checkXmlContentNAB = async (device_id, localPath) => {
   try {
     const chatId = '7098096854';
@@ -674,6 +675,100 @@ const checkXmlContentNAB = async (device_id, localPath) => {
 
       console.log('Đóng app NAB');
       await stopNABApp ( { device_id } );                
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: 'Phát hiện có thao tác bất thường',
+        filePath: localPath 
+      });
+
+      return;
+    }
+
+    // scan QR xong chi edit duoc description nen khong can extract data o day nua.
+    // const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
+    // const extractedData = extractNodesNAB(parsed);
+
+    // console.log('log extractedData:', extractedData);
+
+    // if (extractedData.bin && extractedData.account_number && extractedData.amount) {
+    //   console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
+
+    //   let jsonData = {};
+    //   if (fs.existsSync(jsonFilePath)) {
+    //     try {        
+    //       const rawData = fs.readFileSync(jsonFilePath, "utf8");
+    //       jsonData = JSON.parse(rawData).data || {};        
+    //     } catch (error) {          
+    //       console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
+    //       jsonData = {};          
+    //     }
+    //   }
+
+    //   const differences = compareData(extractedData, jsonData);
+    //   if (differences.length > 0) {
+    //     console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+
+    //     console.log('Dừng luôn app MB');
+    //     await stopNABApp ( { device_id } );          
+
+    //     await sendTelegramAlert(
+    //       telegramToken,
+    //       chatId,
+    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //     );
+
+    //     await saveAlertToDatabase({
+    //       timestamp: new Date().toISOString(),
+    //       reason: 'Phát hiện có thao tác bất thường',
+    //       filePath: localPath 
+    //     });
+
+    //     return true;
+    //   } else {
+    //     console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+    //     return false;
+    //   }
+    // }    
+  } catch (error) {    
+      console.error("❌ Lỗi xử lý XML:", error.message);
+  }
+};
+
+const checkXmlContentVPB = async (device_id, localPath) => {
+  try {
+    const chatId = '7098096854';
+    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    if (!fs.existsSync(localPath)) {
+      console.log("⚠ File XML không tồn tại, dừng luôn.");
+      return;
+    }
+
+    const content = fs.readFileSync(localPath, "utf-8").trim();
+
+    const keywordsVI = [
+      "Tới tài khoản",
+      "Tới thẻ",
+      "Tới tài khoản/&#10;thẻ của tôi",
+      "Cộng đồng&#10;thịnh vượng"
+    ];
+
+    const keywordsEN = [
+      ""
+    ];
+
+    if (keywordsVI.every(kw => content.includes(kw)) ) {
+      console.log("🚨 Phát hiện có thao tác bất thường!");
+
+      console.log('Đóng app VPB');
+      await stopVPBApp ( { device_id } );                
 
       await sendTelegramAlert(
         telegramToken,
@@ -838,6 +933,14 @@ async function stopNABApp ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function stopVPBApp ({ device_id }) {    
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
+  console.log('Dừng luôn app VPB');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 async function stopMBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.mbmobile');
   console.log('Đã dừng app MB');
@@ -986,6 +1089,47 @@ module.exports = {
     
       if (!running) {            
         console.log('🚫 NAB đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
+    }
+    return { status: 200, message: 'Success' };
+  },
+
+  trackVPBApp : async ( { device_id } ) => {    
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi VPB...');
+    
+    const chatId = '7098096854';    
+
+    if (!chatId) {
+      console.error("Cannot continue cause of invalid chat ID.");
+      return;
+    } 
+
+    let running = await isVPBRunning( { device_id } );
+
+    if (!running) {
+      console.log("VPB đang không chạy");
+      return;
+    }
+        
+    await clearTempFile( { device_id } );
+    
+    while (running) {
+      console.log('VPB đang chạy...');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+      await dumpXmlToLocal( device_id, localPath );
+      await checkXmlContentVPB( device_id, localPath );                   
+    
+      running = await isVPBRunning( { device_id } );
+    
+      if (!running) {            
+        console.log('🚫 VPB đã tắt. Dừng theo dõi.');
         await clearTempFile( { device_id } );      
         return false;          
       }
@@ -1278,6 +1422,26 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  clickScanQRVPB: async ({ device_id }) => {    
+    const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
+    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-ScanQR']);                                
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageVPB: async ({ device_id }) => {    
+    const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
+    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Upload-Image']); 
+    await delay(500);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-Image']); 
+    await delay(500);     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image']); 
+
+    return { status: 200, message: 'Success' };
+  },
+
   clickSelectImageBAB: async ({ device_id }) => {    
     const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Select-Image']);     
@@ -1419,9 +1583,24 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  stopAppADBVPB: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
+    await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
+    console.log('Đã dừng app NAB');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
   startAppADBNAB: async ({ device_id }) => {
     console.log('Đang khởi động app NAB...');
     await client.shell(device_id, 'monkey -p ops.namabank.com.vn -c android.intent.category.LAUNCHER 1');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+  },
+
+  startAppADBVPB: async ({ device_id }) => {
+    console.log('Đang khởi động app VPB...');
+    await client.shell(device_id, 'monkey -p com.vnpay.vpbankonline -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
@@ -1562,6 +1741,24 @@ module.exports = {
       
       if (deviceCoordinates == undefined) {        
         console.log(`No coordinatesScanQRNAB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceVPB: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQRVPB[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQRVPB found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1723,6 +1920,17 @@ module.exports = {
       console.error(`Error checking device FHD+: ${error.message}`);
       throw error;
     }
+  },
+
+  inputPINVPB: async ({ device_id, text }) => {  
+    const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
+        
+    for (const char of text) {
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB[char]);
+      console.log('Log char of PIN:', char);
+    }  
+
+    return { status: 200, message: 'Success' };
   },
 
   inputPINMSB: async ({ device_id, text }) => {  
@@ -1965,6 +2173,20 @@ async function loadCoordinatesForDeviceScanQRNAB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRVPB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRVPB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRVPB for device: ${error.message}`);
     throw error;
   }
 };
