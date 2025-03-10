@@ -278,12 +278,12 @@ export const babScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ TPB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu TPB cần truyền vào thiết bị');  
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu BAB cần truyền vào thiết bị');  
   if (!text) return;
 
   console.log('1. Stop app BAB');

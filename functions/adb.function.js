@@ -641,6 +641,78 @@ function extractNodesMSB(obj) {
   return { bin, account_number, amount };
 }
 
+function extractNodesTPB(obj) {
+  let bin = null, account_number = null, amount = null;
+  const bankList = [
+    "ACB",
+    "VIETCOMBANK", 
+    "VIETINBANK",
+    "TECHCOMBANK, TCB", 
+    "BIDV", 
+    "MB BANK", 
+    "NCB"
+  ];
+  
+  let foundBank = false; 
+  let foundAccount = false;
+  let maxAmount = 0;
+
+  function traverse(node) {
+    if (!node) return;
+
+    if (typeof node === 'object') {
+      for (let key in node) {
+        traverse(node[key]);
+      }
+    }
+
+    if (typeof node === 'string') {
+      let text = node.trim();
+      if (!text || text === "false" || text === "true") return;
+
+      console.log(`🔍 Scanning: "${text}"`);
+
+      // 1️⃣ Tìm ngân hàng trước
+      if (!bin) {
+        for (let bank of bankList) {
+          if (text.includes(bank)) {
+            bin = bankBinMapMB[bank] || bank;
+            foundBank = true;
+            console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+            return; 
+          }
+        }
+      }
+
+      // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
+      if (foundBank && !account_number) {
+        const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
+        if (accountMatch) {
+          account_number = accountMatch[0];
+          foundAccount = true;
+          console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
+          return;
+        }
+      }
+
+      // 3️⃣ Tìm số tiền giao dịch lớn nhất
+      const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
+      if (amountMatch) {
+        let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
+        if (extractedAmount > maxAmount) {
+          maxAmount = extractedAmount;
+          console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
+        }
+      }
+    }
+  }
+
+  traverse(obj);
+  amount = maxAmount;
+
+  return { bin, account_number, amount };
+}
+
 const checkXmlContentNAB = async (device_id, localPath) => {
   try {
     const chatId = '7098096854';
@@ -791,7 +863,7 @@ const checkXmlContentTPB = async (device_id, localPath) => {
 
     // scan QR xong chi edit duoc description nen khong can extract data o day nua.
     // const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    // const extractedData = extractNodesNAB(parsed);
+    // const extractedData = extractNodesTPB(parsed);
 
     // console.log('log extractedData:', extractedData);
 
@@ -1584,8 +1656,8 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Select-Image']); 
     await delay(500);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-1']); 
-    await delay(500);     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
+    // await delay(500);     
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
     return { status: 200, message: 'Success' };
   },
 
