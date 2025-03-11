@@ -97,11 +97,11 @@ const bankBinMapMB = {
 const bankBinMapOCB = {
   "Asia (ACB)": "970416",
   "Vietnam Foreign Trade (VCB)": "970436",
-  "Vietinbank (Vietnam Joint Stock Commercial Bank for Industry and Trade)": "970415",
+  "Vietinbank (Vietnam Joint Stock Commercial Bank for Industry and Trade)": "970415", "Ngân hàng TMCP Công Thương Việt Nam": "970415",  
   "Technology and Trade (TCB)": "970407",
-  "Investment and development (BIDV)": "970418",
-  "Military (MB)": "970422",
-  "NCB": "970419"
+  "Investment and development (BIDV)": "970418", "Ngân hàng TMCP Đầu Tư và Phát Triển Việt Nam": "970418",
+  "Military (MB)": "970422", "Ngân hàng TMCP Quân Đội": "970422",
+  "NCB": "970419", "Ngân hàng TMCP Quốc Dân": "970419"  
 };
 
 // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng NAB
@@ -225,43 +225,38 @@ const checkXmlContentOCB = async (device_id, localPath) => {
 
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    const keywordsVI = [
-      "Chuyển tiền",
-      "Trong OCB",
-      "Ngân hàng khác",
-      "Đến số thẻ",
-      "Xem tất cả",
-      "Chuyển gần đây"      
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Chuyển tiền", "Trong OCB", "Ngân hàng khác", "Đến số thẻ", "Xem tất cả", "Chuyển gần đây"],
+        en: ["Transfer money", "Within OCB", "Interbank", "To card number", "See all", "Recent transferred"]
+      }
     ];
 
-    const keywordsEN = [
-      "Transfer money",
-      "Within OCB",
-      "Interbank",
-      "To card number",
-      "See all",
-      "Recent transferred" 
-    ];
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => content.includes(kw)) ||
+        screen.en.every(kw => content.includes(kw))
+      ) {
+        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
 
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+        console.log('Đóng app OCB');
+        await stopOCBApp({ device_id });
 
-      console.log('Đóng app OCB OMNI');
-      await stopOCBApp ( { device_id } );                
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (${device_id})`
+        );
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-      );
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          filePath: localPath
+        });
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
-        filePath: localPath 
-      });
-
-      return;
+        return;
+      }
     }
 
     const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
@@ -439,7 +434,6 @@ function extractNodesMB(obj) {
   return { bin, account_number, amount };
 }
 
-// chưa xong
 function extractNodesOCB(obj) {
   let bin = null, account_number = null, amount = null;
   const bankList = [
@@ -465,39 +459,39 @@ function extractNodesOCB(obj) {
       }
 
       if (typeof node === 'string') {
-          let text = node.trim();
-          if (!text || text === "false" || text === "true") return;
+        let text = node.trim();
+        if (!text || text === "false" || text === "true") return;
 
-          console.log(`🔍 Scanning: "${text}"`);
+        console.log(`🔍 Scanning: "${text}"`);
 
-          // 1️⃣ Tìm ngân hàng
-          if (!bin) {
-              for (let bank of bankList) {
-                  if (text.includes(bank)) {
-                      bin = bankBinMapOCB[bank] || bank;
-                      foundBank = true;
-                      console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
-                      return;
-                  }
+        // 1️⃣ Tìm ngân hàng
+        if (!bin) {
+          for (let bank of bankList) {
+            if (text.includes(bank)) {
+              bin = bankBinMapOCB[bank] || bank;
+              foundBank = true;
+              console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+              return;
               }
+            }
           }
 
           // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
           if (foundBank && !account_number) {
               const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
               if (accountMatch) {
-                  account_number = accountMatch[0];
-                  foundAccount = true;
-                  console.log(`💳 Tìm thấy số tài khoản: ${account_number}`);
-                  return;
+                account_number = accountMatch[0];
+                foundAccount = true;
+                console.log(`💳 Tìm thấy số tài khoản: ${account_number}`);
+                return;
               }
           }
       }
 
       // 3️⃣ Lấy số tiền từ đúng thẻ có resource-id="vn.com.ocb.awe:id/edtInput"
       if (typeof node === 'object' && node['resource-id'] === 'vn.com.ocb.awe:id/edtInput' && node.text) {
-          amount = parseInt(node.text.replace(/,/g, ''), 10);
-          console.log(`✅ Tìm thấy số tiền giao dịch chính xác: ${amount}`);
+        amount = parseInt(node.text.replace(/,/g, ''), 10);
+        console.log(`✅ Tìm thấy số tiền giao dịch chính xác: ${amount}`);
       }
   }
 
@@ -1498,12 +1492,6 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQROCB: async ({ device_id }) => {    
-    const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-ScanQR']);      
-    return { status: 200, message: 'Success' };
-  },
-
   clickSelectImageNAB: async ({ device_id }) => {    
     const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
     
@@ -1577,18 +1565,14 @@ module.exports = {
 
   clickSelectImageOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
-    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['ScanQR']);           
+    await delay(500);
     await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-Image']);           
-    await delay(800);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-Hamburgur-Menu']);           
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-Galaxy-Note9']);  
-    await delay(800); 
-
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800);     
+    await delay(500);
+    // await client.shell(device_id, `input swipe 500 1800 500 300`);
+    // await delay(500);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-Target-Img']);  
-    await delay(800);   
+    await delay(500);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Finish']);        
 
     return { status: 200, message: 'Success' };

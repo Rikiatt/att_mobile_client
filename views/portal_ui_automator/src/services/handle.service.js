@@ -56,7 +56,7 @@ export const ocbScanQR = async (data, setLoading) => {
 
   setLoading(true);  
 
-  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mật khẩu OCB cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN OCB cần truyền vào thiết bị');
   if (!text) return;    
 
   // console.log('1. Copy QR images'); 
@@ -86,9 +86,7 @@ export const ocbScanQR = async (data, setLoading) => {
   // Track MB App while it is in process  
   const trackOCBAppPromise = actionADB({ action: 'trackOCBApp', device_id: data.device_id });
   
-  console.log('5. Scan QR, select img');
-  await actionADB({ action: 'clickScanQROCB', device_id: data.device_id });
-  await delay(500);
+  console.log('5. Scan QR, select img');    
   await actionADB({ action: 'clickSelectImageOCB', device_id: data.device_id });
   await delay(2000);  
 
