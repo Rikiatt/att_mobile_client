@@ -44,8 +44,7 @@ const { isVPBRunning } = require('../functions/checkAppBankStatus');
 const { qrDevicePath, filename } = require('../functions/endpoint');
 
 async function clearTempFile( { device_id } ) {
-  try {      
-      console.log('log device_id in clearTempFile: ', device_id);
+  try {            
       await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
       await delay(1000);
       console.log('Clear temp file successfully!');
@@ -641,78 +640,6 @@ function extractNodesMSB(obj) {
   return { bin, account_number, amount };
 }
 
-function extractNodesTPB(obj) {
-  let bin = null, account_number = null, amount = null;
-  const bankList = [
-    "ACB",
-    "VIETCOMBANK", 
-    "VIETINBANK",
-    "TECHCOMBANK, TCB", 
-    "BIDV", 
-    "MB BANK", 
-    "NCB"
-  ];
-  
-  let foundBank = false; 
-  let foundAccount = false;
-  let maxAmount = 0;
-
-  function traverse(node) {
-    if (!node) return;
-
-    if (typeof node === 'object') {
-      for (let key in node) {
-        traverse(node[key]);
-      }
-    }
-
-    if (typeof node === 'string') {
-      let text = node.trim();
-      if (!text || text === "false" || text === "true") return;
-
-      console.log(`🔍 Scanning: "${text}"`);
-
-      // 1️⃣ Tìm ngân hàng trước
-      if (!bin) {
-        for (let bank of bankList) {
-          if (text.includes(bank)) {
-            bin = bankBinMapMB[bank] || bank;
-            foundBank = true;
-            console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
-            return; 
-          }
-        }
-      }
-
-      // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
-      if (foundBank && !account_number) {
-        const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
-        if (accountMatch) {
-          account_number = accountMatch[0];
-          foundAccount = true;
-          console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
-          return;
-        }
-      }
-
-      // 3️⃣ Tìm số tiền giao dịch lớn nhất
-      const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
-      if (amountMatch) {
-        let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
-        if (extractedAmount > maxAmount) {
-          maxAmount = extractedAmount;
-          console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
-        }
-      }
-    }
-  }
-
-  traverse(obj);
-  amount = maxAmount;
-
-  return { bin, account_number, amount };
-}
-
 const checkXmlContentNAB = async (device_id, localPath) => {
   try {
     const chatId = '7098096854';
@@ -826,86 +753,46 @@ const checkXmlContentTPB = async (device_id, localPath) => {
 
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    const keywordsVI = [
-      "Chuyển tiền ChatPay",
-      "Người Nhận Mới - Trong TPBank",
-      "Người Nhận Mới - Liên Ngân Hàng/Thẻ",
-      "Dán Thông Tin Chuyển Tiền"
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền/Chatpay",
+        vi: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"],
+        en: ["Transfer ChatPay", "New Recipient Within TPBank", "New Recipient Interbank/ATM Card", "Paste To Pay"]
+      },
+      {
+        name: "Lịch sử GD",
+        vi: ["Tra cứu giao dịch", "Thông tin tài khoản", "Tìm kiếm"],
+        en: ["Enquiry", "Account information", "Search"]
+      }
     ];
 
-    const keywordsEN = [
-      "Transfer ChatPay",
-      "New Recipient Within TPBank",
-      "New Recipient Interbank/ATM Card",
-      "Paste To Pay"
-    ];
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => content.includes(kw)) ||
+        screen.en.every(kw => content.includes(kw))
+      ) {
+        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
 
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+        console.log('Đóng app TPB');
+        await stopTPBApp({ device_id });
 
-      console.log('Đóng app TPB');
-      await stopTPBApp ( { device_id } );                
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (${device_id})`
+        );
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-      );
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          filePath: localPath
+        });
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
-        filePath: localPath 
-      });
-
-      return;
+        return;
+      }
     }
 
-    // scan QR xong chi edit duoc description nen khong can extract data o day nua.
-    // const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    // const extractedData = extractNodesTPB(parsed);
-
-    // console.log('log extractedData:', extractedData);
-
-    // if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-    //   console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
-
-    //   let jsonData = {};
-    //   if (fs.existsSync(jsonFilePath)) {
-    //     try {        
-    //       const rawData = fs.readFileSync(jsonFilePath, "utf8");
-    //       jsonData = JSON.parse(rawData).data || {};        
-    //     } catch (error) {          
-    //       console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-    //       jsonData = {};          
-    //     }
-    //   }
-
-    //   const differences = compareData(extractedData, jsonData);
-    //   if (differences.length > 0) {
-    //     console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
-
-    //     console.log('Dừng luôn app MB');
-    //     await stopNABApp ( { device_id } );          
-
-    //     await sendTelegramAlert(
-    //       telegramToken,
-    //       chatId,
-    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-    //     );
-
-    //     await saveAlertToDatabase({
-    //       timestamp: new Date().toISOString(),
-    //       reason: 'Phát hiện có thao tác bất thường',
-    //       filePath: localPath 
-    //     });
-
-    //     return true;
-    //   } else {
-    //     console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-    //     return false;
-    //   }
-    // }    
+    // scan QR xong >> chi co the edit duoc description => khong can extract data o day nua.           
   } catch (error) {    
       console.error("❌ Lỗi xử lý XML:", error.message);
   }
@@ -1651,13 +1538,20 @@ module.exports = {
 
   clickSelectImageTPB: async ({ device_id }) => {    
     const coordinatesScanQRTPB = await loadCoordinatesForDeviceScanQRTPB(device_id);    
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+    console.log('Device Model:', deviceModel);
+
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['ScanQR']); 
     await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Select-Image']); 
     await delay(500);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-1']); 
-    // await delay(500);     
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
+
+    if (deviceModel === 'SM-G973') {  // Nếu là S10 thì click thêm Target-Image-2
+      await delay(500);     
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
+    }
+
     return { status: 200, message: 'Success' };
   },
 
@@ -2452,7 +2346,7 @@ async function loadCoordinatesForDeviceScanQRTPB(device_id) {
 
     return deviceCoordinates;
   } catch (error) {
-    console.error(`Error loading coordinatesScanQRVPB for device: ${error.message}`);
+    console.error(`Error loading coordinatesScanQRTPB for device: ${error.message}`);
     throw error;
   }
 };
