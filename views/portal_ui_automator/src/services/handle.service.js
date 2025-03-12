@@ -371,10 +371,7 @@ export const vpbScanQR = async (data, setLoading) => {
 
   console.log('2. Start app VPB');
   await actionADB({ action: 'startVPB', device_id: data.device_id });
-  await delay(6000);
-
-  // Track VPB while it is in process  
-  const trackVPBAppPromise = actionADB({ action: 'trackVPBApp', device_id: data.device_id });
+  await delay(6000);  
 
   console.log('3. Scan QR');  
   await actionADB({ action: 'clickScanQRVPB', device_id: data.device_id });
@@ -382,7 +379,10 @@ export const vpbScanQR = async (data, setLoading) => {
 
   console.log('4. Input PIN after selecting img');
   await actionADB({ action: 'inputPINVPB', device_id: data.device_id, text: text.trim() });   
-  await delay(3000); 
+  await delay(6000); 
+  
+  // Track VPB while it is in process  
+  const trackVPBAppPromise = actionADB({ action: 'trackVPBApp', device_id: data.device_id });
 
   console.log('5. Select img after input PIN');  
   await actionADB({ action: 'clickSelectImageVPB', device_id: data.device_id });

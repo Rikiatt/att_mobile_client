@@ -735,6 +735,7 @@ const checkXmlContentNAB = async (device_id, localPath) => {
   }
 };
 
+// không dump được nữa
 const checkXmlContentTPB = async (device_id, localPath) => {
   try {
     const chatId = '7098096854';
@@ -750,8 +751,10 @@ const checkXmlContentTPB = async (device_id, localPath) => {
     const screenKeywords = [
       {
         name: "Chuyển tiền/Chatpay",
-        vi: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"],
-        en: ["Transfer ChatPay", "New Recipient Within TPBank", "New Recipient Interbank/ATM Card", "Paste To Pay"]
+        // vi: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"],
+        // en: ["Transfer ChatPay", "New Recipient Within TPBank", "New Recipient Interbank/ATM Card", "Paste To Pay"]
+        vi: ["Từ tài khoản", "Chuyển đến", "Trong TPBank", "Liên Ngân Hàng", "Thẻ ATM"] 
+        ,en: ["Source account", "Transfer to", "Within TPBank", "Inter-bank", "ATM card"] 
       },
       {
         name: "Lịch sử GD",
@@ -1535,10 +1538,10 @@ module.exports = {
     await delay(500);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-1']); 
 
-    if (deviceModel === 'SM-G973') {  // Nếu là S10 thì click thêm Target-Image-2
-      await delay(500);     
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
-    }
+    // if (deviceModel === 'SM-G973') {  // Nếu là S10 thì click thêm Target-Image-2
+    //   await delay(500);     
+    //   await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
+    // }
 
     return { status: 200, message: 'Success' };
   },
@@ -1555,9 +1558,9 @@ module.exports = {
     const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Upload-Image']); 
-    await delay(500);                  
+    await delay(1000);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-Image']); 
-    await delay(500);     
+    await delay(1000);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image']); 
 
     return { status: 200, message: 'Success' };
