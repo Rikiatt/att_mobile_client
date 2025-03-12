@@ -96,7 +96,7 @@ export const ocbScanQR = async (data, setLoading) => {
   }
 
   console.log('6. Delete all of imgs in /sdcard');
-  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -348,6 +348,9 @@ export const tpbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi TPB đã kết thúc.');
   }
 
+  console.log('5. Delete all of imgs in /sdcard');
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+
   setLoading(false);
 };
 
@@ -391,6 +394,9 @@ export const vpbScanQR = async (data, setLoading) => {
   if (!trackResult) {
     console.log('📢 Theo dõi VPB đã kết thúc.');
   }
+
+  console.log('5. Delete all of imgs in /sdcard');
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -469,9 +475,7 @@ export const mbScanQR = async (data, setLoading) => {
   console.log('2. Start app MB Bank');
   await actionADB({ action: 'startMB', device_id: data.device_id });
 
-  await delay(10000);
-  // Track MB App while it is in process  
-  const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
+  await delay(10000);  
 
   console.log('3. Input password and login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -479,11 +483,12 @@ export const mbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
-  await delay(10000);
+  await delay(4000);
 
-  console.log('4. Scan QR, select img');
-  await actionADB({ action: 'clickScanQRMB', device_id: data.device_id });
-  await delay(500);
+  // Track MB App while it is in process  
+  const trackMBAppPromise = actionADB({ action: 'trackMBApp', device_id: data.device_id });
+
+  console.log('4. Scan QR');
   await actionADB({ action: 'clickSelectImageMB', device_id: data.device_id });  
   await delay(3000); 
 

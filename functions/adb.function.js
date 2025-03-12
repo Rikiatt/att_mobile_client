@@ -1360,12 +1360,6 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRMB: async ({ device_id }) => {    
-    const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['ScanQR']);      
-    return { status: 200, message: 'Success' };
-  }, 
-
   clickLoginACB: async ({ device_id }) => {    
     const coordinatesLoginACB = await loadCoordinatesForDeviceLoginACB(device_id);
                        
@@ -1383,18 +1377,15 @@ module.exports = {
   clickSelectImageMB: async ({ device_id }) => {    
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);
     
-    await delay(800);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['ScanQR']);
+    await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Image']);
-    await delay(800);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Hamburgur-Menu']);           
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Galaxy-Note9']); 
-    await delay(800);
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800); 
+    await delay(500);                  
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Files']); 
+    // await delay(500);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Finish']); 
+    // await delay(500);
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },
