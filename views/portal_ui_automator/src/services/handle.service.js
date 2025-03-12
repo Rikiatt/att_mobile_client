@@ -67,7 +67,7 @@ export const ocbScanQR = async (data, setLoading) => {
 
   console.log('2. Start app OCB OMNI 4.0');
   await actionADB({ action: 'startOCB', device_id: data.device_id });
-  await delay(8000);
+  await delay(7000);
 
   console.log('3. Login');
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -77,18 +77,17 @@ export const ocbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await delay(2000);
+  await delay(1000);
 
   console.log('4. Input PIN');  
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(5000);
+  await delay(4000);
 
   // Track MB App while it is in process  
   const trackOCBAppPromise = actionADB({ action: 'trackOCBApp', device_id: data.device_id });
   
   console.log('5. Scan QR, select img');    
-  await actionADB({ action: 'clickSelectImageOCB', device_id: data.device_id });
-  await delay(2000);  
+  await actionADB({ action: 'clickSelectImageOCB', device_id: data.device_id });   
 
   //Đợi trackOCBApp hoàn thành (nếu app OCB bị thoát)
   const trackResult = await trackOCBAppPromise;
@@ -380,7 +379,7 @@ export const vpbScanQR = async (data, setLoading) => {
   console.log('4. Input PIN after selecting img');
   await actionADB({ action: 'inputPINVPB', device_id: data.device_id, text: text.trim() });   
   await delay(6000); 
-  
+
   // Track VPB while it is in process  
   const trackVPBAppPromise = actionADB({ action: 'trackVPBApp', device_id: data.device_id });
 
