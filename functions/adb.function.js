@@ -1452,12 +1452,6 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickScanQRNAB: async ({ device_id }) => {    
-    const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-ScanQR']);      
-    return { status: 200, message: 'Success' };
-  },
-
   copyQRImages : async ({ device_id }) => {
     console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
     
@@ -1489,19 +1483,20 @@ module.exports = {
   clickSelectImageNAB: async ({ device_id }) => {    
     const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-ScanQR']);           
-    await delay(800);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Image']);           
-    await delay(800);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Hamburgur-Menu']);           
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Galaxy-Note9']);  
-    await delay(800); 
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);      
+    console.log('log', ...coordinatesScanQRNAB['ScanQR']);     
+    await delay(500);        
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Image']);         
+    console.log('log', ...coordinatesScanQRNAB['Select-Image'])
+    await delay(500);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Files']);                            
+    console.log('log', ...coordinatesScanQRNAB['Select-Files'])
+    await delay(500);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Target-Img']);  
-    await delay(800);   
+    console.log('log', ...coordinatesScanQRNAB['Select-Target-Img'])
+    await delay(500);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Finish']);
+    console.log('log', ...coordinatesScanQRNAB['Finish'])
 
     return { status: 200, message: 'Success' };
   },

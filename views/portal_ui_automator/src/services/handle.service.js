@@ -112,7 +112,7 @@ export const acbScanQR = async (data, setLoading) => {
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mật khẩu ACB cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu ACB cần truyền vào thiết bị');
   if (!text) return;
 
   // console.log('1. Copy QR images'); 
@@ -142,7 +142,7 @@ export const acbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await delay(2000);
 
-  // Track ACB App while it is in process  
+  // Track ACB App while it is in processf  
   const trackACBAppPromise = actionADB({ action: 'trackACBApp', device_id: data.device_id });
 
   console.log('5. Scan QR');
@@ -183,7 +183,7 @@ export const ncbScanQR = async (data, setLoading) => {
   console.log('2. Start app NCB');
   await actionADB({ action: 'startNCB', device_id: data.device_id });
 
-  await delay(10000);
+  await delay(6000);
   // Track NCB App while it is in process  
   // const trackNCBAppPromise = actionADB({ action: 'trackNCBApp', device_id: data.device_id });
 
@@ -194,7 +194,7 @@ export const ncbScanQR = async (data, setLoading) => {
   await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
-  await delay(9000);
+  await delay(2000);
 
   console.log('4. Scan QR, select img');
   await actionADB({ action: 'clickScanQRNCB', device_id: data.device_id });
@@ -237,10 +237,8 @@ export const nabScanQR = async (data, setLoading) => {
   console.log('2. Start app NAB');
   await actionADB({ action: 'startNAB', device_id: data.device_id });
 
-  await delay(12000);
-  // Track NAB app while it is in process  
-  const trackNABAppPromise = actionADB({ action: 'trackNABApp', device_id: data.device_id });
-
+  await delay(6000);
+  
   console.log('3. Click Log in');   
   await actionADB({ action: 'clickLoginNAB', device_id: data.device_id });
 
@@ -251,21 +249,24 @@ export const nabScanQR = async (data, setLoading) => {
   
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await delay(2000);  
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  await delay(6000); 
 
-  // console.log('5. Scan QR, select img');
-  // await actionADB({ action: 'clickScanQRNAB', device_id: data.device_id });
-  // await delay(500);
+  // Track NAB app while it is in process  
+  const trackNABAppPromise = actionADB({ action: 'trackNABApp', device_id: data.device_id });
+
   console.log('5. Select img');
   await actionADB({ action: 'clickSelectImageNAB', device_id: data.device_id });
   await delay(3000); 
 
-  //Đợi trackNABApp hoàn thành (nếu app NAB bị thoát)
+  // Đợi trackNABApp hoàn thành (nếu app NAB bị thoát)
   const trackResult = await trackNABAppPromise;
   if (!trackResult) {
     console.log('📢 Theo dõi NAB đã kết thúc.');
   }
+
+  console.log('6. Delete all of imgs in device');
+  await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
