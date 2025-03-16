@@ -271,7 +271,6 @@ export const tpbScanQR = async (data, setLoading) => {
   setLoading(true);    
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu TPB cần truyền vào thiết bị');  
-  console.log('log text:', text);
   if (!text) return;
 
   console.log('1. Stop app TPB');
