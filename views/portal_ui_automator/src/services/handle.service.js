@@ -703,9 +703,9 @@ export const vietinLogin = async (data, setLoading) => {
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await delay(50);
     await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
-    // await delay(5000);
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+    await delay(4000);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
 
     setLoading(false);
   } catch (error) {
