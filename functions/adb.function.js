@@ -1546,7 +1546,7 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Upload-Image']); 
     await delay(1000);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-Image']); 
-    await delay(1000);     
+    await delay(2000);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image']); 
 
     return { status: 200, message: 'Success' };
