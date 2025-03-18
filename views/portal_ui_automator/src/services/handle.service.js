@@ -51,7 +51,7 @@ export const acbScanQR = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceACB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ MSB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ ACB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   setLoading(true);    

@@ -1379,13 +1379,18 @@ module.exports = {
     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['ScanQR']);
     await delay(500);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Image']);
-    await delay(500);                  
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Files']); 
-    // await delay(500);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Image']);
+    await delay(700);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Hamburger-Menu']);
+    await delay(700);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Galaxy-Note9']);
+    await delay(700);                 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await client.shell(device_id, `input swipe 500 1800 500 300`);        
+    await delay(700);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
-    // await delay(500);
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Finish']); 
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },
@@ -1423,8 +1428,7 @@ module.exports = {
     await delay(800); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Select-Galaxy-Note9']); 
     await delay(800);
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800); 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);    
     await client.shell(device_id, `input swipe 500 1800 500 300`);
     await delay(800); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Select-Target-Img']); 
@@ -1729,7 +1733,7 @@ module.exports = {
   },
 
   startAppADBMB: async ({ device_id }) => {
-    console.log('Đã dừng app MB...');
+    console.log('Đang khởi động app MB...');
     await client.shell(device_id, 'monkey -p com.mbmobile -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
