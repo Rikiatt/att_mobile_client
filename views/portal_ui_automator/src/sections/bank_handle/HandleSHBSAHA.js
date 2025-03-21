@@ -3,7 +3,7 @@ import { shbLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleSHB = ({ item, X, Y, setLoading }) => {
+const HandleSHBSAHA = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,7 +19,7 @@ const HandleSHB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>SHB</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>SHB SAHA</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
@@ -39,4 +39,4 @@ const HandleSHB = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleSHB;
+export default HandleSHBSAHA;

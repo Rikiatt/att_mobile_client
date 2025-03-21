@@ -872,7 +872,7 @@ export const msbScanQR = async (data, setLoading) => {
   setLoading(false);
 };
 
-// ============== SHB ============== //
+// ============== SHB SAHA ============== //
 
 export const shbLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
@@ -881,13 +881,11 @@ export const shbLogin = async (data, setLoading) => {
 
   try {
     // Start app
-    await actionADB({ action: 'stopSHB', device_id: data.device_id });
-    await actionADB({ action: 'startSHB', device_id: data.device_id });
+    await actionADB({ action: 'stopSHBSAHA', device_id: data.device_id });
+    await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
     await delay(6000);
 
     // Tab vào ô mật khẩu
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
 

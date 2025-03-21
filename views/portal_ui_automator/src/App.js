@@ -48,12 +48,12 @@ import HandleNAB from './sections/bank_handle/HandleNAB';
 // import HandleBAB from './sections/bank_handle/HandleBAB';
 import HandleTPB from './sections/bank_handle/HandleTPB';
 import HandleVPB from './sections/bank_handle/HandleVPB';
-import HandleMSB from './sections/bank_handle/HandleMSB';
+// import HandleMSB from './sections/bank_handle/HandleMSB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleMB from './sections/bank_handle/HandleMB';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleVietin from './sections/bank_handle/HandleVietin';
-// import HandleSHB from './sections/bank_handle/HandleSHB';
+import HandleSHBSAHA from './sections/bank_handle/HandleSHBSAHA';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import HandleShowQr from './sections/HandleShowQr';
@@ -293,8 +293,8 @@ function App() {
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      {/* <HandleSHB item={item} X={X} Y={Y} setLoading={setLoading} /> */}                      
+                      {/* <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
+                      <HandleSHBSAHA item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       {/* <HandleABB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                       {/* <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} /> */}
                     </CardContent>

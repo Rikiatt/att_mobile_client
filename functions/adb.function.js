@@ -1798,17 +1798,17 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  stopAppADBSHB: async ({ device_id }) => {    
+  stopAppADBSHBSAHA: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop vn.shb.mbanking');
-    console.log('Đã dừng app SHB Mobile');
+    await client.shell(device_id, 'am force-stop vn.shb.saha.mbanking');
+    console.log('Đã dừng app SHB SAHA');
     await delay(500);
     return { status: 200, message: 'Success' };
   },
 
-  startAppADBSHB: async ({ device_id }) => {
-    console.log('Đang khởi động app SHB Mobile...');
-    await client.shell(device_id, 'monkey -p vn.shb.mbanking -c android.intent.category.LAUNCHER 1');
+  startAppADBSHBSAHA: async ({ device_id }) => {
+    console.log('Đang khởi động app SHB SAHA...');
+    await client.shell(device_id, 'monkey -p vn.shb.saha.mbanking -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
   },  
