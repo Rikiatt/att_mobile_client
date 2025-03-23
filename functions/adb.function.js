@@ -11,6 +11,7 @@ const client = adb.createClient({ bin: adbPath });
 
 const coordinatesLoginACB = require('../config/coordinatesLoginACB.json');
 const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
+const coordinatesScanQREXIM = require('../config/coordinatesScanQREXIM.json');
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
@@ -33,10 +34,11 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 }
 
+const { isACBRunning } = require('../functions/checkAppBankStatus');
+const { isEXIMRunning } = require('../functions/checkAppBankStatus');
 const { isMBRunning } = require('../functions/checkAppBankStatus');
 const { isMSBRunning } = require('../functions/checkAppBankStatus');
 const { isOCBRunning } = require('../functions/checkAppBankStatus');
-const { isACBRunning } = require('../functions/checkAppBankStatus');
 const { isNABRunning } = require('../functions/checkAppBankStatus');
 const { isTPBRunning } = require('../functions/checkAppBankStatus');
 const { isVPBRunning } = require('../functions/checkAppBankStatus');
@@ -1018,6 +1020,13 @@ async function stopOCBApp ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function stopOCBApp ({ device_id }) {    
+  await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
+  console.log('Đã dừng app OCB OMNI');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 async function stopMSBApp ({ device_id }) {    
   await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
   console.log('Đã dừng app MSB');
@@ -1036,7 +1045,7 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
-  trackOCBApp : async ( { device_id } ) => {
+  trackOCB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1077,7 +1086,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackACBApp : async ( { device_id } ) => {
+  trackACB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1118,7 +1127,49 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackNABApp : async ( { device_id } ) => {    
+  trackEXIM : async ( { device_id } ) => {
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi NAB App...');
+    
+    const chatId = '7098096854';    
+
+    if (!chatId) {
+      console.error("Cannot continue cause of invalid chat ID.");
+      return;
+    } 
+
+    let running = await isEXIMRunning( { device_id } );
+
+    if (!running) {
+      console.log("EXIM đang không chạy.");
+      return;
+    }
+        
+    await clearTempFile( { device_id } );
+    
+    while (running) {
+      console.log('Eximbank EDigi đang chạy');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+      await dumpXmlToLocal( device_id, localPath );
+      // await checkXmlContentEXIM( device_id, localPath );   
+      console.log('checkXmlContentEXIM chua lam');
+                      
+      running = await isEXIMRunning( { device_id } );
+    
+      if (!running) {            
+        console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
+    }
+    return { status: 200, message: 'Success' };
+  },
+
+  trackNAB : async ( { device_id } ) => {    
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1159,7 +1210,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackTPBApp : async ( { device_id } ) => {    
+  trackTPB : async ( { device_id } ) => {    
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1200,7 +1251,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackVPBApp : async ( { device_id } ) => {    
+  trackVPB : async ( { device_id } ) => {    
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1241,7 +1292,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackMBApp : async ( { device_id } ) => {
+  trackMB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1282,7 +1333,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackMSBApp : async ( { device_id } ) => {
+  trackMSB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
@@ -1398,6 +1449,27 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Image']);           
     await delay(500); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Target-Img']);     
+
+    return { status: 200, message: 'Success' };
+  },
+
+  clickSelectImageEXIM: async ({ device_id }) => {    
+    const coordinatesScanQREXIM = await loadCoordinatesForDeviceScanQREXIM(device_id);
+    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['ScanQR']);
+    await delay(500);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Image']);
+    await delay(1000);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Hamburger-Menu']);
+    await delay(800);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Galaxy-Note9']);
+    await delay(700);                 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    // await client.shell(device_id, `input swipe 500 1800 500 300`);        
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Select-Target-Img']); 
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Finish']); 
 
     return { status: 200, message: 'Success' };
   },
@@ -1655,9 +1727,25 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  stopAppADBEXIM: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
+    await client.shell(device_id, 'am force-stop com.vnpay.EximBankOmni');
+    console.log('Đã dừng app EximBank EDigi');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
   startAppADBACB: async ({ device_id }) => {    
     await client.shell(device_id, 'monkey -p mobile.acb.com.vn -c android.intent.category.LAUNCHER 1');
     console.log('Đang khởi động app ACB');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },  
+
+  startAppADBEXIM: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent 3');
+    await client.shell(device_id, 'monkey -p com.vnpay.EximBankOmni -c android.intent.category.LAUNCHER 1');
+    console.log('Đang khởi động app Eximbank EDigi');
     await delay(200);
     return { status: 200, message: 'Success' };
   },
@@ -1840,6 +1928,24 @@ module.exports = {
       
       if (deviceCoordinates == undefined) {        
         console.log(`No coordinatesScanQRACB found for device model: ${deviceModel}`);
+        return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
+      }
+  
+      return deviceCoordinates;
+    } catch (error) {
+      console.error(`Error checking device: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkDeviceEXIM: async ({ device_id }) => {
+    try {
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);      
+  
+      const deviceCoordinates = coordinatesScanQREXIM[deviceModel];             
+      
+      if (deviceCoordinates == undefined) {        
+        console.log(`No coordinatesScanQREXIM found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -2378,6 +2484,20 @@ async function loadCoordinatesForDeviceScanQRACB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRACB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQREXIM(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQREXIM[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQREXIM for device: ${error.message}`);
     throw error;
   }
 };

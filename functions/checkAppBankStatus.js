@@ -5,18 +5,6 @@ const path = require('path');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
-async function isOCBRunning({ device_id }) {                 
-    try {
-        const output = await client.shell(device_id, 'pidof vn.com.ocb.awe')
-            .then(adb.util.readAll)
-            .then(buffer => buffer.toString().trim());                
-        if (output !== '') return true;        
-    } catch (error) {
-        console.error("Error checking OCB app status:", error.message);
-        return false;
-    }
-}
-
 async function isACBRunning( { device_id } ) {             
     try {
         const output = await client.shell(device_id, 'pidof mobile.acb.com.vn')
@@ -25,6 +13,30 @@ async function isACBRunning( { device_id } ) {
         if (output !== '') return true;        
     } catch (error) {
         console.error("Error checking MB Bank app status:", error.message);
+        return false;
+    }
+}
+
+async function isEXIMRunning({ device_id }) {                 
+    try {
+        const output = await client.shell(device_id, 'pidof com.vnpay.EximBankOmni')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());                
+        if (output !== '') return true;        
+    } catch (error) {
+        console.error("Error checking EXIM app status:", error.message);
+        return false;
+    }
+}
+
+async function isOCBRunning({ device_id }) {                 
+    try {
+        const output = await client.shell(device_id, 'pidof vn.com.ocb.awe')
+            .then(adb.util.readAll)
+            .then(buffer => buffer.toString().trim());                
+        if (output !== '') return true;        
+    } catch (error) {
+        console.error("Error checking OCB app status:", error.message);
         return false;
     }
 }
@@ -89,4 +101,4 @@ async function isVPBRunning( { device_id } ) {
     }
 }
 
-module.exports = { isACBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning };
+module.exports = { isACBRunning, isEXIMRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning };

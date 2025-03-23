@@ -22,7 +22,7 @@ const HandleNAB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>NAB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Start >> Login >> ScanQR" arrow>
+          <Tooltip title="Start >> ScanQR" arrow>
             <Button
               size="small"
               variant="contained"

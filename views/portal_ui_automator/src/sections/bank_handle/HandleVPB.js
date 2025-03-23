@@ -22,7 +22,7 @@ const HandleVPB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>VPB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Start >> ScanQR >> Login (PIN) " arrow>
+          <Tooltip title="Start >> ScanQR " arrow>
             <Button
               size="small"
               variant="contained"

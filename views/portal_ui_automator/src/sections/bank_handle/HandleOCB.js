@@ -22,7 +22,7 @@ const HandleOCB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>OCB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>                           
-          <Tooltip title="Start app >> Login >> ScanQR" arrow>
+          <Tooltip title="Start >> ScanQR" arrow>
             <Button
               size="small"
               variant="contained"

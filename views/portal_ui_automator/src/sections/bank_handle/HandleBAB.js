@@ -22,7 +22,7 @@ const HandleBAB = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>BAB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Start >> ScanQR >> Login (PIN) " arrow>
+          <Tooltip title="Start >> ScanQR " arrow>
             <Button
               size="small"
               variant="contained"
