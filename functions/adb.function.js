@@ -750,16 +750,9 @@ const checkXmlContentTPB = async (device_id, localPath) => {
 
     const screenKeywords = [
       {
-        name: "Chuyển tiền/Chatpay",
-        // vi: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"],
-        // en: ["Transfer ChatPay", "New Recipient Within TPBank", "New Recipient Interbank/ATM Card", "Paste To Pay"]
-        vi: ["Từ tài khoản", "Chuyển đến", "Trong TPBank", "Liên Ngân Hàng", "Thẻ ATM"] 
-        ,en: ["Source account", "Transfer to", "Within TPBank", "Inter-bank", "ATM card"] 
-      },
-      {
-        name: "Lịch sử GD",
-        vi: ["Tra cứu giao dịch", "Thông tin tài khoản", "Tìm kiếm"],
-        en: ["Enquiry", "Account information", "Search"]
+        name: "Chuyển tiền/Chatpay",                
+        vi: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"],
+        en: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"] 
       }
     ];
 
@@ -1380,13 +1373,13 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['ScanQR']);
     await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Image']);
-    await delay(700);   
+    await delay(1000);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Hamburger-Menu']);
-    await delay(700);   
+    await delay(800);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Galaxy-Note9']);
     await delay(700);                 
     await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await client.shell(device_id, `input swipe 500 1800 500 300`);        
+    // await client.shell(device_id, `input swipe 500 1800 500 300`);        
     await delay(700);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
     await delay(700);
@@ -1487,20 +1480,20 @@ module.exports = {
   clickSelectImageNAB: async ({ device_id }) => {    
     const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);      
-    console.log('log', ...coordinatesScanQRNAB['ScanQR']);     
-    await delay(500);        
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Image']);         
-    console.log('log', ...coordinatesScanQRNAB['Select-Image'])
-    await delay(500);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Files']);                            
-    console.log('log', ...coordinatesScanQRNAB['Select-Files'])
-    await delay(500);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Select-Target-Img']);  
-    console.log('log', ...coordinatesScanQRNAB['Select-Target-Img'])
-    await delay(500);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);
+    await delay(500);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Image']);
+    await delay(1000);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Hamburger-Menu']);
+    await delay(800);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Galaxy-Note9']);
+    await delay(600);                 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    // await client.shell(device_id, `input swipe 500 1800 500 300`);        
+    await delay(600);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Target-Img']); 
+    await delay(600);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Finish']);
-    console.log('log', ...coordinatesScanQRNAB['Finish'])
 
     return { status: 200, message: 'Success' };
   },
@@ -1558,15 +1551,20 @@ module.exports = {
 
   clickSelectImageOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesForDeviceScanQROCB(device_id);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['ScanQR']);           
-    await delay(500);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-Image']);           
-    await delay(500);
-    // await client.shell(device_id, `input swipe 500 1800 500 300`);
-    // await delay(500);     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Select-Target-Img']);  
-    await delay(500);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Finish']);        
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['ScanQR']);
+    await delay(500);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Image']);
+    await delay(1000);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Hamburger-Menu']);
+    await delay(800);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Galaxy-Note9']);
+    await delay(600);                 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    // await client.shell(device_id, `input swipe 500 1800 500 300`);        
+    await delay(600);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Target-Img']); 
+    await delay(600);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Finish']);       
 
     return { status: 200, message: 'Success' };
   },

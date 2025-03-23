@@ -1,11 +1,10 @@
 {
     "SM-N960": {
-        "ScanQR": [947, 1469],
-        "Select-Fake": [826, 1823], 
-        "Select-Image": [477, 1707],   
-
-        "Select-Files": [850, 432],        
-        "Select-Target-Img": [92, 336],
-        "Finish": [540, 2025]
+        "ScanQR": [947, 1469],         
+        "Image": [477, 1707],   
+        "Hamburger-Menu": [92, 154],      
+        "Galaxy-Note9": [92, 800],     
+        "Target-Img": [92, 2000],
+        "Finish": [881, 150]
     }
 }

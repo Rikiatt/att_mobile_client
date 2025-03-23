@@ -120,7 +120,7 @@ export const ocbScanQR = async (data, setLoading) => {
 
   console.log('2. Start app OCB OMNI 4.0');
   await actionADB({ action: 'startOCB', device_id: data.device_id });
-  await delay(7000);
+  await delay(5000);
 
   console.log('3. Login');
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
