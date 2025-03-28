@@ -1,4 +1,10 @@
 {
+    "SM-G781": {
+        "ScanQR": [540, 1760],
+        "Select-Image": [540, 1668],
+        "Target-Image-1": [150, 588]        
+    },
+
     "SM-G973": {
         "ScanQR": [540, 1636],
         "Select-Image": [540, 1622],
