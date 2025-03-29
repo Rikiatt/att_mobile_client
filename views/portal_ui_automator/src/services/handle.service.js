@@ -83,7 +83,7 @@ export const acbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await delay(2000);
 
-  // Track ACB App while it is in processf  
+  // Track ACB App while it is in process  
   const trackACBPromise = actionADB({ action: 'trackACB', device_id: data.device_id });
 
   console.log('5. Scan QR');

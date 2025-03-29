@@ -682,44 +682,79 @@ const checkXmlContentNAB = async (device_id, localPath) => {
 
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    const keywordsVI = [
-      "Tài khoản",
-      "Thẻ",
-      "Quét QR",
-      "Chuyển tiền quốc tế",
-      "Danh bạ &#10; người nhận",
-      "Danh sách &#10; lịch chuyển tiền"
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Tài khoản", "Thẻ", "Quét QR", "Chuyển tiền quốc tế", "Danh bạ &#10; người nhận", "Danh sách &#10; lịch chuyển tiền"],
+        en: ["Account", "Card", "QR code", "International payments", "Danh bạ &#10; người nhận", "Danh sách &#10; lịch chuyển tiền"]
+      }
     ];
 
-    const keywordsEN = [
-      "Account",
-      "Card",
-      "QR code",
-      "International payments",      
-      "Danh bạ &#10; người nhận",
-      "Danh sách &#10; lịch chuyển tiền"
-    ];
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => content.includes(kw)) ||
+        screen.en.every(kw => content.includes(kw))
+      ) {
+        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
 
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+        console.log('Đóng app NAB');
+        await stopNABApp({ device_id });
 
-      console.log('Đóng app NAB');
-      await stopNABApp ( { device_id } );                
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (${device_id})`
+        );
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-      );
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          filePath: localPath
+        });
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
-        filePath: localPath 
-      });
-
-      return;
+        return;
+      }
     }
+
+    // const keywordsVI = [
+    //   "Tài khoản",
+    //   "Thẻ",
+    //   "Quét QR",
+    //   "Chuyển tiền quốc tế",
+    //   "Danh bạ &#10; người nhận",
+    //   "Danh sách &#10; lịch chuyển tiền"
+    // ];
+
+    // const keywordsEN = [
+    //   "Account",
+    //   "Card",
+    //   "QR code",
+    //   "International payments",      
+    //   "Danh bạ &#10; người nhận",
+    //   "Danh sách &#10; lịch chuyển tiền"
+    // ];
+
+    // if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
+    //   console.log("🚨 Phát hiện có thao tác bất thường!");
+
+    //   console.log('Đóng app NAB');
+    //   await stopNABApp ( { device_id } );                
+
+    //   await sendTelegramAlert(
+    //     telegramToken,
+    //     chatId,
+    //     `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //   );
+
+    //   await saveAlertToDatabase({
+    //     timestamp: new Date().toISOString(),
+    //     reason: 'Phát hiện có thao tác bất thường',
+    //     filePath: localPath 
+    //   });
+
+    //   return;
+    // }
+    //////////////////////////////////////
 
     // scan QR xong chi edit duoc description nen khong can extract data o day nua.
     // const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
