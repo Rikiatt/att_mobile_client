@@ -126,7 +126,7 @@ const compareData = (xmlData, jsonData) => {
 
 const checkXmlContentMB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -136,34 +136,68 @@ const checkXmlContentMB = async (device_id, localPath) => {
 
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    const keywordsVI = [
-      "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
-      "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ", "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"],
+        en: ["Account", "Phone number", "Card", "Large-value transaction inquiry", "MB partner", "Transfer"]
+      }
     ];
-    const keywordsEN = [
-      "Account", "Phone number", "Card",
-      "Large-value transaction inquiry", "MB partner", "Transfer"
-    ];
 
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+    // const keywordsVI = [
+    //   "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
+    //   "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
+    // ];
+    // const keywordsEN = [
+    //   "Account", "Phone number", "Card",
+    //   "Large-value transaction inquiry", "MB partner", "Transfer"
+    // ];
 
-      console.log('Dừng luôn app MB Bank');
-      await stopMBApp ( { device_id } );                
+    // if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
+    //   console.log("🚨 Phát hiện có thao tác bất thường!");
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-      );
+    //   console.log('Dừng luôn app MB Bank');
+    //   await stopMBApp ( { device_id } );                
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
-        filePath: localPath 
-      });
+    //   await sendTelegramAlert(
+    //     telegramToken,
+    //     chatId,
+    //     `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //   );
 
-      return;
+    //   await saveAlertToDatabase({
+    //     timestamp: new Date().toISOString(),
+    //     reason: 'Phát hiện có thao tác bất thường',
+    //     filePath: localPath 
+    //   });
+
+    //   return;
+    // }
+
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => content.includes(kw)) ||
+        screen.en.every(kw => content.includes(kw))
+      ) {
+        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
+
+        console.log('Đóng app MB');
+        await stopMBApp({ device_id });
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        );
+
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          filePath: localPath
+        });
+
+        return;
+      }
     }
 
     const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
@@ -217,7 +251,7 @@ const checkXmlContentMB = async (device_id, localPath) => {
 
 const checkXmlContentOCB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -312,7 +346,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
 
 const checkXmlContentACB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -638,7 +672,7 @@ function extractNodesMSB(obj) {
 
 const checkXmlContentNAB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -740,7 +774,7 @@ const checkXmlContentNAB = async (device_id, localPath) => {
 // không dump được nữa
 const checkXmlContentTPB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -792,7 +826,7 @@ const checkXmlContentTPB = async (device_id, localPath) => {
 
 const checkXmlContentVPB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -887,7 +921,7 @@ const checkXmlContentVPB = async (device_id, localPath) => {
 // chưa xong
 const checkXmlContentMSB = async (device_id, localPath) => {
   try {
-    const chatId = '7098096854';
+    const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
 
     if (!fs.existsSync(localPath)) {
@@ -1051,7 +1085,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi NAB App...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1092,7 +1126,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi ACB...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1133,7 +1167,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi NAB App...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1175,7 +1209,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi NAB...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1216,7 +1250,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi TPB...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1257,7 +1291,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi VPB...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1298,7 +1332,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi MB Bank...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");
@@ -1339,7 +1373,7 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi MSB...');
     
-    const chatId = '7098096854';    
+    const chatId = '-4725254373';    
 
     if (!chatId) {
       console.error("Cannot continue cause of invalid chat ID.");

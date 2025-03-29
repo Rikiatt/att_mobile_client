@@ -186,7 +186,7 @@ export const ocbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(4000);
 
-  // Track MB App while it is in process  
+  // Track OCB while it is in process  
   const trackOCBPromise = actionADB({ action: 'trackOCB', device_id: data.device_id });
   
   console.log('5. Scan QR, select img');    
