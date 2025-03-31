@@ -67,8 +67,7 @@ async function dumpXmlToLocal ( device_id, localPath ) {
         stream.pipe(fileStream);
         fileStream.on('finish', resolve);
         fileStream.on('error', reject);
-    }));
-    console.log(`XML dump pulled directly to local: ${localPath}`);
+    }));    
   } catch (error) {
       console.error(`Error during XML dump to local. ${error.message}`);
   }
@@ -250,11 +249,6 @@ const checkXmlContentOCB = async (device_id, localPath) => {
       return;
     }
 
-    if (!fs.existsSync(localPath)) {
-      console.log("⚠ File XML không tồn tại, dừng luôn.");
-      return;
-    }
-
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
     const screenKeywords = [
@@ -270,7 +264,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
         screen.vi.every(kw => content.includes(kw)) ||
         screen.en.every(kw => content.includes(kw))
       ) {
-        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
+        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);        
 
         console.log('Đóng app OCB');
         await stopOCBApp({ device_id });

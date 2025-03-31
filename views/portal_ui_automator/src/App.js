@@ -378,7 +378,7 @@ function TitleComp({ title, item, setMutate }) {
         <>
           <TextField
             variant="outlined"
-            placeholder="Ghi chú"
+            placeholder="Tên thiết bị"
             size="small"
             value={textTitle}
             onChange={(event) => setTextTitle(event.target.value)}
@@ -400,7 +400,7 @@ function TitleComp({ title, item, setMutate }) {
             {textTitle}
           </Typography>
           <Stack direction={'row'} justifyContent={'end'}>
-            <Tooltip title={"Chỉnh sửa ghi chú"} arrow>
+            <Tooltip title={"Chỉnh sửa tên thiết bị"} arrow>
               <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
                 <Edit color="primary" sx={{ fontSize: 16 }} />
               </IconButton>
