@@ -1150,8 +1150,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('App OCB đang chạy');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
@@ -1184,8 +1183,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('ACB đang chạy');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
@@ -1218,8 +1216,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('Eximbank EDigi đang chạy');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
@@ -1253,8 +1250,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('NAB đang chạy...');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
@@ -1287,8 +1283,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('TPB đang chạy...');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
@@ -1354,8 +1349,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('MB đang chạy...');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
