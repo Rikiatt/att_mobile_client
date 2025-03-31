@@ -888,7 +888,13 @@ const checkXmlContentVPB = async (device_id, localPath) => {
       {
         name: "Chuyển tiền",
         vi: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"],
-        en: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"],
+        en: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"]
+      },
+
+      {
+        name: "Chuyển đến số tài khoản",
+        vi: ["Chuyển đến số tài khoản", "Tài khoản nguồn", "Thông tin người nhận", "Chọn ngân hàng"],
+        en: ["Chuyển đến số tài khoản", "Tài khoản nguồn", "Thông tin người nhận", "Chọn ngân hàng"]
       }
     ];
 
@@ -1315,8 +1321,7 @@ module.exports = {
         
     await clearTempFile( { device_id } );
     
-    while (running) {
-      console.log('VPB đang chạy...');
+    while (running) {      
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
