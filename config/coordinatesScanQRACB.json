@@ -1,8 +1,8 @@
 {
     "SM-N960": {
-        "Hide-Keyboard": [836, 2157],
+        "Hide-Popup": [835, 2155],
         "ScanQR": [329, 1956],
         "Select-Image": [540, 1588],                
-        "Select-Target-Img": [136, 837]
+        "Select-Target-Img": [136, 836]
     }
 }

@@ -19,7 +19,7 @@ const HandleTPB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>TBP</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>TPB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Start >> ScanQR " arrow>

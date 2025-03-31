@@ -65,7 +65,7 @@ export const acbScanQR = async (data, setLoading) => {
   console.log('2. Start app ACB');
   await actionADB({ action: 'startACB', device_id: data.device_id });
 
-  await delay(15000);
+  await delay(14000);
 
   console.log('3. Tab 4 times and enter to click login'); 
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -81,7 +81,7 @@ export const acbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await delay(2000);
+  await delay(4000);
 
   // Track ACB App while it is in process  
   const trackACBPromise = actionADB({ action: 'trackACB', device_id: data.device_id });

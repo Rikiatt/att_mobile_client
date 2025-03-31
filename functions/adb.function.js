@@ -126,8 +126,21 @@ const compareData = (xmlData, jsonData) => {
 
 const checkXmlContentMB = async (device_id, localPath) => {
   try {
-    const chatId = '-4725254373';
+    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
+    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const jsonData = JSON.parse(fileContent);
+
+      if (jsonData.data?.site === 'new88') {
+        chatId = '-4607954489';
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
+      return;
+    }
 
     if (!fs.existsSync(localPath)) {
       console.log("⚠ File XML không tồn tại, dừng luôn.");
@@ -144,42 +157,12 @@ const checkXmlContentMB = async (device_id, localPath) => {
       }
     ];
 
-    // const keywordsVI = [
-    //   "Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ",
-    //   "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"
-    // ];
-    // const keywordsEN = [
-    //   "Account", "Phone number", "Card",
-    //   "Large-value transaction inquiry", "MB partner", "Transfer"
-    // ];
-
-    // if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-    //   console.log("🚨 Phát hiện có thao tác bất thường!");
-
-    //   console.log('Dừng luôn app MB Bank');
-    //   await stopMBApp ( { device_id } );                
-
-    //   await sendTelegramAlert(
-    //     telegramToken,
-    //     chatId,
-    //     `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-    //   );
-
-    //   await saveAlertToDatabase({
-    //     timestamp: new Date().toISOString(),
-    //     reason: 'Phát hiện có thao tác bất thường',
-    //     filePath: localPath 
-    //   });
-
-    //   return;
-    // }
-
     for (const screen of screenKeywords) {
       if (
         screen.vi.every(kw => content.includes(kw)) ||
         screen.en.every(kw => content.includes(kw))
       ) {
-        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
+        console.log(`🚨 Phát hiện có thao tác thủ công ở màn hình: ${screen.name}`);
 
         console.log('Đóng app MB');
         await stopMBApp({ device_id });
@@ -187,12 +170,12 @@ const checkXmlContentMB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công ở màn hình: ${screen.name}`,
           filePath: localPath
         });
 
@@ -229,12 +212,12 @@ const checkXmlContentMB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác bất thường',
+          reason: 'Phát hiện có thao tác thủ công',
           filePath: localPath 
         });
 
@@ -251,8 +234,21 @@ const checkXmlContentMB = async (device_id, localPath) => {
 
 const checkXmlContentOCB = async (device_id, localPath) => {
   try {
-    const chatId = '-4725254373';
+    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
+    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const jsonData = JSON.parse(fileContent);
+
+      if (jsonData.data?.site === 'new88') {
+        chatId = '-4607954489';
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
+      return;
+    }
 
     if (!fs.existsSync(localPath)) {
       console.log("⚠ File XML không tồn tại, dừng luôn.");
@@ -274,7 +270,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
         screen.vi.every(kw => content.includes(kw)) ||
         screen.en.every(kw => content.includes(kw))
       ) {
-        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
+        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
         console.log('Đóng app OCB');
         await stopOCBApp({ device_id });
@@ -282,12 +278,12 @@ const checkXmlContentOCB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
 
@@ -324,12 +320,12 @@ const checkXmlContentOCB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác bất thường',
+          reason: 'Phát hiện có thao tác thủ công',
           filePath: localPath 
         });
 
@@ -346,8 +342,21 @@ const checkXmlContentOCB = async (device_id, localPath) => {
 
 const checkXmlContentACB = async (device_id, localPath) => {
   try {
-    const chatId = '-4725254373';
+    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
+    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const jsonData = JSON.parse(fileContent);
+
+      if (jsonData.data?.site === 'new88') {
+        chatId = '-4607954489';
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
+      return;
+    }
 
     if (!fs.existsSync(localPath)) {
       console.log("⚠ File XML không tồn tại, dừng luôn.");
@@ -356,43 +365,40 @@ const checkXmlContentACB = async (device_id, localPath) => {
 
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    const keywordsVI = [
-      "Chuyển tiền", 
-      "Chuyển tiền đến", 
-      "Tài khoản ngân hàng", 
-      "Thẻ ngân hàng", 
-      "CMND / Hộ chiếu", 
-      "Số điện thoại"
-    ];
-    const keywordsEN = [
-      "Transfer",
-      "Transfer to",
-      "Bank account",
-      "Bank card",
-      "ID / Passport",
-      "Cellphone number",
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Chuyển tiền", "Chuyển tiền đến", "Tài khoản ngân hàng", "Thẻ ngân hàng", "CMND / Hộ chiếu", "Số điện thoại"],
+        en: ["Transfer", "Transfer to", "Bank account", "Bank card", "ID / Passport", "Cellphone number"]
+      }
     ];
 
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => content.includes(kw)) ||
+        screen.en.every(kw => content.includes(kw))
+      ) {
+        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
-      console.log('Dừng luôn app ACB');
-      await stopACBApp ( { device_id } );                
+        console.log('Đóng app ACB');
+        await stopACBApp({ device_id });
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-      );
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        );
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
-        filePath: localPath 
-      });
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+          filePath: localPath
+        });
 
-      return;
-    }    
+        return;
+      }
+    }
+       
   } catch (error) {    
       console.error("❌ Lỗi xử lý XML:", error.message);
   }
@@ -695,7 +701,7 @@ const checkXmlContentNAB = async (device_id, localPath) => {
         screen.vi.every(kw => content.includes(kw)) ||
         screen.en.every(kw => content.includes(kw))
       ) {
-        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
+        console.log(`🚨 Phát hiện có thao tác thủ công ở màn hình: ${screen.name}`);
 
         console.log('Đóng app NAB');
         await stopNABApp({ device_id });
@@ -703,12 +709,12 @@ const checkXmlContentNAB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công ở màn hình: ${screen.name}`,
           filePath: localPath
         });
 
@@ -735,7 +741,7 @@ const checkXmlContentNAB = async (device_id, localPath) => {
     // ];
 
     // if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-    //   console.log("🚨 Phát hiện có thao tác bất thường!");
+    //   console.log("🚨 Phát hiện có thao tác thủ công!");
 
     //   console.log('Đóng app NAB');
     //   await stopNABApp ( { device_id } );                
@@ -743,12 +749,12 @@ const checkXmlContentNAB = async (device_id, localPath) => {
     //   await sendTelegramAlert(
     //     telegramToken,
     //     chatId,
-    //     `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //     `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
     //   );
 
     //   await saveAlertToDatabase({
     //     timestamp: new Date().toISOString(),
-    //     reason: 'Phát hiện có thao tác bất thường',
+    //     reason: 'Phát hiện có thao tác thủ công',
     //     filePath: localPath 
     //   });
 
@@ -786,12 +792,12 @@ const checkXmlContentNAB = async (device_id, localPath) => {
     //     await sendTelegramAlert(
     //       telegramToken,
     //       chatId,
-    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //       `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
     //     );
 
     //     await saveAlertToDatabase({
     //       timestamp: new Date().toISOString(),
-    //       reason: 'Phát hiện có thao tác bất thường',
+    //       reason: 'Phát hiện có thao tác thủ công',
     //       filePath: localPath 
     //     });
 
@@ -832,7 +838,7 @@ const checkXmlContentTPB = async (device_id, localPath) => {
         screen.vi.every(kw => content.includes(kw)) ||
         screen.en.every(kw => content.includes(kw))
       ) {
-        console.log(`🚨 Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`);
+        console.log(`🚨 Phát hiện có thao tác thủ công ở màn hình: ${screen.name}`);
 
         console.log('Đóng app TPB');
         await stopTPBApp({ device_id });
@@ -840,12 +846,12 @@ const checkXmlContentTPB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ở màn hình: ${screen.name} (${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác bất thường ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công ở màn hình: ${screen.name}`,
           filePath: localPath
         });
 
@@ -861,8 +867,21 @@ const checkXmlContentTPB = async (device_id, localPath) => {
 
 const checkXmlContentVPB = async (device_id, localPath) => {
   try {
-    const chatId = '-4725254373';
+    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
+    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
+
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const jsonData = JSON.parse(fileContent);
+
+      if (jsonData.data?.site === 'new88') {
+        chatId = '-4607954489';
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
+      return;
+    }
 
     if (!fs.existsSync(localPath)) {
       console.log("⚠ File XML không tồn tại, dừng luôn.");
@@ -871,36 +890,38 @@ const checkXmlContentVPB = async (device_id, localPath) => {
 
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    const keywordsVI = [
-      "Tới tài khoản",
-      "Tới thẻ",
-      "Tới tài khoản/&#10;thẻ của tôi",
-      "Cộng đồng&#10;thịnh vượng"
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"],
+        en: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"],
+      }
     ];
 
-    const keywordsEN = [
-      ""
-    ];
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => content.includes(kw)) ||
+        screen.en.every(kw => content.includes(kw))
+      ) {
+        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
-    if (keywordsVI.every(kw => content.includes(kw)) ) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+        console.log('Đóng app VPB');
+        await stopVPBApp({ device_id });
 
-      console.log('Đóng app VPB');
-      await stopVPBApp ( { device_id } );                
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        );
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
-      );
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện có thao tác thủ công ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+          filePath: localPath
+        });
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
-        filePath: localPath 
-      });
-
-      return;
+        return;
+      }
     }
 
     // scan QR xong chi edit duoc description nen khong can extract data o day nua.
@@ -933,12 +954,12 @@ const checkXmlContentVPB = async (device_id, localPath) => {
     //     await sendTelegramAlert(
     //       telegramToken,
     //       chatId,
-    //       `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+    //       `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
     //     );
 
     //     await saveAlertToDatabase({
     //       timestamp: new Date().toISOString(),
-    //       reason: 'Phát hiện có thao tác bất thường',
+    //       reason: 'Phát hiện có thao tác thủ công',
     //       filePath: localPath 
     //     });
 
@@ -974,7 +995,7 @@ const checkXmlContentMSB = async (device_id, localPath) => {
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác bất thường!");
+      console.log("🚨 Phát hiện có thao tác thủ công!");
 
       console.log('Đóng app MSB');
       await stopMSBApp ( { device_id } );                
@@ -982,12 +1003,12 @@ const checkXmlContentMSB = async (device_id, localPath) => {
       await sendTelegramAlert(
         telegramToken,
         chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+        `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
       );
 
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác bất thường',
+        reason: 'Phát hiện có thao tác thủ công',
         filePath: localPath 
       });
 
@@ -1023,12 +1044,12 @@ const checkXmlContentMSB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác bất thường ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác bất thường',
+          reason: 'Phát hiện có thao tác thủ công',
           filePath: localPath 
         });
 
@@ -1118,20 +1139,13 @@ module.exports = {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('🔍 Bắt đầu theo dõi NAB App...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
+    console.log('🔍 Bắt đầu theo dõi OCB...');
 
     let running = await isOCBRunning( { device_id } );
 
     if (!running) {
-        console.log("OCB đang không chạy.");
-        return;
+      console.log("OCB đang không chạy.");
+      return;
     }
         
     await clearTempFile( { device_id } );
@@ -1160,13 +1174,6 @@ module.exports = {
     ensureDirectoryExists(targetDir);
 
     console.log('🔍 Bắt đầu theo dõi ACB...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
 
     let running = await isACBRunning( { device_id } );
 
@@ -1200,14 +1207,7 @@ module.exports = {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('🔍 Bắt đầu theo dõi NAB App...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
+    console.log('🔍 Bắt đầu theo dõi EXIM...');
 
     let running = await isEXIMRunning( { device_id } );
 
@@ -1243,13 +1243,6 @@ module.exports = {
     ensureDirectoryExists(targetDir);
 
     console.log('🔍 Bắt đầu theo dõi NAB...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
 
     let running = await isNABRunning( { device_id } );
 
@@ -1284,13 +1277,6 @@ module.exports = {
     ensureDirectoryExists(targetDir);
 
     console.log('🔍 Bắt đầu theo dõi TPB...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
 
     let running = await isTPBRunning( { device_id } );
 
@@ -1325,13 +1311,6 @@ module.exports = {
     ensureDirectoryExists(targetDir);
 
     console.log('🔍 Bắt đầu theo dõi VPB...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
 
     let running = await isVPBRunning( { device_id } );
 
@@ -1366,13 +1345,6 @@ module.exports = {
     ensureDirectoryExists(targetDir);
 
     console.log('🔍 Bắt đầu theo dõi MB Bank...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
 
     let running = await isMBRunning( { device_id } );
 
@@ -1511,7 +1483,8 @@ module.exports = {
   ScanQRACB: async ({ device_id }) => {    
     const coordinatesScanQRACB = await loadCoordinatesForDeviceScanQRACB(device_id);
     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Keyboard']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
     await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['ScanQR']);
     await delay(500);                  
