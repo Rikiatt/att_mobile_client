@@ -111,7 +111,7 @@ function App() {
   const showDevice = (item) => {
     Swal.fire({
       icon: "info",
-      title: "Thông tin thiết bị - " + (localStorage.getItem(item.id) || "Ghi chú"),
+      title: "Thông tin thiết bị - " + (localStorage.getItem(item.id) || "Thiết bị mới"),
       html: `<p>ID: ${item.id}</p><p>Name: ${item.nameDevice}</p><p>Model: ${item.model}</p><p>Size: ${item.screenSize}</p>`
     })
   }
@@ -151,7 +151,7 @@ function App() {
           {devices &&
             devices.length > 0 &&
             devices.map((item, index) => {
-              const title = localStorage.getItem(item.id) || 'Ghi chú';
+              const title = localStorage.getItem(item.id) || 'Thiết bị mới';
               const X = item.screenSize.split('x')[0];
               const Y = item.screenSize.split('x')[1];
 
