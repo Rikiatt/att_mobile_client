@@ -1549,12 +1549,19 @@ module.exports = {
 
   scanQRVPB: async ({ device_id }) => {    
     const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+    console.log('Device Model:', deviceModel);
     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Upload-Image']); 
     await delay(1000);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-Image']); 
     await delay(2000);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image']); 
+
+    if (deviceModel === 'ONEPLUS A5000') {  // Nếu là ONEPLUS A5000 thì click thêm Target-Image-2
+      await delay(500);     
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image-2']); 
+    }
 
     return { status: 200, message: 'Success' };
   },  
