@@ -1018,6 +1018,14 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
+  stopAllApps: async ({ device_id }) => {    
+    await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
+    await client.shell(device_id, 'input swipe 500 1500 540 540 300');
+    console.log('Đã đóng tất cả các app đang mở');
+    await delay(200);
+    return { status: 200, message: 'Success' };
+  },
+
   trackOCB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);

@@ -95,8 +95,8 @@ export const acbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi ACB đã kết thúc.');
   }
 
-  console.log('6. Delete all of imgs in device');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('6. Delete all of imgs in device');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -145,8 +145,11 @@ export const eximScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi EXIM đã kết thúc.');
   }
 
-  console.log('5. Delete all of imgs in device');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('5. Delete all of imgs in device');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+
+  console.log('5. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id });
 
   setLoading(false);
 };
@@ -198,8 +201,8 @@ export const ocbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi OCB đã kết thúc.');
   }
 
-  console.log('6. Delete all of imgs in /sdcard');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('6. Delete all of imgs in /sdcard');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -249,8 +252,8 @@ export const ncbScanQR = async (data, setLoading) => {
   //   console.log('📢 Theo dõi NCB đã kết thúc.');
   // }
 
-  console.log('5. Delete all of imgs in device');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('5. Delete all of imgs in device');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -303,8 +306,8 @@ export const nabScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi NAB đã kết thúc.');
   }
 
-  console.log('6. Delete all of imgs in device');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('6. Delete all of imgs in device');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -347,8 +350,8 @@ export const tpbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi TPB đã kết thúc.');
   }
 
-  console.log('5. Delete all of imgs in /sdcard');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('5. Delete all of imgs in /sdcard');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -406,8 +409,8 @@ export const vpbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi VPB đã kết thúc.');
   }
 
-  console.log('6. Delete all of imgs in /sdcard');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('6. Delete all of imgs in /sdcard');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -458,8 +461,8 @@ export const mbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi MB Bank đã kết thúc.');
   }
 
-  console.log('5. Delete all of imgs in /sdcard');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('5. Delete all of imgs in /sdcard');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
