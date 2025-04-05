@@ -118,38 +118,38 @@ export const eximScanQR = async (data, setLoading) => {
   console.log('1. Stop all of apps running');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
 
-  console.log('2. Start app Eximbank EDigi');
-  await actionADB({ action: 'startEXIM', device_id: data.device_id });
+  // console.log('2. Start app Eximbank EDigi');
+  // await actionADB({ action: 'startEXIM', device_id: data.device_id });
 
-  await delay(3500);
+  // await delay(3500);
 
-  // Track EXIM while it is in process 
-  const trackEXIMPromise = actionADB({ action: 'trackEXIM', device_id: data.device_id });
+  // // Track EXIM while it is in process 
+  // const trackEXIMPromise = actionADB({ action: 'trackEXIM', device_id: data.device_id });
 
-  console.log('3. Scan QR');
-  await actionADB({ action: 'ScanQREXIM', device_id: data.device_id });   
+  // console.log('3. Scan QR');
+  // await actionADB({ action: 'ScanQREXIM', device_id: data.device_id });   
 
-  console.log('4. Input keyevent 61 4 times, then input password');
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(500);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  // console.log('4. Input keyevent 61 4 times, then input password');
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  // await delay(500);
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
    
-  // Đợi trackEXIMPromise hoàn thành (nếu app EXIM bị thoát)
-  const trackResult = await trackEXIMPromise;
-  if (!trackResult) {
-    console.log('📢 Theo dõi EXIM đã kết thúc.');
-  }
+  // // Đợi trackEXIMPromise hoàn thành (nếu app EXIM bị thoát)
+  // const trackResult = await trackEXIMPromise;
+  // if (!trackResult) {
+  //   console.log('📢 Theo dõi EXIM đã kết thúc.');
+  // }
 
-  // console.log('5. Delete all of imgs in device');
-  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // // console.log('5. Delete all of imgs in device');
+  // // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
-  console.log('5. Stop all of apps running');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id });
+  // console.log('5. Stop all of apps running');
+  // await actionADB({ action: 'stopAllApps', device_id: data.device_id });
 
   setLoading(false);
 };
