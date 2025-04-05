@@ -115,8 +115,8 @@ export const eximScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu EXIM cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop app Eximbank EDigi');
-  await actionADB({ action: 'stopEXIM', device_id: data.device_id });  
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
 
   console.log('2. Start app Eximbank EDigi');
   await actionADB({ action: 'startEXIM', device_id: data.device_id });
