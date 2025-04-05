@@ -117,7 +117,7 @@ export const eximScanQR = async (data, setLoading) => {
 
   console.log('1. Stop all of apps running');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
-  await delay(500);
+  await delay(1000);
 
   console.log('2. Start app Eximbank EDigi');
   await actionADB({ action: 'startEXIM', device_id: data.device_id });
