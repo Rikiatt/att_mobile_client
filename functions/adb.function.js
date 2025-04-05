@@ -1113,8 +1113,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      // await checkXmlContentEXIM( device_id, localPath );   
-      console.log('checkXmlContentEXIM chua lam');
+      // await checkXmlContentEXIM( device_id, localPath );         
                       
       running = await isEXIMRunning( { device_id } );
     
