@@ -59,8 +59,9 @@ export const acbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu ACB cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop app ACB');
-  await actionADB({ action: 'stopACB', device_id: data.device_id });  
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000); 
 
   console.log('2. Start app ACB');
   await actionADB({ action: 'startACB', device_id: data.device_id });
@@ -169,8 +170,9 @@ export const ocbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN OCB cần truyền vào thiết bị');
   if (!text) return;    
 
-  console.log('1. Stop app OCB OMNI 4.0');
-  await actionADB({ action: 'stopOCB', device_id: data.device_id });
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000);
 
   console.log('2. Start app OCB OMNI 4.0');
   await actionADB({ action: 'startOCB', device_id: data.device_id });
@@ -222,8 +224,9 @@ export const ncbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NCB cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop app NCB');
-  await actionADB({ action: 'stopNCB', device_id: data.device_id });  
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000);  
 
   console.log('2. Start app NCB');
   await actionADB({ action: 'startNCB', device_id: data.device_id });
@@ -273,8 +276,9 @@ export const nabScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NAB cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop app NAB');
-  await actionADB({ action: 'stopNAB', device_id: data.device_id });
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000);
 
   console.log('2. Start app NAB');
   await actionADB({ action: 'startNAB', device_id: data.device_id });
@@ -327,8 +331,9 @@ export const tpbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu TPB cần truyền vào thiết bị');  
   if (!text) return;
 
-  console.log('1. Stop app TPB');
-  await actionADB({ action: 'stopTPB', device_id: data.device_id });
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000);
 
   console.log('2. Start app TPB');
   await actionADB({ action: 'startTPB', device_id: data.device_id });
@@ -372,8 +377,9 @@ export const vpbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN hoặc mật khẩu', '', 'Nhập mã PIN hoặc mật khẩu VPB cần truyền cho thiết bị');  
   if (!text) return;
 
-  console.log('1. Stop app VPB');
-  await actionADB({ action: 'stopVPB', device_id: data.device_id });
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000);
 
   console.log('2. Start app VPB');
   await actionADB({ action: 'startVPB', device_id: data.device_id });
@@ -433,8 +439,9 @@ export const mbScanQR = async (data, setLoading) => {
   // console.log('1. Copy QR images'); 
   // await actionADB({ action: 'copyQRImages', device_id: data.device_id });
 
-  console.log('1. Stop app MB Bank');
-  await actionADB({ action: 'stopMB', device_id: data.device_id });  
+  console.log('1. Stop all of apps running');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000); 
 
   console.log('2. Start app MB Bank');
   await actionADB({ action: 'startMB', device_id: data.device_id });
