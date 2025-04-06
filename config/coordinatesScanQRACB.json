@@ -1,7 +1,6 @@
 {
-    "SM-N960": {
-        "Hide-Popup": [835, 2155],
-        "ScanQR": [329, 1956],
+    "SM-N960": {        
+        "ScanQR": [800, 1900],
         "Select-Image": [540, 1588],                
         "Select-Target-Img": [136, 836]
     }

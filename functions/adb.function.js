@@ -1331,7 +1331,9 @@ module.exports = {
 
   clickLoginACB: async ({ device_id }) => {    
     const coordinatesLoginACB = await loadCoordinatesForDeviceLoginACB(device_id);
-                       
+    
+    await adbHelper.tapXY(device_id, ...coordinatesLoginACB['Click-Login']);
+    await delay(500);  
     await adbHelper.tapXY(device_id, ...coordinatesLoginACB['Field-Password']);        
 
     return { status: 200, message: 'Success' };
@@ -1367,9 +1369,9 @@ module.exports = {
   ScanQRACB: async ({ device_id }) => {    
     const coordinatesScanQRACB = await loadCoordinatesForDeviceScanQRACB(device_id);
     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
-    await delay(500);                  
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
+    // await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['ScanQR']);
     await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Image']);           
@@ -1447,15 +1449,12 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  copyQRImages : async ({ device_id }) => {
-    console.log('log qrDevicePath in copyQRImages:', qrDevicePath);
-    
+  copyQRImages : async ({ device_id }) => {    
     if (!qrDevicePath) {
       console.error("❌ Cannot find the directory of QR!");
       return;
     }
-
-    console.log('log filename in copyQRImages:', filename);
+    
     const sourcePath = qrDevicePath;
     const destinationDir = `/sdcard/`;
 
@@ -1493,14 +1492,13 @@ module.exports = {
     else {
       await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Hamburger-Menu']);
       await delay(800);   
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Galaxy-Note9']);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Gallery']);
       await delay(600);                 
-      await client.shell(device_id, `input swipe 500 1800 500 300`);
-      // await client.shell(device_id, `input swipe 500 1800 500 300`);        
-      await delay(600);
+      // await client.shell(device_id, `input swipe 500 1800 500 300`);      
+      await delay(1000);
       await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Target-Img']); 
-      await delay(600);
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Finish']);
+      // await delay(600);
+      // await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Finish']);
     }    
 
     return { status: 200, message: 'Success' };

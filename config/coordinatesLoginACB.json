@@ -1,6 +1,6 @@
 {
-    "SM-N960": {
-       "Field-Password": [161, 899],
-        "Click-Login": [400, 1928]
+    "SM-N960": {       
+        "Click-Login": [800, 1250],
+        "Field-Password": [540, 910]
     }
 }

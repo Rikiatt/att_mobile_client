@@ -68,28 +68,21 @@ export const acbScanQR = async (data, setLoading) => {
 
   await delay(14000);
 
-  console.log('3. Tab 4 times and enter to click login'); 
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  console.log('3. Scan QR');
+  await actionADB({ action: 'ScanQRACB', device_id: data.device_id }); 
   await delay(500);
 
-  console.log('4. Click field password, input password and login'); 
+  console.log('4. Begin loginning...');   
   await actionADB({ action: 'clickLoginACB', device_id: data.device_id });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await delay(4000);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+  await delay(2000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track
 
   // Track ACB App while it is in process  
-  const trackACBPromise = actionADB({ action: 'trackACB', device_id: data.device_id });
-
-  console.log('5. Scan QR');
-  await actionADB({ action: 'ScanQRACB', device_id: data.device_id });   
-   
+  const trackACBPromise = actionADB({ action: 'trackACB', device_id: data.device_id }); 
+        
   // Đợi trackACBPromise hoàn thành (nếu app ACB bị thoát)
   const trackResult = await trackACBPromise;
   if (!trackResult) {
