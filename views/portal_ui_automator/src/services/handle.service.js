@@ -978,7 +978,50 @@ export const msbScanQR = async (data, setLoading) => {
 
 // ============== SHB SAHA ============== //
 
-export const shbLogin = async (data, setLoading) => {
+export const shbsahaScanQR = async (data, setLoading) => {
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+  setLoading(true);
+
+  try {
+    
+    console.log('1. stopAllApps');
+    await actionADB({ action: 'stopAllApps', device_id: data.device_id });     
+    console.log('2. startSHBSAHA');
+    await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
+    await delay(5000);
+
+    console.log('3. Login');
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // Nhập mật khẩu và đăng nhập
+    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+    await delay(500);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    await delay(5000);
+
+    // Track SHB SAHA while it is in process  
+    const trackSHBSAHAPromise = actionADB({ action: 'trackSHBSAHA', device_id: data.device_id });                
+
+    console.log('4. Scan QR');
+    await actionADB({ action: 'scanQRSHBSAHA', device_id: data.device_id });
+
+    // Đợi trackSHBSAHA hoàn thành (nếu app SHB SAHA bị thoát)
+    const trackResult = await trackSHBSAHAPromise;
+    if (!trackResult) {
+      console.log('📢 Theo dõi SHB SAHA đã kết thúc.');
+    }
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+export const shbsahaLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
   setLoading(true);
@@ -987,7 +1030,7 @@ export const shbLogin = async (data, setLoading) => {
     // Start app
     await actionADB({ action: 'stopSHBSAHA', device_id: data.device_id });
     await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
-    await delay(6000);
+    await delay(5000);
 
     // Tab vào ô mật khẩu
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });

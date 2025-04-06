@@ -24,6 +24,7 @@ const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
 const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
 const coordinatesScanQRBAB = require('../config/coordinatesScanQRBAB.json');
+const coordinatesScanQRSHBSAHA = require('../config/coordinatesScanQRSHBSAHA.json');
 
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
@@ -1299,6 +1300,39 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
+  trackSHBSAHA : async ( { device_id } ) => {
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi SHB SAHA...chưa làm được gì thì bị đòi máy chịu luôn');
+
+    // let running = await isEXIMRunning( { device_id } );
+
+    // if (!running) {
+    //   console.log("EXIM đang không chạy.");
+    //   return;
+    // }
+        
+    // await clearTempFile( { device_id } );
+    
+    // while (running) {      
+    //   const timestamp = Math.floor(Date.now() / 1000).toString();
+    //   const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+    //   await dumpXmlToLocal( device_id, localPath );
+    //   // await checkXmlContentEXIM( device_id, localPath );         
+                      
+    //   running = await isEXIMRunning( { device_id } );
+    
+    //   if (!running) {            
+    //     console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
+    //     await clearTempFile( { device_id } );      
+    //     return false;          
+    //   }
+    // }
+    return { status: 200, message: 'Success' };
+  },
+
   listDevice: async () => {
     try {
       const devices = await client.listDevices();
@@ -1409,6 +1443,18 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNCB['Select-Target-Img']); 
     await delay(800); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNCB['Finish']); 
+    return { status: 200, message: 'Success' };
+  },
+
+  scanQRSHBSAHA: async ({ device_id }) => {    
+    const coordinatesScanQRSHBSAHA = await loadCoordinatesForDeviceScanQRSHBSAHA(device_id);
+    
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRSHBSAHA['ScanQR']);
+    await delay(600);                  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRSHBSAHA['Image']);
+    await delay(1000);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRSHBSAHA['Target-Img']);        
+
     return { status: 200, message: 'Success' };
   },
 
@@ -2415,6 +2461,20 @@ async function loadCoordinatesForDeviceScanQRMB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRMB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRSHBSAHA(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRSHBSAHA[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRSHBSAHA for device: ${error.message}`);
     throw error;
   }
 };

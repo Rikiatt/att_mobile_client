@@ -1,10 +1,10 @@
 const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINVPB, inputPINMSB, inputPINBIDV, inputPINVTB, 
   copyQRImages, scanQRVTB, clickScanQRVTB, 
-  clickConfirmScanFaceBIDV, clickScanQRVPB2, clickScanQRVPB, clickScanQRMSB, clickScanQRNCB, clickLoginNAB, ScanQRNAB, clickSelectImageBAB, scanQRTPB, scanQRVPB, ScanQRNCB, clickSelectImageMSB, scanQRMB, ScanQROCB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
+  clickConfirmScanFaceBIDV, clickScanQRVPB2, clickScanQRVPB, clickScanQRMSB, clickScanQRNCB, clickLoginNAB, ScanQRNAB, clickSelectImageBAB, scanQRTPB, scanQRVPB, ScanQRNCB, clickSelectImageMSB, scanQRMB, ScanQROCB, scanQRSHBSAHA, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
   startAppADBACB, stopAppADBACB, stopAppADBEXIM, startAppADBEXIM, stopAppADBOCB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBBAB, stopAppADBTPB, stopAppADBVPB, stopAppADBNAB, startAppADBBAB, startAppADBTPB, startAppADBVPB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, startAppADBMSB, stopAppADBMSB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHBSAHA, startAppADBSHBSAHA, 
   tapADB, inputADB, inputADBVTB, checkDeviceACB, checkDeviceEXIM, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDeviceMB, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  stopAllApps, clickLoginACB, ScanQRACB, ScanQREXIM, trackACB, trackEXIM, trackOCB, trackNAB, trackTPB, trackVPB, trackMSB, trackMB } = require('../functions/adb.function');
+  stopAllApps, clickLoginACB, ScanQRACB, ScanQREXIM, trackACB, trackEXIM, trackOCB, trackNAB, trackTPB, trackVPB, trackMSB, trackMB, trackSHBSAHA } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
@@ -13,6 +13,7 @@ const mapAction = {
   clickLoginACB: clickLoginACB,
   ScanQRACB: ScanQRACB,
   ScanQREXIM: ScanQREXIM,
+  trackSHBSAHA: trackSHBSAHA,
   trackOCB: trackOCB,
   trackACB: trackACB,
   trackEXIM: trackEXIM,
@@ -41,6 +42,7 @@ const mapAction = {
   scanQRTPB: scanQRTPB,
   scanQRVPB: scanQRVPB,
   scanQRMB: scanQRMB,
+  scanQRSHBSAHA: scanQRSHBSAHA,
   clickSelectImageMSB: clickSelectImageMSB,
   ScanQRNCB: ScanQRNCB,
   clickLoginNAB: clickLoginNAB,  
