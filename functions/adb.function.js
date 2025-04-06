@@ -1612,14 +1612,22 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageVTB: async ({ device_id }) => {    
+  scanQRVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
         
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Select-ScanQR']); 
-    await sleep(10000); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Select-Image']);  
-    await sleep(2000);   
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Select-Image-2']);  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ScanQR']); 
+    await sleep(600); 
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Image']);  
+    await sleep(800);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Hamburger-Menu']);
+    await delay(800);   
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ONEPLUS A5010']); // = Galaxy Note9
+    await delay(700);                     
+	  await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Img']); 
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Finish']); 
 
     return { status: 200, message: 'Success' };
   },
