@@ -1550,7 +1550,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickSelectImageBAB: async ({ device_id }) => {    
+  scanQRBAB: async ({ device_id }) => {    
     const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['ScanQR']); 
     await delay(500);                  

@@ -59,20 +59,19 @@ export const acbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu ACB cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000); 
 
-  console.log('2. Start app ACB');
+  console.log('2. Khởi động app ACB...');
   await actionADB({ action: 'startACB', device_id: data.device_id });
-
   await delay(14000);
 
   console.log('3. Scan QR');
   await actionADB({ action: 'ScanQRACB', device_id: data.device_id }); 
   await delay(500);
 
-  console.log('4. Begin loginning...');   
+  console.log('4. Login');   
   await actionADB({ action: 'clickLoginACB', device_id: data.device_id });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -81,6 +80,7 @@ export const acbScanQR = async (data, setLoading) => {
   await delay(2000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track
 
   // Track ACB App while it is in process  
+  console.log('4. Đang theo dõi ACB...');
   const trackACBPromise = actionADB({ action: 'trackACB', device_id: data.device_id }); 
         
   // Đợi trackACBPromise hoàn thành (nếu app ACB bị thoát)
@@ -89,7 +89,7 @@ export const acbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi ACB đã kết thúc.');
   }
 
-  // console.log('6. Delete all of imgs in device');
+  // console.log('5. Delete all of imgs in device');
   // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
@@ -109,11 +109,11 @@ export const eximScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu EXIM cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);
 
-  console.log('2. Start app Eximbank EDigi');
+  console.log('2. Khởi động app EXIM...');
   await actionADB({ action: 'startEXIM', device_id: data.device_id });
 
   await delay(3500);
@@ -130,7 +130,7 @@ export const eximScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(500);
+  await delay(3000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
    
@@ -163,11 +163,11 @@ export const ocbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN OCB cần truyền vào thiết bị');
   if (!text) return;    
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);
 
-  console.log('2. Start app OCB OMNI 4.0');
+  console.log('2. Đang khởi động OCB...');
   await actionADB({ action: 'startOCB', device_id: data.device_id });
   await delay(5000);
 
@@ -179,16 +179,15 @@ export const ocbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  await delay(1000);
-
-  console.log('4. Input PIN');  
+  await delay(1000);  
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(4000);
 
   // Track OCB while it is in process  
+  console.log('4. Đang theo dõi OCB...');
   const trackOCBPromise = actionADB({ action: 'trackOCB', device_id: data.device_id });
   
-  console.log('5. Scan QR, select img');    
+  console.log('5. Scan QR');   
   await actionADB({ action: 'ScanQROCB', device_id: data.device_id });   
 
   // Đợi trackOCB hoàn thành (nếu app OCB bị thoát)
@@ -217,18 +216,18 @@ export const ncbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NCB cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);  
 
-  console.log('2. Start app NCB');
+  console.log('2. Khởi động NCB...');
   await actionADB({ action: 'startNCB', device_id: data.device_id });
   await delay(6000);
 
   // Track NCB App while it is in process  
   // const trackNCBAppPromise = actionADB({ action: 'trackNCBApp', device_id: data.device_id });
 
-  console.log('3. Input password and login');  
+  console.log('3. Login...');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
@@ -237,7 +236,7 @@ export const ncbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
   await delay(2000);
 
-  console.log('4. Scan QR, select img');
+  console.log('4. Scan QR');  
   await actionADB({ action: 'clickScanQRNCB', device_id: data.device_id });
   await delay(500);
   await actionADB({ action: 'ScanQRNCB', device_id: data.device_id });
@@ -269,32 +268,30 @@ export const nabScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NAB cần truyền vào thiết bị');
   if (!text) return;
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);
 
-  console.log('2. Start app NAB');
+  console.log('2. Khởi động app NAB...');
   await actionADB({ action: 'startNAB', device_id: data.device_id });
 
   await delay(6000);
   
-  console.log('3. Click Log in');   
-  await actionADB({ action: 'clickLoginNAB', device_id: data.device_id });
-
-  console.log('4. Tab to Password field, input text, then enter twice');
+  console.log('3. Login');   
+  await actionADB({ action: 'clickLoginNAB', device_id: data.device_id });  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });  
-  
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
   await delay(6000); 
 
   // Track NAB app while it is in process  
+  console.log('4. Đang theo dõi NAB...');
   const trackNABPromise = actionADB({ action: 'trackNAB', device_id: data.device_id });
 
-  console.log('5. Select img');
+  console.log('5. Scan QR');  
   await actionADB({ action: 'ScanQRNAB', device_id: data.device_id });
   await delay(3000); 
 
@@ -304,7 +301,7 @@ export const nabScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi NAB đã kết thúc.');
   }
 
-  // console.log('6. Delete all of imgs in device');
+  // console.log('5. Delete all of imgs in device');
   // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
@@ -324,23 +321,24 @@ export const tpbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu TPB cần truyền vào thiết bị');  
   if (!text) return;
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);
 
-  console.log('2. Start app TPB');
+  console.log('2. Khởi động app TPB...');
   await actionADB({ action: 'startTPB', device_id: data.device_id });
   await delay(5000);  
 
-  console.log('3. Scan QR, select img');  
+  console.log('3. Scan QR');  
   await actionADB({ action: 'scanQRTPB', device_id: data.device_id });
   await delay(1500);
 
-  console.log('4. Input password after selecting img, enter');  
+  console.log('4. Login');  
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() }); 
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
 
   // Track TPB while it is in process  
+  console.log('5. Đang theo dõi TPB...'); 
   const trackTPBPromise = actionADB({ action: 'trackTPB', device_id: data.device_id });
   
   // Đợi trackTPB hoàn thành (nếu app TPB bị thoát)
@@ -349,7 +347,7 @@ export const tpbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi TPB đã kết thúc.');
   }
 
-  // console.log('5. Delete all of imgs in /sdcard');
+  // console.log('6. Delete all of imgs in /sdcard');
   // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
@@ -370,11 +368,11 @@ export const vpbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN hoặc mật khẩu', '', 'Nhập mã PIN hoặc mật khẩu VPB cần truyền cho thiết bị');  
   if (!text) return;
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);
 
-  console.log('2. Start app VPB');
+  console.log('2. Khởi động app VPB...');
   await actionADB({ action: 'startVPB', device_id: data.device_id });
   await delay(6000);    
   
@@ -383,12 +381,12 @@ export const vpbScanQR = async (data, setLoading) => {
     console.log('3. Scan QR');  
     await actionADB({ action: 'clickScanQRVPB', device_id: data.device_id });
     await delay(500);
-    console.log('4. Input PIN after selecting img');
+    console.log('4. Login');
     await actionADB({ action: 'inputPINVPB', device_id: data.device_id, text: text.trim() });   
   } else {
     console.log('3. Scan QR');  
     await actionADB({ action: 'clickScanQRVPB2', device_id: data.device_id });
-    console.log('4. Input password after selecting img');
+    console.log('4. Login');
     // Nhập mật khẩu xong 66, 61, 66
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() }); 
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
@@ -398,9 +396,10 @@ export const vpbScanQR = async (data, setLoading) => {
   await delay(6000);  
 
   // Track VPB while it is in process  
+  console.log('5. Đang theo dõi VPB...');
   const trackVPBPromise = actionADB({ action: 'trackVPB', device_id: data.device_id });
 
-  console.log('5. Select img after input PIN');  
+  console.log('6. Đang bắt đầu chọn ảnh sau khi nhập xong PIN / mật khẩu đăng nhập...');  
   await actionADB({ action: 'scanQRVPB', device_id: data.device_id });
 
   // Đợi trackVPB hoàn thành (nếu app VPB bị thoát)
@@ -432,16 +431,16 @@ export const mbScanQR = async (data, setLoading) => {
   // console.log('1. Copy QR images'); 
   // await actionADB({ action: 'copyQRImages', device_id: data.device_id });
 
-  console.log('1. Stop all of apps running');
+  console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000); 
 
-  console.log('2. Start app MB Bank');
+  console.log('2. Khởi động app MB Bank...');
   await actionADB({ action: 'startMB', device_id: data.device_id });
 
   await delay(10000);  
 
-  console.log('3. Input password and login');  
+  console.log('3. Login');  
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
@@ -450,19 +449,20 @@ export const mbScanQR = async (data, setLoading) => {
   await delay(4000);
 
   // Track MB App while it is in process  
+  console.log('4. Đang theo dõi MB Bank...');
   const trackMBPromise = actionADB({ action: 'trackMB', device_id: data.device_id });
 
-  console.log('4. Scan QR');
+  console.log('5. Scan QR');
   await actionADB({ action: 'scanQRMB', device_id: data.device_id });  
   await delay(3000); 
 
-  //Đợi trackMB hoàn thành (nếu app MB Bank bị thoát)
+  // Đợi trackMB hoàn thành (nếu app MB Bank bị thoát)
   const trackResult = await trackMBPromise;
   if (!trackResult) {
     console.log('📢 Theo dõi MB Bank đã kết thúc.');
   }
 
-  // console.log('5. Delete all of imgs in /sdcard');
+  // console.log('6. Delete all of imgs in /sdcard');
   // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
@@ -660,8 +660,6 @@ export const vcbOldClickLogin = async (data, setLoading) => {
   setLoading(false);
 };
 
-// ============== VCB ============== //
-
 export const vcbLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
@@ -844,33 +842,32 @@ export const vietinScanQR = async (data, setLoading) => {
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
 
     // Start app
-    console.log('1. Stop all of apps running');
+    console.log('1. Đang đóng các app đang mở...');
     await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
     await delay(1000);
-    console.log('2. startVTB');
+
+    console.log('2. Khởi động app VTB...');
     await actionADB({ action: 'startVTB', device_id: data.device_id });
     await delay(6000);
     
     // Tab vào ô Scan QR và chọn ảnh .. chọn mã QR thủ công ... xóa luôn ảnh trong thư viện
-    console.log('3. scanQRVTB');
+    console.log('3. scanQR');
     await actionADB({ action: 'scanQRVTB', device_id: data.device_id }); // Chọn ảnh từ trong máy         
     await delay(2000);
 
-    // Tab vào ô mật khẩu
+    console.log('4. Login');  
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-
-    // Nhập mật khẩu và click nút Đăng nhập
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
     await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
     await delay(1000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
     await delay(5000);
 
-    // Click xác nhận
+    console.log('5. Click Next / Confirm');  
     await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
     await delay(12000); // chờ quét mặt hoặc video loading...
     await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text2.trim() });
@@ -939,28 +936,28 @@ export const msbScanQR = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mật khẩu MSB cần truyền vào thiết bị');
   if (!text) return;
 
-  // console.log('1. Copy QR images'); 
-  // await actionADB({ action: 'copyQRImages', device_id: data.device_id });
+  console.log('1. Đang đóng các app đang mở...');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000);  
 
-  console.log('1. Stop app MSB');
-  await actionADB({ action: 'stopMSB', device_id: data.device_id });  
-
-  console.log('2. Start app MSB');
+  console.log('2. Khởi động app MSB...');
   await actionADB({ action: 'startMSB', device_id: data.device_id });
-
   await delay(10000);
+
   // Track MSB App while it is in process  
+  console.log('3. Đang theo dõi MSB...');
+  console.log('Nhưng MSB không cho dump màn hình.');
   const trackMSBPromise = actionADB({ action: 'trackMSB', device_id: data.device_id });
 
-  console.log('3. Scan QR');
+  console.log('4. Scan QR');
   await actionADB({ action: 'clickScanQRMSB', device_id: data.device_id }); 
   await delay(300); 
 
-  console.log('4. Input PIN to login');    
+  console.log('5. Login');    
   await actionADB({ action: 'inputPINMSB', device_id: data.device_id, text: text.trim() });   
   await delay(2000); 
 
-  console.log('5. Select img');
+  console.log('6. Scan QR');
   await actionADB({ action: 'clickSelectImageMSB', device_id: data.device_id });
   await delay(3000);
    
@@ -970,8 +967,8 @@ export const msbScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi MSB đã kết thúc.');
   }
 
-  console.log('6. Delete all of imgs in device');
-  await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  // console.log('7. Delete all of imgs in device');
+  // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -983,19 +980,19 @@ export const shbsahaScanQR = async (data, setLoading) => {
   if (!text) return;
   setLoading(true);
 
-  try {
-    
-    console.log('1. stopAllApps');
-    await actionADB({ action: 'stopAllApps', device_id: data.device_id });     
-    console.log('2. startSHBSAHA');
+  try {    
+    console.log('1. Đang đóng các app đang mở...');
+    await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+    await delay(1000); 
+
+    console.log('2. Khởi động app SHB SAHA...');
     await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
     await delay(5000);
 
     console.log('3. Login');
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // Nhập mật khẩu và đăng nhập
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });    
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
     await delay(500);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
@@ -1003,9 +1000,10 @@ export const shbsahaScanQR = async (data, setLoading) => {
     await delay(5000);
 
     // Track SHB SAHA while it is in process  
+    console.log('4. Đang theo dõi SHB SAHA...');
     const trackSHBSAHAPromise = actionADB({ action: 'trackSHBSAHA', device_id: data.device_id });                
 
-    console.log('4. Scan QR');
+    console.log('5. Scan QR');
     await actionADB({ action: 'scanQRSHBSAHA', device_id: data.device_id });
 
     // Đợi trackSHBSAHA hoàn thành (nếu app SHB SAHA bị thoát)
@@ -1027,16 +1025,17 @@ export const shbsahaLogin = async (data, setLoading) => {
   setLoading(true);
 
   try {
-    // Start app
-    await actionADB({ action: 'stopSHBSAHA', device_id: data.device_id });
+    console.log('1. Đang đóng các app đang mở...');
+    await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+    await delay(1000); 
+
+    console.log('2. Khởi động app SHB SAHA...');
     await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
     await delay(5000);
 
-    // Tab vào ô mật khẩu
+    console.log('3. Login');  
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-
-    // Nhập mật khẩu và click nút Đăng nhập
     await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
     await delay(1000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
@@ -1047,6 +1046,47 @@ export const shbsahaLogin = async (data, setLoading) => {
   } finally {
     setLoading(false);
   }
+};
+
+// ============== BAB ============== //
+export const babScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status === 500) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ BAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu BAB cần truyền vào thiết bị');  
+  if (!text) return;
+
+  console.log('1. Đang đóng các app đang mở...');
+  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await delay(1000); 
+
+  console.log('2. Khởi động app BAB...');
+  await actionADB({ action: 'startBAB', device_id: data.device_id });
+  await delay(6000);
+
+  // // Track BAB while it is in process  
+  // const trackBABAppPromise = actionADB({ action: 'trackBABApp', device_id: data.device_id });
+
+  console.log('3. Scan QR');  
+  await actionADB({ action: 'scanQRBAB', device_id: data.device_id });
+  await delay(500);
+
+  // console.log('4. Login');  
+  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() }); 
+  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  
+  // // Đợi trackBABApp hoàn thành (nếu app BAB bị thoát)
+  // const trackResult = await trackBABAppPromise;
+  // if (!trackResult) {
+  //   console.log('📢 Theo dõi BAB đã kết thúc.');
+  // }
+
+  setLoading(false);
 };
 
 // ============== ABB ============== //
@@ -1109,46 +1149,6 @@ export const shinhanClickLogin = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-
-  setLoading(false);
-};
-
-// ============== BAB ============== //
-export const babScanQR = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
-
-  if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ BAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }  
-
-  setLoading(true);    
-
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu BAB cần truyền vào thiết bị');  
-  if (!text) return;
-
-  console.log('1. Stop app BAB');
-  await actionADB({ action: 'stopBAB', device_id: data.device_id });
-
-  console.log('2. Start app BAB');
-  await actionADB({ action: 'startBAB', device_id: data.device_id });
-  await delay(6000);
-
-  // // Track BAB while it is in process  
-  // const trackBABAppPromise = actionADB({ action: 'trackBABApp', device_id: data.device_id });
-
-  console.log('3. Scan QR, select img');  
-  await actionADB({ action: 'clickSelectImageBAB', device_id: data.device_id });
-  await delay(500);
-
-  // console.log('4. Input password after selecting img, enter');  
-  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() }); 
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
-  
-  // // Đợi trackBABApp hoàn thành (nếu app BAB bị thoát)
-  // const trackResult = await trackBABAppPromise;
-  // if (!trackResult) {
-  //   console.log('📢 Theo dõi BAB đã kết thúc.');
-  // }
 
   setLoading(false);
 };
