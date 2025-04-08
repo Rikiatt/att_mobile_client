@@ -731,55 +731,6 @@ export const vcbNewGetOTP = async (data, setLoading) => {
 
 // ============== VTB ============== //
 
-// export const vietinLogin = async (data, setLoading) => {  
-//   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-//   if (!text) return;
-  
-//   setLoading(true);
-
-//   try {       
-//     const deviceCoordinates = await actionADB({ action: 'checkDeviceVTB', device_id: data.device_id });    
-//     const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
-            
-//     if (deviceCoordinates.status === 500) {
-//       return swalNotification("error", "Thiết bị chưa hỗ trợ VTB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-//     }    
-
-//     if (checkDeviceFHDOrNot.status === 500) {
-//       return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
-//     } 
-    
-//     // Start app
-//     await actionADB({ action: 'stopVTB', device_id: data.device_id });
-//     await actionADB({ action: 'startVTB', device_id: data.device_id });
-//     await delay(8000);
-
-//     // Tab vào ô mật khẩu
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-
-//     // Nhập mật khẩu và click nút Đăng nhập
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-//     await delay(50);
-//     await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
-//     await delay(4000);
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-//     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
-
-//     setLoading(false);
-//   } catch (error) {
-//     swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
-//     console.error(error);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
 // export const vietinConfirm = async (data, setLoading) => {  
 //   try {       
 //     const deviceCoordinates = await actionADB({ action: 'checkDeviceVTB', device_id: data.device_id });    
@@ -873,6 +824,55 @@ export const vietinScanQR = async (data, setLoading) => {
     await actionADB({ action: 'inputPINVTB', device_id: data.device_id, text: text2.trim() });
     await delay(4000);
     await actionADB({ action: 'clickConfirmVTB', device_id: data.device_id });
+
+    setLoading(false);
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+export const vietinLogin = async (data, setLoading) => {  
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+  
+  setLoading(true);
+
+  try {       
+    const deviceCoordinates = await actionADB({ action: 'checkDeviceVTB', device_id: data.device_id });    
+    const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
+            
+    if (deviceCoordinates.status === 500) {
+      return swalNotification("error", "Thiết bị chưa hỗ trợ VTB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    }    
+
+    if (checkDeviceFHDOrNot.status === 500) {
+      return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
+    } 
+    
+    // Start app
+    await actionADB({ action: 'stopVTB', device_id: data.device_id });
+    await actionADB({ action: 'startVTB', device_id: data.device_id });
+    await delay(8000);
+
+    // Tab vào ô mật khẩu
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+    // Nhập mật khẩu và click nút Đăng nhập
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await delay(50);
+    await actionADB({ action: 'inputVTB', device_id: data.device_id, text: text.trim() });
+    await delay(4000);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
 
     setLoading(false);
   } catch (error) {
