@@ -210,12 +210,12 @@ const checkXmlContentMB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+          reason: `Phát hiện có thao tác thủ công khi xuất với MB (id thiết bị: ${device_id})`,
           filePath: localPath 
         });
 
@@ -311,12 +311,12 @@ const checkXmlContentOCB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+          reason: `Phát hiện có thao tác thủ công khi xuất với OCB (id thiết bị: ${device_id})`,
           filePath: localPath 
         });
 
@@ -429,8 +429,7 @@ function extractNodesMB(obj) {
         for (let bank of bankList) {
           if (text.includes(bank)) {
             bin = bankBinMapMB[bank] || bank;
-            foundBank = true;
-            console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+            foundBank = true;            
             return; 
           }
         }
@@ -441,8 +440,7 @@ function extractNodesMB(obj) {
         const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
         if (accountMatch) {
           account_number = accountMatch[0];
-          foundAccount = true;
-          console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
+          foundAccount = true;          
           return;
         }
       }
@@ -452,8 +450,7 @@ function extractNodesMB(obj) {
       if (amountMatch) {
         let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
         if (extractedAmount > maxAmount) {
-          maxAmount = extractedAmount;
-          console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
+          maxAmount = extractedAmount;          
         }
       }
     }
@@ -498,8 +495,7 @@ function extractNodesOCB(obj) {
           for (let bank of bankList) {
             if (text.includes(bank)) {
               bin = bankBinMapOCB[bank] || bank;
-              foundBank = true;
-              console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+              foundBank = true;              
               return;
               }
             }
@@ -519,8 +515,7 @@ function extractNodesOCB(obj) {
 
       // 3️⃣ Lấy số tiền từ đúng thẻ có resource-id="vn.com.ocb.awe:id/edtInput"
       if (typeof node === 'object' && node['resource-id'] === 'vn.com.ocb.awe:id/edtInput' && node.text) {
-        amount = parseInt(node.text.replace(/,/g, ''), 10);
-        console.log(`✅ Tìm thấy số tiền giao dịch chính xác: ${amount}`);
+        amount = parseInt(node.text.replace(/,/g, ''), 10);        
       }
   }
 
@@ -557,8 +552,7 @@ function extractNodesNAB(obj) {
               for (let bank of bankList) {
                   if (text.includes(bank)) {
                       bin = bankBinMapNAB[bank] || bank;
-                      foundBank = true;
-                      console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+                      foundBank = true;                      
                       return; 
                   }
               }
@@ -569,8 +563,7 @@ function extractNodesNAB(obj) {
               const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
               if (accountMatch) {
                   account_number = accountMatch[0];
-                  foundAccount = true;
-                  console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
+                  foundAccount = true;                  
                   return;
               }
           }
@@ -580,8 +573,7 @@ function extractNodesNAB(obj) {
           if (amountMatch) {
               let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
               if (extractedAmount > maxAmount) {
-                  maxAmount = extractedAmount;
-                  console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
+                  maxAmount = extractedAmount;                  
               }
           }
       }
@@ -623,8 +615,7 @@ function extractNodesMSB(obj) {
               for (let bank of bankList) {
                   if (text.includes(bank)) {
                       bin = bankBinMapMSB[bank] || bank;
-                      foundBank = true;
-                      console.log(`🏦 Tìm thấy ngân hàng: ${bin}`);
+                      foundBank = true;                      
                       return; 
                   }
               }
@@ -635,8 +626,7 @@ function extractNodesMSB(obj) {
               const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
               if (accountMatch) {
                   account_number = accountMatch[0];
-                  foundAccount = true;
-                  console.log(`💳 Tìm thấy Số tài khoản: ${account_number}`);
+                  foundAccount = true;                  
                   return;
               }
           }
@@ -646,8 +636,7 @@ function extractNodesMSB(obj) {
           if (amountMatch) {
               let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
               if (extractedAmount > maxAmount) {
-                  maxAmount = extractedAmount;
-                  console.log(`✅ Tìm thấy số tiền giao dịch: ${maxAmount}`);
+                maxAmount = extractedAmount;                  
               }
           }
       }
@@ -867,7 +856,7 @@ const checkXmlContentMSB = async (device_id, localPath) => {
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
+      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`);
 
       console.log('Đóng app MSB');
       await stopMSBApp ( { device_id } );                
@@ -875,12 +864,12 @@ const checkXmlContentMSB = async (device_id, localPath) => {
       await sendTelegramAlert(
         telegramToken,
         chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
       );
 
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
-        reason: `Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+        reason: `Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`,
         filePath: localPath 
       });
 
@@ -914,12 +903,12 @@ const checkXmlContentMSB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+          reason: `Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`,
           filePath: localPath 
         });
 
