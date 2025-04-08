@@ -175,7 +175,7 @@ const checkXmlContentMB = async (device_id, localPath) => {
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
 
@@ -184,9 +184,7 @@ const checkXmlContentMB = async (device_id, localPath) => {
     }
 
     const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesMB(parsed);
-
-    console.log('log extractedData:', extractedData);
+    const extractedData = extractNodesMB(parsed);    
 
     if (extractedData.bin && extractedData.account_number && extractedData.amount) {
       console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
@@ -212,12 +210,12 @@ const checkXmlContentMB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác thủ công',
+          reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath 
         });
 
@@ -287,9 +285,7 @@ const checkXmlContentOCB = async (device_id, localPath) => {
     }
 
     const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesOCB(parsed);
-
-    console.log('log extractedData:', extractedData);
+    const extractedData = extractNodesOCB(parsed);    
 
     if (extractedData.bin && extractedData.account_number && extractedData.amount) {
       console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
@@ -315,12 +311,12 @@ const checkXmlContentOCB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác thủ công',
+          reason: `Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath 
         });
 
@@ -426,9 +422,7 @@ function extractNodesMB(obj) {
 
     if (typeof node === 'string') {
       let text = node.trim();
-      if (!text || text === "false" || text === "true") return;
-
-      console.log(`🔍 Scanning: "${text}"`);
+      if (!text || text === "false" || text === "true") return;      
 
       // 1️⃣ Tìm ngân hàng trước
       if (!bin) {
@@ -497,9 +491,7 @@ function extractNodesOCB(obj) {
 
       if (typeof node === 'string') {
         let text = node.trim();
-        if (!text || text === "false" || text === "true") return;
-
-        console.log(`🔍 Scanning: "${text}"`);
+        if (!text || text === "false" || text === "true") return;        
 
         // 1️⃣ Tìm ngân hàng
         if (!bin) {
@@ -558,9 +550,7 @@ function extractNodesNAB(obj) {
 
       if (typeof node === 'string') {
           let text = node.trim();
-          if (!text || text === "false" || text === "true") return;
-
-          console.log(`🔍 Scanning: "${text}"`);
+          if (!text || text === "false" || text === "true") return;          
 
           // 1️⃣ Tìm ngân hàng trước
           if (!bin) {
@@ -626,9 +616,7 @@ function extractNodesMSB(obj) {
 
       if (typeof node === 'string') {
           let text = node.trim();
-          if (!text || text === "false" || text === "true") return;
-
-          console.log(`🔍 Scanning: "${text}"`);
+          if (!text || text === "false" || text === "true") return;          
 
           // 1️⃣ Tìm ngân hàng trước
           if (!bin) {
@@ -717,7 +705,7 @@ const checkXmlContentNAB = async (device_id, localPath) => {
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
 
@@ -780,7 +768,7 @@ const checkXmlContentTPB = async (device_id, localPath) => {
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name}`,
+          reason: `Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
 
@@ -879,7 +867,7 @@ const checkXmlContentMSB = async (device_id, localPath) => {
     ];
 
     if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log("🚨 Phát hiện có thao tác thủ công!");
+      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
       console.log('Đóng app MSB');
       await stopMSBApp ( { device_id } );                
@@ -887,12 +875,12 @@ const checkXmlContentMSB = async (device_id, localPath) => {
       await sendTelegramAlert(
         telegramToken,
         chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
+        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
       );
 
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
-        reason: 'Phát hiện có thao tác thủ công',
+        reason: `Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
         filePath: localPath 
       });
 
@@ -900,9 +888,7 @@ const checkXmlContentMSB = async (device_id, localPath) => {
     }
 
     const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesMSB(parsed);
-
-    console.log('log extractedData:', extractedData);
+    const extractedData = extractNodesMSB(parsed);    
 
     if (extractedData.bin && extractedData.account_number && extractedData.amount) {
       console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
@@ -928,12 +914,12 @@ const checkXmlContentMSB = async (device_id, localPath) => {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công ${device_id}`
+          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
         );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
-          reason: 'Phát hiện có thao tác thủ công',
+          reason: `Phát hiện có thao tác thủ công khi xuất với MSB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
           filePath: localPath 
         });
 
