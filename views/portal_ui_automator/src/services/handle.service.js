@@ -301,7 +301,7 @@ export const nabScanQR = async (data, setLoading) => {
     console.log('📢 Theo dõi NAB đã kết thúc.');
   }
 
-  // console.log('5. Delete all of imgs in device');
+  // console.log('6. Delete all of imgs in device');
   // await actionADB({ action: 'delImg', device_id: data.device_id }); 
 
   setLoading(false);

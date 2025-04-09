@@ -1363,9 +1363,9 @@ module.exports = {
     await delay(800);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Hamburger-Menu']);
     await delay(800);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Galaxy-Note9']);
-    await delay(700);                 
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Galaxy-Note9']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Recently']);
+    await delay(700);                     
     // await client.shell(device_id, `input swipe 500 1800 500 300`);        
     await delay(700);
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Select-Target-Img']); 
@@ -1502,21 +1502,22 @@ module.exports = {
     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);
     // await delay(500);                  
-    await delay(2000); 
+    await delay(700); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Image']);
     // await delay(1000);   
-    await delay(2000);   
+    await delay(700);   
     if (deviceModel === 'SM-G781') {  // Nếu là S20 FE 5G thì chỉ cần ScanQR, Image, Target-Img
       await delay(500);     
       await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Target-Img']); 
     }
     else {
       await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Hamburger-Menu']);
-      await delay(800);   
+      await delay(700);   
+      // await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Gallery']);
       await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Gallery']);
-      await delay(600);                 
+      await delay(700);                 
       // await client.shell(device_id, `input swipe 500 1800 500 300`);      
-      await delay(1000);
+      await delay(700);
       await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Target-Img']); 
       // await delay(600);
       // await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Finish']);
