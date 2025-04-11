@@ -75,8 +75,7 @@ const getDeviceModel = async (device_id) => {
         let deviceModel = buffer.toString().trim();
 
         // Chỉ lấy dòng model hợp lệ, bỏ qua các dòng lỗi
-        const match = deviceModel.match(/(ONEPLUS A\d{4}|SM-[A-Za-z0-9]+|CPH2565|itel A666L)/);
-        console.log('log match ra:', match);
+        const match = deviceModel.match(/(ONEPLUS A\d{4}|SM-[A-Za-z0-9]+|CPH2565|itel A666L)/);        
         if (match) {
             deviceModel = match[1]; // Chỉ giữ lại model hợp lệ
         } else {
