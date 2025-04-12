@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { eximScanQR } from '../../services/handle.service';
+import { eibScanQR } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleEXIM = ({ item, X, Y, setLoading }) => {
+const HandleEIB = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,7 +19,7 @@ const HandleEXIM = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>EXIM</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>EIB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Start >> ScanQR" arrow>
@@ -28,7 +28,7 @@ const HandleEXIM = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => eximScanQR({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => eibScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
               Quét QR
             </Button>
@@ -39,4 +39,4 @@ const HandleEXIM = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleEXIM;
+export default HandleEIB;

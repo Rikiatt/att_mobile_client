@@ -95,47 +95,47 @@ export const acbScanQR = async (data, setLoading) => {
   setLoading(false);
 };
 
-// ============== EXIM ============== //
+// ============== EIB ============== //
 
-export const eximScanQR = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceEXIM', device_id: data.device_id }); 
+export const eibScanQR = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDeviceEIB', device_id: data.device_id }); 
 
   if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ EXIM", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ EIB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu EXIM cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu EIB cần truyền vào thiết bị');
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
   await delay(1000);
 
-  console.log('2. Khởi động app EXIM...');
-  await actionADB({ action: 'startEXIM', device_id: data.device_id });
+  console.log('2. Khởi động app EIB...');
+  await actionADB({ action: 'startEIB', device_id: data.device_id });
 
   await delay(3500);  
 
   console.log('3. Scan QR');
-  await actionADB({ action: 'scanQREXIM', device_id: data.device_id });   
+  await actionADB({ action: 'scanQREIB', device_id: data.device_id });   
 
   console.log('4. Login');
-  await actionADB({ action: 'clickPasswordFieldEXIM', device_id: data.device_id });   
+  await actionADB({ action: 'clickPasswordFieldEIB', device_id: data.device_id });   
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await delay(4000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track
 
-  // Track EXIM while it is in process 
-  const trackEXIMPromise = actionADB({ action: 'trackEXIM', device_id: data.device_id });
+  // Track EIB while it is in process 
+  const trackEIBPromise = actionADB({ action: 'trackEIB', device_id: data.device_id });
    
-  // Đợi trackEXIMPromise hoàn thành (nếu app EXIM bị thoát)
-  const trackResult = await trackEXIMPromise;
+  // Đợi trackEIBPromise hoàn thành (nếu app EIB bị thoát)
+  const trackResult = await trackEIBPromise;
   if (!trackResult) {
-    console.log('📢 Theo dõi EXIM đã kết thúc.');
+    console.log('📢 Theo dõi EIB đã kết thúc.');
   }
 
   // console.log('5. Delete all of imgs in device');

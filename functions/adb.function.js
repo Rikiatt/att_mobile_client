@@ -11,7 +11,7 @@ const client = adb.createClient({ bin: adbPath });
 
 const coordinatesLoginACB = require('../config/coordinatesLoginACB.json');
 const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
-const coordinatesScanQREXIM = require('../config/coordinatesScanQREXIM.json');
+const coordinatesScanQREIB = require('../config/coordinatesScanQREIB.json');
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
@@ -36,7 +36,7 @@ const ensureDirectoryExists = ( dirPath ) => {
 }
 
 const { isACBRunning } = require('../functions/checkAppBankStatus');
-const { isEXIMRunning } = require('../functions/checkAppBankStatus');
+const { isEIBRunning } = require('../functions/checkAppBankStatus');
 const { isMBRunning } = require('../functions/checkAppBankStatus');
 const { isMSBRunning } = require('../functions/checkAppBankStatus');
 const { isOCBRunning } = require('../functions/checkAppBankStatus');
@@ -385,7 +385,7 @@ const checkXmlContentACB = async (device_id, localPath) => {
   }
 }
 
-const checkXmlContentEXIM = async (device_id, localPath) => {
+const checkXmlContentEIB = async (device_id, localPath) => {
   try {
     const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
     let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
@@ -414,20 +414,20 @@ const checkXmlContentEXIM = async (device_id, localPath) => {
     if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
       const screenName = "Chuyển tiền";
 
-      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với EXIM ở màn hình: ${screenName}`);
+      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName}`);
 
-      console.log('Đóng app EXIM');
-      await stopEXIM({ device_id });
+      console.log('Đóng app EIB');
+      await stopEIB({ device_id });
 
       await sendTelegramAlert(
         telegramToken,
         chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với EXIM ở màn hình: ${screenName} (id thiết bị: ${device_id})`
+        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName} (id thiết bị: ${device_id})`
       );
 
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
-        reason: `Phát hiện có thao tác thủ công khi xuất với EXIM ở màn hình: ${screenName} (id thiết bị: ${device_id})`,
+        reason: `Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName} (id thiết bị: ${device_id})`,
         filePath: localPath
       });
 
@@ -1022,9 +1022,9 @@ async function stopACB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-async function stopEXIM ({ device_id }) {    
+async function stopEIB ({ device_id }) {    
   await client.shell(device_id, 'am force-stop com.vnpay.EximBankOmni');
-  console.log('Đã dừng EXIM');
+  console.log('Đã dừng EIB');
   await delay(500);
   return { status: 200, message: 'Success' };
 }
@@ -1108,16 +1108,16 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  trackEXIM : async ( { device_id } ) => {
+  trackEIB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('🔍 Bắt đầu theo dõi EXIM...');
+    console.log('🔍 Bắt đầu theo dõi EIB...');
 
-    let running = await isEXIMRunning( { device_id } );
+    let running = await isEIBRunning( { device_id } );
 
     if (!running) {
-      console.log("EXIM đang không chạy.");
+      console.log("EIB đang không chạy.");
       return;
     }
         
@@ -1128,9 +1128,9 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentEXIM( device_id, localPath );         
+      await checkXmlContentEIB( device_id, localPath );         
                       
-      running = await isEXIMRunning( { device_id } );
+      running = await isEIBRunning( { device_id } );
     
       if (!running) {            
         console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
@@ -1320,10 +1320,10 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi SHB SAHA...chưa làm được gì thì bị đòi máy chịu luôn');
 
-    // let running = await isEXIMRunning( { device_id } );
+    // let running = await isEIBRunning( { device_id } );
 
     // if (!running) {
-    //   console.log("EXIM đang không chạy.");
+    //   console.log("EIB đang không chạy.");
     //   return;
     // }
         
@@ -1334,9 +1334,9 @@ module.exports = {
     //   const localPath = path.join(targetDir, `${timestamp}.xml`);
     
     //   await dumpXmlToLocal( device_id, localPath );
-    //   // await checkXmlContentEXIM( device_id, localPath );         
+    //   // await checkXmlContentEIB( device_id, localPath );         
                       
-    //   running = await isEXIMRunning( { device_id } );
+    //   running = await isEIBRunning( { device_id } );
     
     //   if (!running) {            
     //     console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
@@ -1408,25 +1408,25 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  scanQREXIM: async ({ device_id }) => {    
-    const coordinatesScanQREXIM = await loadCoordinatesForDeviceScanQREXIM(device_id);
+  scanQREIB: async ({ device_id }) => {    
+    const coordinatesScanQREIB = await loadCoordinatesForDeviceScanQREIB(device_id);
     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['ScanQR']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['ScanQR']);
     await delay(600);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Image']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Image']);
     await delay(600);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Hamburger-Menu']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Hamburger-Menu']);
     await delay(600);   
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Galaxy-Note9']);
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Galaxy-Note9']);
     // "Galaxy-Note9": [92, 800]
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Recently']);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Recently']);
     await delay(600);                 
     // await client.shell(device_id, `input swipe 500 1800 500 300`);          
     // await delay(600);
     // "Select-Target-Img": [92, 2000],
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Select-Target-Img']);     
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Select-Target-Img']);     
     await delay(600);
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Finish']); 
+    // await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Finish']); 
     // await delay(600);
 
     return { status: 200, message: 'Success' };
@@ -1569,10 +1569,10 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  clickPasswordFieldEXIM: async ({ device_id }) => {    
-    const coordinatesScanQREXIM = await loadCoordinatesForDeviceScanQREXIM(device_id);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Password-Field']);      
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREXIM['Password-Field']);
+  clickPasswordFieldEIB: async ({ device_id }) => {    
+    const coordinatesScanQREIB = await loadCoordinatesForDeviceScanQREIB(device_id);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Password-Field']);      
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Password-Field']);
     return { status: 200, message: 'Success' };
   },    
 
@@ -1757,7 +1757,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  stopAppADBEXIM: async ({ device_id }) => {    
+  stopAppADBEIB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vnpay.EximBankOmni');
     console.log('Đã dừng app EximBank EDigi');
@@ -1772,7 +1772,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },  
 
-  startAppADBEXIM: async ({ device_id }) => {    
+  startAppADBEIB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'monkey -p com.vnpay.EximBankOmni -c android.intent.category.LAUNCHER 1');
     console.log('Đang khởi động app Eximbank EDigi');
@@ -1968,14 +1968,14 @@ module.exports = {
     }
   },
 
-  checkDeviceEXIM: async ({ device_id }) => {
+  checkDeviceEIB: async ({ device_id }) => {
     try {
       const deviceModel = await deviceHelper.getDeviceModel(device_id);      
   
-      const deviceCoordinates = coordinatesScanQREXIM[deviceModel];             
+      const deviceCoordinates = coordinatesScanQREIB[deviceModel];             
       
       if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQREXIM found for device model: ${deviceModel}`);
+        console.log(`No coordinatesScanQREIB found for device model: ${deviceModel}`);
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -2532,16 +2532,16 @@ async function loadCoordinatesForDeviceScanQRACB(device_id) {
   }
 };
 
-async function loadCoordinatesForDeviceScanQREXIM(device_id) {
+async function loadCoordinatesForDeviceScanQREIB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
     console.log('deviceModel now:', deviceModel);
 
-    const deviceCoordinates = coordinatesScanQREXIM[deviceModel];
+    const deviceCoordinates = coordinatesScanQREIB[deviceModel];
 
     return deviceCoordinates;
   } catch (error) {
-    console.error(`Error loading coordinatesScanQREXIM for device: ${error.message}`);
+    console.error(`Error loading coordinatesScanQREIB for device: ${error.message}`);
     throw error;
   }
 };

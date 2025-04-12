@@ -42,7 +42,7 @@ import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swal
 import { connect, connectTcpIp, disconnectTcpIp, enter, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleACB from './sections/bank_handle/HandleACB';
-import HandleEXIM from './sections/bank_handle/HandleEXIM';
+import HandleEIB from './sections/bank_handle/HandleEIB';
 import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleNAB from './sections/bank_handle/HandleNAB';
@@ -221,7 +221,7 @@ function App() {
                               }}
                               startIcon={<Launch />}
                             >
-                              Mở thiết bị
+                              Mở máy
                             </Button>
                           </Tooltip>
                         </Grid>
@@ -284,7 +284,7 @@ function App() {
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
                       <HandleACB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleEXIM item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} /> 
