@@ -17,14 +17,14 @@ async function isACBRunning( { device_id } ) {
     }
 }
 
-async function isEXIMRunning({ device_id }) {                 
+async function isEIBRunning({ device_id }) {                 
     try {
         const output = await client.shell(device_id, 'pidof com.vnpay.EximBankOmni')
             .then(adb.util.readAll)
             .then(buffer => buffer.toString().trim());                
         if (output !== '') return true;        
     } catch (error) {
-        console.error("Error checking EXIM app status:", error.message);
+        console.error("Error checking EIB app status:", error.message);
         return false;
     }
 }
@@ -72,7 +72,7 @@ async function isNABRunning( { device_id } ) {
             .then(buffer => buffer.toString().trim());
         if (output !== '') return true;        
     } catch (error) {
-        console.error("Error checking Nam A Bank app status:", error.message);
+        console.error("Got an error when checking NAB app status:", error.message);
         return false;
     }
 }
@@ -101,4 +101,4 @@ async function isVPBRunning( { device_id } ) {
     }
 }
 
-module.exports = { isACBRunning, isEXIMRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning };
+module.exports = { isACBRunning, isEIBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning };
