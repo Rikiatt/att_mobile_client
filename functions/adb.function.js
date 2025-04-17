@@ -18,6 +18,8 @@ const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
 const coordinatesScanQRTPB = require('../config/coordinatesScanQRTPB.json');
 const coordinatesScanQRVPB = require('../config/coordinatesScanQRVPB.json');
 const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
+const coordinatesScanQRMB2 = require('../config/coordinatesScanQRMB2.json');
+const coordinatesScanQRMB3 = require('../config/coordinatesScanQRMB3.json');
 const coordinatesScanQRNCB = require('../config/coordinatesScanQRNCB.json');
 const coordinatesScanQRMSB = require('../config/coordinatesScanQRMSB.json');
 const coordinatesScanQRVTB = require('../config/coordinatesScanQRVTB.json');
@@ -1542,18 +1544,64 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  scanQRMB: async ({ device_id }) => {    
+  scanQRMB: async ({ device_id, localPath }) => {    
     // coordinatesScanQRMB.json
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);    
+    const coordinatesScanQRMB2 = await loadCoordinatesForDeviceScanQRMB2(device_id);    
+    const coordinatesScanQRMB3 = await loadCoordinatesForDeviceScanQRMB3(device_id);    
+
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['ScanQR']);             
     await delay(800);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Image']);
-    await delay(800);       
+    await delay(2000);       
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Hamburger-Menu']);
-    await delay(800);              
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Gallery']);
+    await delay(3000);
+
+    let running = await isMBRunning({ device_id });
+    if (!running) {
+      console.log("MB đang không chạy.");
+      return;
+    } 
+    
+    await clearTempFile({ device_id });
+
+    let selectedCoords = coordinatesScanQRMB;
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    while (running) {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
+
+      await dumpXmlToLocal(device_id, localDumpPath);
+      const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
+
+      const keywordsBase = ["Gần đây", "Hình ảnh", "Tệp tải xuống", "Báo cáo lỗi", "Bộ sưu tập"];
+      const keywordsNote9 = [...keywordsBase.slice(0, 3), "Galaxy Note9", ...keywordsBase.slice(3)];
+
+      if (keywordsNote9.every(kw => xmlContent.includes(kw))) {
+        console.log("🔄 Sử dụng coordinatesScanQRMB3 (Galaxy Note9 detected)");
+        selectedCoords = coordinatesScanQRMB3;
+        break;
+      }
+
+      if (keywordsBase.every(kw => xmlContent.includes(kw))) {
+        console.log("🔄 Sử dụng coordinatesScanQRMB2 (màn hình chứa Bộ sưu tập)");
+        selectedCoords = coordinatesScanQRMB2;
+        break;
+      }
+
+      // running = await isMBRunning({ device_id });
+
+      // if (!running) {
+      //   console.log('🚫 MB Bank đã tắt. Dừng theo dõi.');
+      //   await clearTempFile({ device_id });
+      //   return false;
+      // }
+    }
+    
+    await adbHelper.tapXY(device_id, ...selectedCoords['Gallery']);
     await delay(800);                                               
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Target-Img']); 
+    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);
+    console.log('log ...test:', ...selectedCoords['Gallery']); 
 
     return { status: 200, message: 'Success' };
   }, 
@@ -1684,20 +1732,28 @@ module.exports = {
 
   scanQRVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+    console.log('Device Model:', deviceModel);
         
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ScanQR']); 
     await sleep(600); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Image']);  
     await sleep(800);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Hamburger-Menu']);
-    await delay(800);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ONEPLUS A5010']); // = Galaxy Note9
-    await delay(700);                     
-	  await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(700);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Img']); 
-    await delay(700);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Finish']); 
+    if (deviceModel === 'SM-N960') {  // Nếu là S20 FE 5G thì chỉ cần Target-Img ở đây
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Img']);             
+    }
+    else {      
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Hamburger-Menu']);
+      await delay(800);   
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ONEPLUS A5010']); // = Galaxy Note9
+      await delay(700);                     
+      await client.shell(device_id, `input swipe 500 1800 500 300`);
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Img']); 
+      await delay(700);      
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Finish']);
+    }
+     
 
     return { status: 200, message: 'Success' };
   },
@@ -2245,21 +2301,18 @@ module.exports = {
       if (isUpperCase(char)) {
         await adbHelper.tapXY(device_id, ...coordinatesLoginVTB['CapsLock']);
         await sleep(50); 
-        await adbHelper.tapXY(device_id, ...coordinatesLoginVTB[char]);
-        console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
+        await adbHelper.tapXY(device_id, ...coordinatesLoginVTB[char]);        
         await sleep(50);
       }
       else if (isSpecialChar(char)) {
         await adbHelper.tapXY(device_id, ...coordinatesLoginVTB['!#1']);
         await sleep(50); 
-        await adbHelper.tapXY(device_id, ...coordinatesLoginVTB[char]);
-        console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
+        await adbHelper.tapXY(device_id, ...coordinatesLoginVTB[char]);        
         await sleep(50); 
         await adbHelper.tapXY(device_id, ...coordinatesLoginVTB['ABC']);
       }        
       else {
-        await adbHelper.tapXY(device_id, ...coordinatesLoginVTB[char.toLowerCase()]);
-        console.log('log ...coordinatesLoginVTB[char]', ...coordinatesLoginVTB[char]);    
+        await adbHelper.tapXY(device_id, ...coordinatesLoginVTB[char.toLowerCase()]);        
       }
               
       await sleep(50); 
@@ -2487,6 +2540,34 @@ async function loadCoordinatesForDeviceScanQRMB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesScanQRMB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRMB2(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRMB2[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRMB2 for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRMB3(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('deviceModel now:', deviceModel);
+
+    const deviceCoordinates = coordinatesScanQRMB3[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRMB2 for device: ${error.message}`);
     throw error;
   }
 };
