@@ -556,7 +556,11 @@ export const bidvLogin = async (data, setLoading) => {
 
   try {
     // Start app
-    await actionADB({ action: 'stopBIDV', device_id: data.device_id });
+    console.log('1. Đang đóng các app đang mở...');
+    await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+    await delay(1000);
+
+    console.log('2. Đang khởi động BIDV...');
     await actionADB({ action: 'startBIDV', device_id: data.device_id });
     await delay(8000);
 
