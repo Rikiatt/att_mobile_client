@@ -604,7 +604,7 @@ export const bidvScanQR = async (data, setLoading) => {
     // Click vào ô Scan QR  (540, 2125)
     await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
     setLoading(true);
-    await delay(10000);
+    await delay(1200);
 
     // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
     await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
