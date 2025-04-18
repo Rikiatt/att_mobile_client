@@ -1052,7 +1052,7 @@ module.exports = {
   stopAllApps: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
     await delay(1000);
-    await client.shell(device_id, 'input swipe 500 1500 540 540 300');
+    await client.shell(device_id, 'input swipe 540 1695 540 150 300'); // input swipe <x1> <y1> <x2> <y2> <duration>
     console.log('Đã đóng tất cả các app đang mở');
     await delay(200);
     return { status: 200, message: 'Success' };
