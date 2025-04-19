@@ -1,3 +1,2 @@
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run chr(34) & "C:\att_mobile_client\auto_kill_vysor.bat" & Chr(34), 0
-Set WshShell = Nothing
+Set UAC = CreateObject("Shell.Application")
+UAC.ShellExecute "C:\att_mobile_client\auto_kill_vysor.bat", "", "", "runas", 0

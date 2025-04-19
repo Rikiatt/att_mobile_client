@@ -986,14 +986,6 @@ async function stopNAB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-async function stopBAB ({ device_id }) {    
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop com.bab.retailUAT');
-  console.log('Dừng luôn app BAB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
 async function stopTPB ({ device_id }) {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
