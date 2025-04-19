@@ -1430,7 +1430,7 @@ module.exports = {
     await client.shell(device_id, `input swipe 500 1800 500 300`);
     await delay(600);                 
     await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Select-Target-Img']);     
-    await delay(600);
+    await delay(1200);
 
     return { status: 200, message: 'Success' };
   },

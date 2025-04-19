@@ -4,7 +4,7 @@
         "Image": [999, 126],
         "Hamburger-Menu": [92, 154],  
         "Recently": [92, 288],                                        
-        "Select-Target-Img": [92, 455],
+        "Select-Target-Img": [200, 455],
         "Finish": [880, 150],
         "Password-Field": [540, 811]
     }
