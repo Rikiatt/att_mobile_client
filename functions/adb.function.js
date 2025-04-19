@@ -1427,6 +1427,8 @@ module.exports = {
     await delay(600);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Recently']);
     await delay(600);                 
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(600);                 
     await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Select-Target-Img']);     
     await delay(600);
 
