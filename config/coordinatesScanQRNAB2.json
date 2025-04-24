@@ -1,15 +1,9 @@
 {
-    "SM-G781": {
-        "ScanQR": [947, 1469],         
-        "Image": [477, 1707],        
-        "Target-Img": [162, 738]
-    },
-
     "SM-N960": {
         "ScanQR": [947, 1469],         
         "Image": [477, 1858],   
         "Hamburger-Menu": [92, 155],      
-        "Gallery": [92, 1020],     
+        "Gallery": [92, 1175],     
         "Target-Img": [133, 838]
     }
 }

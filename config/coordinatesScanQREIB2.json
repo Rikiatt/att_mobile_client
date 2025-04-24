@@ -3,8 +3,8 @@
         "ScanQR": [666, 1111],
         "Image": [999, 126],
         "Hamburger-Menu": [92, 154],  
-        "Galaxy-Note9": [92, 795],                                        
-        "Target-Img": [92, 1997],
+        "Galaxy-Note9": [92, 575],                                        
+        "Target-Img": [214, 390],
         "Finish": [880, 150],
         "Password-Field": [540, 811]
     }

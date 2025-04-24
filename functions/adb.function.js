@@ -5,16 +5,17 @@ const path = require('path');
 const { delay } = require('../helpers/functionHelper');
 const { escapeSpecialChars, removeVietnameseStr } = require('../utils/string.util');
 const xml2js = require('xml2js');
-
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
 const coordinatesLoginACB = require('../config/coordinatesLoginACB.json');
 const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
 const coordinatesScanQREIB = require('../config/coordinatesScanQREIB.json');
+const coordinatesScanQREIB2 = require('../config/coordinatesScanQREIB2.json');
 const coordinatesLoginVTB = require('../config/coordinatesLoginVTB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
+const coordinatesScanQRNAB2 = require('../config/coordinatesScanQRNAB2.json');
 const coordinatesScanQRTPB = require('../config/coordinatesScanQRTPB.json');
 const coordinatesScanQRVPB = require('../config/coordinatesScanQRVPB.json');
 const coordinatesScanQRMB = require('../config/coordinatesScanQRMB.json');
@@ -31,30 +32,27 @@ const coordinatesScanQRSHBSAHA = require('../config/coordinatesScanQRSHBSAHA.jso
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
+const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
+  isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning
+} = require('../functions/bankStatus.function');
+
 const ensureDirectoryExists = ( dirPath ) => {
   if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
+    fs.mkdirSync(dirPath, { recursive: true });
   }
 }
 
-const { isACBRunning } = require('../functions/checkAppBankStatus');
-const { isEIBRunning } = require('../functions/checkAppBankStatus');
-const { isMBRunning } = require('../functions/checkAppBankStatus');
-const { isMSBRunning } = require('../functions/checkAppBankStatus');
-const { isOCBRunning } = require('../functions/checkAppBankStatus');
-const { isNABRunning } = require('../functions/checkAppBankStatus');
-const { isTPBRunning } = require('../functions/checkAppBankStatus');
-const { isVPBRunning } = require('../functions/checkAppBankStatus');
+const { checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB } = require('../functions/checkBank.function');
 
 const { qrDevicePath, filename } = require('../functions/endpoint');
 
 async function clearTempFile( { device_id } ) {
-  try {            
-      await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
-      await delay(1000);
-      console.log('Clear temp file successfully!');
+  try {                
+    await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
+    await delay(1000);
+    console.log('Clear temp file successfully!');
   } catch (error) {
-      console.error("Cannot delete file temp_dump.xml:", error.message);
+    console.error("Cannot delete file temp_dump.xml:", error.message);
   }
 }
 
@@ -76,52 +74,6 @@ async function dumpXmlToLocal ( device_id, localPath ) {
   }
 }
 
-async function clickBoundsFromXmlText(device_id, bounds) {
-  console.log('alo...');
-  // bounds dạng: "[left,top][right,bottom]"
-  const match = bounds.match(/\[(\d+),(\d+)]\[(\d+),(\d+)]/);
-  if (!match) return;
-
-  const [ , left, top, right, bottom ] = match.map(Number);
-  const x = Math.floor((left + right) / 2);
-  const y = Math.floor((top + bottom) / 2);
-
-  // await client.shell(device_id, `input tap ${x} ${y}`);
-  await client.shell(device_id, `input tap 92 457`);
-}
-
-const jsonFilePath = "C:\\att_mobile_client\\database\\info-qr.json";
-
-// Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng MB Bank
-const bankBinMapMB = {
-    "Asia (ACB)": "970416",
-    "Vietnam Foreign Trade (VCB)": "970436",
-    "Vietnam Industry and Trade (VIETINBANK)": "970415",
-    "Technology and Trade (TCB)": "970407",
-    "Investment and development (BIDV)": "970418",
-    "Military (MB)": "970422",
-    "NCB": "970419",
-    
-    "Á Châu (ACB)": "970416",
-    "Ngoại thương Việt Nam (VCB)": "970436",
-    "Công Thương Việt Nam (VIETINBANK)": "970415",
-    "Kỹ Thương (TCB)": "970407",
-    "Đầu tư và phát triển (BIDV)": "970418",
-    "Quân đội (MB)": "970422",
-    "Quốc Dân (NCB)": "970419"
-};
-
-// Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng OCB
-const bankBinMapOCB = {
-  "Asia (ACB)": "970416",
-  "Vietnam Foreign Trade (VCB)": "970436",
-  "Vietinbank (Vietnam Joint Stock Commercial Bank for Industry and Trade)": "970415", "Ngân hàng TMCP Công Thương Việt Nam": "970415",  
-  "Technology and Trade (TCB)": "970407",
-  "Investment and development (BIDV)": "970418", "Ngân hàng TMCP Đầu Tư và Phát Triển Việt Nam": "970418",
-  "Military (MB)": "970422", "Ngân hàng TMCP Quân Đội": "970422",
-  "NCB": "970419", "Ngân hàng TMCP Quốc Dân": "970419"  
-};
-
 // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng NAB
 const bankBinMapNAB = {
   // chưa xong
@@ -131,457 +83,6 @@ const bankBinMapNAB = {
 const bankBinMapMSB = {
   // chưa xong
 };
-
-const compareData = (xmlData, jsonData) => {
-    let differences = [];
-    if (xmlData.bin !== jsonData.bin) differences.push(`BIN khác: XML(${xmlData.bin}) ≠ JSON(${jsonData.bin})`);
-    if (xmlData.account_number !== String(jsonData.account_number)) differences.push(`Số tài khoản khác: XML(${xmlData.account_number}) ≠ JSON(${jsonData.account_number})`);
-    if (Number(xmlData.amount) !== Number(jsonData.amount)) differences.push(`Số tiền khác: XML(${xmlData.amount}) ≠ JSON(${jsonData.amount})`);
-    return differences;
-};
-
-const checkXmlContentMB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ", "Truy vấn giao dịch giá trị lớn", "Đối tác MB", "Chuyển tiền"],
-        en: ["Account", "Phone number", "Card", "Large-value transaction inquiry", "MB partner", "Transfer"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => content.includes(kw)) ||
-        screen.en.every(kw => content.includes(kw))
-      ) {
-        console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`);
-
-        console.log('Đóng app MB');
-        await stopMB({ device_id });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }
-
-    const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesMB(parsed);    
-
-    if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-      console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
-
-      let jsonData = {};
-      if (fs.existsSync(jsonFilePath)) {
-        try {        
-          const rawData = fs.readFileSync(jsonFilePath, "utf8");
-          jsonData = JSON.parse(rawData).data || {};        
-        } catch (error) {          
-          console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-          jsonData = {};          
-        }
-      }
-
-      const differences = compareData(extractedData, jsonData);
-      if (differences.length > 0) {
-        console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
-
-        console.log('Dừng luôn app MB Bank');
-        await stopMB ( { device_id } );          
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với MB (id thiết bị: ${device_id})`,
-          filePath: localPath 
-        });
-
-        return true;
-      } else {
-        console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-        return false;
-      }
-    }    
-  } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-}
-
-const checkXmlContentOCB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Chuyển tiền", "Trong OCB", "Ngân hàng khác", "Đến số thẻ", "Xem tất cả", "Chuyển gần đây"],
-        en: ["Transfer money", "Within OCB", "Interbank", "To card number", "See all", "Recent transferred"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => content.includes(kw)) ||
-        screen.en.every(kw => content.includes(kw))
-      ) {
-        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);        
-
-        console.log('Đóng app OCB');
-        await stopOCB({ device_id });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }
-
-    const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesOCB(parsed);    
-
-    if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-      console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
-
-      let jsonData = {};
-      if (fs.existsSync(jsonFilePath)) {
-        try {        
-          const rawData = fs.readFileSync(jsonFilePath, "utf8");
-          jsonData = JSON.parse(rawData).data || {};        
-        } catch (error) {          
-          console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-          jsonData = {};          
-        }
-      }
-
-      const differences = compareData(extractedData, jsonData);
-      if (differences.length > 0) {
-        console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
-
-        console.log('Đóng app OCB OMNI');
-        await stopOCB ( { device_id } );          
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với OCB (id thiết bị: ${device_id})`,
-          filePath: localPath 
-        });
-
-        return true;
-      } else {
-        console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-        return false;
-      }
-    }   
-  } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-}
-
-const checkXmlContentACB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Chuyển tiền", "Chuyển tiền đến", "Tài khoản ngân hàng", "Thẻ ngân hàng", "CMND / Hộ chiếu", "Số điện thoại"],
-        en: ["Transfer", "Transfer to", "Bank account", "Bank card", "ID / Passport", "Cellphone number"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => content.includes(kw)) ||
-        screen.en.every(kw => content.includes(kw))
-      ) {
-        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
-
-        console.log('Đóng app ACB');
-        await stopACB({ device_id });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }
-       
-  } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-}
-
-const checkXmlContentEIB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    // Đọc file config để xác định chatId phù hợp
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    // Đọc nội dung XML đã dump ra
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    // Kiểm tra hai resource-id đặc trưng của màn hình cần bắt
-    const hasCollapsingToolbarMenuTransfer = content.includes('resource-id="com.vnpay.EximBankOmni:id/collapsingToolbarMenuTransfer"');
-    const hasBtnMenuTransferAddForm = content.includes('resource-id="com.vnpay.EximBankOmni:id/btnMenuTransferAddForm"');
-
-    if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
-      const screenName = "Chuyển tiền";
-
-      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName}`);
-
-      console.log('Đóng app EIB');
-      await stopEIB({ device_id });
-
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName} (id thiết bị: ${device_id})`
-      );
-
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName} (id thiết bị: ${device_id})`,
-        filePath: localPath
-      });
-
-      return;
-    }
-
-  } catch (error) {
-    console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-}
-
-function extractNodesMB(obj) {
-  let bin = null, account_number = null, amount = null;
-  const bankList = [
-    "Asia (ACB)", "Á Châu (ACB)", 
-    "Vietnam Foreign Trade (VCB)", "Ngoại thương Việt Nam (VCB)", 
-    "Vietnam Industry and Trade (VIETINBANK)", "Công Thương Việt Nam (VIETINBANK)",
-    "Technology and Trade (TCB)", "Kỹ Thương (TCB)", 
-    "Investment and development (BIDV)", "Đầu tư và phát triển (BIDV)", 
-    "Military (MB)", "Quân đội (MB)", 
-    "NCB", "Quốc Dân (NCB)"
-  ];
-  
-  let foundBank = false; 
-  let foundAccount = false;
-  let maxAmount = 0;
-
-  function traverse(node) {
-    if (!node) return;
-
-    if (typeof node === 'object') {
-      for (let key in node) {
-        traverse(node[key]);
-      }
-    }
-
-    if (typeof node === 'string') {
-      let text = node.trim();
-      if (!text || text === "false" || text === "true") return;      
-
-      // 1️⃣ Tìm ngân hàng trước
-      if (!bin) {
-        for (let bank of bankList) {
-          if (text.includes(bank)) {
-            bin = bankBinMapMB[bank] || bank;
-            foundBank = true;            
-            return; 
-          }
-        }
-      }
-
-      // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
-      if (foundBank && !account_number) {
-        const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
-        if (accountMatch) {
-          account_number = accountMatch[0];
-          foundAccount = true;          
-          return;
-        }
-      }
-
-      // 3️⃣ Tìm số tiền giao dịch lớn nhất
-      const amountMatch = text.match(/^\d{1,3}(?:,\d{3})*$/);
-      if (amountMatch) {
-        let extractedAmount = parseInt(amountMatch[0].replace(/,/g, ''), 10); // Bỏ dấu `,` và convert thành số
-        if (extractedAmount > maxAmount) {
-          maxAmount = extractedAmount;          
-        }
-      }
-    }
-  }
-
-  traverse(obj);
-  amount = maxAmount;
-
-  return { bin, account_number, amount };
-}
-
-function extractNodesOCB(obj) {
-  let bin = null, account_number = null, amount = null;
-  const bankList = [
-    "ACB (Asia Commercial Bank)", "Ngân hàng TMCP Á Châu", 
-    "Vietcombank (Bank for Foreign Trade of Vietnam)", "Ngân hàng TMCP Ngoại Thương Việt Nam", 
-    "Vietinbank (Vietnam Joint Stock Commercial Bank for Industry and Trade)", "Ngân hàng TMCP Công Thương Việt Nam",
-    "Techcombank (Vietnam Technological and Commercial Joint Stock Bank)", "Ngân hàng TMCP Kỹ Thương Việt Nam", 
-    "BIDV (Bank for Investment and Development of Vietnam)", "Ngân hàng TMCP Đầu Tư và Phát Triển Việt Nam", 
-    "Military Commercial Joint Stock Bank", "Ngân hàng TMCP Quân Đội", 
-    "National Citizen Bank", "Ngân hàng TMCP Quốc Dân"
-  ];
-
-  let foundBank = false;
-  let foundAccount = false;
-
-  function traverse(node) {
-      if (!node) return;
-
-      if (typeof node === 'object') {
-          for (let key in node) {
-              traverse(node[key]);
-          }
-      }
-
-      if (typeof node === 'string') {
-        let text = node.trim();
-        if (!text || text === "false" || text === "true") return;        
-
-        // 1️⃣ Tìm ngân hàng
-        if (!bin) {
-          for (let bank of bankList) {
-            if (text.includes(bank)) {
-              bin = bankBinMapOCB[bank] || bank;
-              foundBank = true;              
-              return;
-              }
-            }
-          }
-
-          // 2️⃣ Tìm số tài khoản (chỉ tìm sau khi đã tìm thấy ngân hàng)
-          if (foundBank && !account_number) {
-              const accountMatch = text.match(/\b\d{6,}\b/); // Tìm số tài khoản (ít nhất 6 số)
-              if (accountMatch) {
-                account_number = accountMatch[0];
-                foundAccount = true;
-                console.log(`💳 Tìm thấy số tài khoản: ${account_number}`);
-                return;
-              }
-          }
-      }
-
-      // 3️⃣ Lấy số tiền từ đúng thẻ có resource-id="vn.com.ocb.awe:id/edtInput"
-      if (typeof node === 'object' && node['resource-id'] === 'vn.com.ocb.awe:id/edtInput' && node.text) {
-        amount = parseInt(node.text.replace(/,/g, ''), 10);        
-      }
-  }
-
-  traverse(obj);
-  return { bin, account_number, amount };
-}
 
 // chưa xong
 function extractNodesNAB(obj) {
@@ -708,195 +209,8 @@ function extractNodesMSB(obj) {
   return { bin, account_number, amount };
 }
 
-const checkXmlContentNAB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Tài khoản", "Thẻ", "Quét QR", "Chuyển tiền quốc tế", "Danh bạ &#10; người nhận", "Danh sách &#10; lịch chuyển tiền"],
-        en: ["Account", "Card", "QR code", "International payments", "Danh bạ &#10; người nhận", "Danh sách &#10; lịch chuyển tiền"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => content.includes(kw)) ||
-        screen.en.every(kw => content.includes(kw))
-      ) {
-        console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name}`);
-
-        console.log('Đóng app NAB');
-        await stopNAB({ device_id });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name} (${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }   
-  } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-};
-
-const checkXmlContentTPB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền/Chatpay",                
-        vi: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"],
-        en: ["Chuyển tiền ChatPay", "Người Nhận Mới - Trong TPBank", "Người Nhận Mới - Liên Ngân Hàng/Thẻ", "Dán Thông Tin Chuyển Tiền"] 
-      },
-      { // giao diện này nó không cho dump
-        name: "Chuyển tiền",                
-        vi: ["Chuyển tiền", "Từ tài khoản", "Chuyển đến", "Trong TPBank", "Liên Ngân Hàng", "Thẻ ATM"],
-        en: ["Chuyển tiền", "Từ tài khoản", "Chuyển đến", "Trong TPBank", "Liên Ngân Hàng", "Thẻ ATM"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => content.includes(kw)) ||
-        screen.en.every(kw => content.includes(kw))
-      ) {
-        console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name}`);
-
-        console.log('Đóng app TPB');
-        await stopTPB({ device_id });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }
-
-    // scan QR xong >> chi co the edit duoc description => khong can extract data o day nua.           
-  } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-};
-
-const checkXmlContentVPB = async (device_id, localPath) => {
-  try {
-    const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-    let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContent);
-
-      if (jsonData.data?.site === 'new88') {
-        chatId = '-4607954489';
-      }
-    } catch (error) {
-      console.error('❌ Lỗi khi đọc file info-qr.json:', error);
-      return;
-    }
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"],
-        en: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"]
-      },
-
-      {
-        name: "Chuyển đến số tài khoản",
-        vi: ["Chuyển đến số tài khoản", "Tài khoản nguồn", "Thông tin người nhận", "Chọn ngân hàng"],
-        en: ["Chuyển đến số tài khoản", "Tài khoản nguồn", "Thông tin người nhận", "Chọn ngân hàng"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => content.includes(kw)) ||
-        screen.en.every(kw => content.includes(kw))
-      ) {
-        console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
-
-        console.log('Đóng app VPB');
-        await stopVPB({ device_id });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }   
-  } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
-  }
-};
-
 // chưa xong
-const checkXmlContentMSB = async (device_id, localPath) => {
+const checkContentMSB = async (device_id, localPath) => {
   try {
     const chatId = '-4725254373';
     const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
@@ -978,61 +292,9 @@ const checkXmlContentMSB = async (device_id, localPath) => {
   }
 }
 
-async function stopNAB ({ device_id }) {    
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
-  console.log('Dừng luôn app NAB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopTPB ({ device_id }) {    
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
-  console.log('Dừng luôn app TPB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopVPB ({ device_id }) {    
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
-  console.log('Dừng luôn app VPB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopMB ({ device_id }) {    
-  await client.shell(device_id, 'am force-stop com.mbmobile');
-  console.log('Đã dừng app MB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopOCB ({ device_id }) {    
-  await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
-  console.log('Đã dừng app OCB OMNI');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
 async function stopMSB ({ device_id }) {    
   await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
   console.log('Đã dừng app MSB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopACB ({ device_id }) {    
-  await client.shell(device_id, 'am force-stop mobile.acb.com.vn');
-  console.log('Đã dừng app ACB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopEIB ({ device_id }) {    
-  await client.shell(device_id, 'am force-stop com.vnpay.EximBankOmni');
-  console.log('Đã dừng EIB');
   await delay(500);
   return { status: 200, message: 'Success' };
 }
@@ -1041,53 +303,36 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
-  stopAllApps: async ({ device_id }) => {    
+  closeAll: async ({ device_id }) => {       
+    const deviceModel = await deviceHelper.getDeviceModel(device_id); 
+
     await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
     await delay(1000);
-    await client.shell(device_id, 'input swipe 540 1695 540 150 300'); // input swipe <x1> <y1> <x2> <y2> <duration>
-    console.log('Đã đóng tất cả các app đang mở');
-    await delay(200);
-    return { status: 200, message: 'Success' };
-  },
 
-  trackOCB : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi OCB...');
-
-    let running = await isOCBRunning( { device_id } );
-
-    if (!running) {
-      console.log("OCB đang không chạy.");
-      return;
+    if (deviceModel === "ONEPLUS A5010") {
+      // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
+      await client.shell(device_id, 'input swipe 540 1080 2182 1080 100'); 
+      await delay(500);
+      await client.shell(device_id, 'input tap 200 1000');
+      console.log('Đã đóng tất cả các app đang mở');      
     }
+    else {
+      await client.shell(device_id, 'input tap 540 1750'); // Click "Close all", for example: Note9
+      console.log('Đã đóng tất cả các app đang mở');      
+    }        
         
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentOCB( device_id, localPath );   
-                      
-      running = await isOCBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 OCB OMNI đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
     return { status: 200, message: 'Success' };
-  },
+  },  
 
   trackACB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
     console.log('🔍 Bắt đầu theo dõi ACB...');
+
+    // Click "CLOSE" to close UTILITIES SETTING
+    // await client.shell(device_id, 'input tap 540 900');      
+    await client.shell(device_id, 'input tap 787 1242');  
 
     let running = await isACBRunning( { device_id } );
 
@@ -1103,7 +348,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentACB( device_id, localPath );                
+      await checkContentACB( device_id, localPath );                
     
       running = await isACBRunning( { device_id } );
     
@@ -1136,12 +381,45 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentEIB( device_id, localPath );         
+      await checkContentEIB( device_id, localPath );         
                       
       running = await isEIBRunning( { device_id } );
     
       if (!running) {            
         console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
+        await clearTempFile( { device_id } );      
+        return false;          
+      }
+    }
+    return { status: 200, message: 'Success' };
+  },
+
+  trackOCB : async ( { device_id } ) => {
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+    ensureDirectoryExists(targetDir);
+
+    console.log('🔍 Bắt đầu theo dõi OCB...');
+
+    let running = await isOCBRunning( { device_id } );
+
+    if (!running) {
+      console.log("OCB đang không chạy.");
+      return;
+    }
+        
+    await clearTempFile( { device_id } );
+    
+    while (running) {      
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+    
+      await dumpXmlToLocal( device_id, localPath );
+      await checkContentOCB( device_id, localPath );   
+                      
+      running = await isOCBRunning( { device_id } );
+    
+      if (!running) {            
+        console.log('🚫 OCB OMNI đã tắt. Dừng theo dõi.');
         await clearTempFile( { device_id } );      
         return false;          
       }
@@ -1169,7 +447,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentNAB( device_id, localPath );                   
+      await checkContentNAB( device_id, localPath );                   
     
       running = await isNABRunning( { device_id } );
     
@@ -1202,7 +480,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentTPB( device_id, localPath );                   
+      await checkContentTPB( device_id, localPath );                   
     
       running = await isTPBRunning( { device_id } );
     
@@ -1235,7 +513,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentVPB( device_id, localPath );                   
+      await checkContentVPB( device_id, localPath );                   
     
       running = await isVPBRunning( { device_id } );
     
@@ -1268,7 +546,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentMB( device_id, localPath );                
+      await checkContentMB( device_id, localPath );                
     
       running = await isMBRunning( { device_id } );
     
@@ -1309,7 +587,7 @@ module.exports = {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
     
       await dumpXmlToLocal( device_id, localPath );
-      await checkXmlContentMSB( device_id, localPath );                       
+      await checkContentMSB( device_id, localPath );                       
     
       running = await isMSBRunning( { device_id } );
     
@@ -1328,30 +606,6 @@ module.exports = {
 
     console.log('🔍 Bắt đầu theo dõi SHB SAHA...chưa làm được gì thì bị đòi máy chịu luôn');
 
-    // let running = await isEIBRunning( { device_id } );
-
-    // if (!running) {
-    //   console.log("EIB đang không chạy.");
-    //   return;
-    // }
-        
-    // await clearTempFile( { device_id } );
-    
-    // while (running) {      
-    //   const timestamp = Math.floor(Date.now() / 1000).toString();
-    //   const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-    //   await dumpXmlToLocal( device_id, localPath );
-    //   // await checkXmlContentEIB( device_id, localPath );         
-                      
-    //   running = await isEIBRunning( { device_id } );
-    
-    //   if (!running) {            
-    //     console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
-    //     await clearTempFile( { device_id } );      
-    //     return false;          
-    //   }
-    // }
     return { status: 200, message: 'Success' };
   },
 
@@ -1408,30 +662,77 @@ module.exports = {
     // await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
     // await delay(500);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['ScanQR']);
-    await delay(500);                  
+    await delay(600);                  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Image']);           
-    await delay(500); 
+    await delay(600); 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Target-Img']);     
 
     return { status: 200, message: 'Success' };
   },
 
-  scanQREIB: async ({ device_id }) => {    
-    const coordinatesScanQREIB = await loadCoordinatesForDeviceScanQREIB(device_id);
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['ScanQR']);
-    await delay(600);                  
+  scanQREIB: async ({ device_id, localPath }) => {
+    const coordinatesScanQREIB = await loadCoordinatesForDeviceScanQREIB(device_id);    
+    const coordinatesScanQREIB2 = await loadCoordinatesForDeviceScanQREIB2(device_id);         
+  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['ScanQR']);             
+    await delay(600);  
     await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Image']);
-    await delay(600);   
+    await delay(600);      
     await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Hamburger-Menu']);
-    await delay(600);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Recently']);
+    await delay(600);
+  
+    let running = await isEIBRunning({ device_id });
+    if (!running) {
+      console.log("EIB đang không chạy.");
+      return;
+    } 
+    
+    await clearTempFile({ device_id });
+  
+    let selectedCoords = coordinatesScanQREIB;
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+      
+    const keywordMap = {
+      recent: ["Recent", "Gần đây"],
+      images: ["Images", "Hình ảnh"],
+      downloads: ["Downloads", "Tệp tải xuống"],
+      galaxyNote9: ["Galaxy Note9"]  
+    };
+  
+    while (running) {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
+  
+      await dumpXmlToLocal(device_id, localDumpPath);
+      const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
+        
+      const containsAllKeywords = (keys) => {
+        return keys.every(key =>
+          keywordMap[key].some(kw => xmlContent.includes(kw))
+        );
+      };
+  
+      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9'])) {
+        console.log("🔄 Sử dụng coordinatesScanQREIB.json (màn hình có mục Downloads)");
+        selectedCoords = coordinatesScanQREIB;
+        break;
+      }
+  
+      if (containsAllKeywords(['recent', 'downloads', 'galaxyNote9'])) {
+        console.log("🔄 Sử dụng coordinatesScanQREIB2.json (màn hình không có mục Downloads)");
+        selectedCoords = coordinatesScanQREIB2;
+        break;
+      }
+    }
+  
+    await adbHelper.tapXY(device_id, ...selectedCoords['Galaxy-Note9']);
     await delay(600);                 
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(600);                 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Select-Target-Img']);     
-    await delay(1200);
-
+    await client.shell(device_id, `input swipe 500 1800 500 300`);                                               
+    await delay(600); 
+    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);    
+    await delay(600);
+    await adbHelper.tapXY(device_id, ...selectedCoords['Finish']); 
+  
     return { status: 200, message: 'Success' };
   },
 
@@ -1470,37 +771,72 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  scanQRNAB: async ({ device_id }) => {    
-    const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-    console.log('Device Model:', deviceModel);
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);
-    // await delay(500);                  
-    await delay(700); 
+  scanQRNAB: async ({ device_id, localPath }) => {
+    const coordinatesScanQRNAB = await loadCoordinatesForDeviceScanQRNAB(device_id);    
+    const coordinatesScanQRNAB2 = await loadCoordinatesForDeviceScanQRNAB2(device_id);         
+  
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);             
+    await delay(800);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Image']);
-    // await delay(1000);   
-    await delay(700);   
-    if (deviceModel === 'SM-G781') {  // Nếu là S20 FE 5G thì chỉ cần ScanQR, Image, Target-Img
-      await delay(500);     
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Target-Img']); 
+    await delay(800);       
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Hamburger-Menu']);
+    await delay(800);
+  
+    let running = await isNABRunning({ device_id });
+    if (!running) {
+      console.log("NAB đang không chạy.");
+      return;
+    } 
+    
+    await clearTempFile({ device_id });
+  
+    let selectedCoords = coordinatesScanQRNAB;
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+      
+    const keywordMap = {
+      recent: ["Recent", "Gần đây"],
+      images: ["Images", "Hình ảnh"],
+      downloads: ["Downloads", "Tệp tải xuống"],
+      galaxyNote9: ["Galaxy Note9"],
+      bugReports: ["Bug reports", "Báo cáo lỗi"],
+      gallery: ["Gallery", "Bộ sưu tập"]      
+    };
+  
+    while (running) {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
+  
+      await dumpXmlToLocal(device_id, localDumpPath);
+      const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
+  
+      // Helper function: kiểm tra xem nội dung XML có chứa tất cả keyword (dù là tiếng Anh hay tiếng Việt)
+      const containsAllKeywords = (keys) => {
+        return keys.every(key =>
+          keywordMap[key].some(kw => xmlContent.includes(kw))
+        );
+      };
+  
+      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'bugReports', 'gallery'])) {
+        console.log("🔄 Sử dụng coordinatesScanQRNAB2.json (Bug reports detected)");
+        selectedCoords = coordinatesScanQRNAB2;
+        break;
+      }
+  
+      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'gallery'])) {
+        console.log("🔄 Sử dụng coordinatesScanQRNAB.json (màn hình không có Bug reports)");
+        selectedCoords = coordinatesScanQRNAB2;
+        break;
+      }
     }
-    else {
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Hamburger-Menu']);
-      await delay(700);   
-      // "Gallery": [92, 1171] có "Báo cáo lỗi"
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Gallery']);
-      await delay(700);                 
-      // await client.shell(device_id, `input swipe 500 1800 500 300`);      
-      // await delay(700);
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Target-Img']); 
-      await delay(700);
-      // await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Finish']);
-    }    
-
+  
+    await adbHelper.tapXY(device_id, ...selectedCoords['Gallery']);
+    await delay(800);                                               
+    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);    
+  
     return { status: 200, message: 'Success' };
   },
 
+  // chưa test được đang đợi c Hira
   scanQRTPB: async ({ device_id }) => {    
     const coordinatesScanQRTPB = await loadCoordinatesForDeviceScanQRTPB(device_id);    
     const deviceModel = await deviceHelper.getDeviceModel(device_id);    
@@ -1538,19 +874,18 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  scanQRMB: async ({ device_id, localPath }) => {    
-    // coordinatesScanQRMB.json
+  scanQRMB: async ({ device_id, localPath }) => {
     const coordinatesScanQRMB = await loadCoordinatesForDeviceScanQRMB(device_id);    
     const coordinatesScanQRMB2 = await loadCoordinatesForDeviceScanQRMB2(device_id);    
     const coordinatesScanQRMB3 = await loadCoordinatesForDeviceScanQRMB3(device_id);    
-
+  
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['ScanQR']);             
     await delay(800);   
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Image']);
-    await delay(2000);       
+    await delay(800);       
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMB['Hamburger-Menu']);
-    await delay(3000);
-
+    await delay(800);
+  
     let running = await isMBRunning({ device_id });
     if (!running) {
       console.log("MB đang không chạy.");
@@ -1558,45 +893,50 @@ module.exports = {
     } 
     
     await clearTempFile({ device_id });
-
+  
     let selectedCoords = coordinatesScanQRMB;
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+      
+    const keywordMap = {
+      recent: ["Recent", "Gần đây"],
+      images: ["Images", "Hình ảnh"],
+      downloads: ["Downloads", "Tệp tải xuống"],
+      bugReports: ["Bug reports", "Báo cáo lỗi"],
+      gallery: ["Gallery", "Bộ sưu tập"],
+      galaxyNote9: ["Galaxy Note9"]
+    };
+  
     while (running) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
-
+  
       await dumpXmlToLocal(device_id, localDumpPath);
       const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
-
-      const keywordsBase = ["Gần đây", "Hình ảnh", "Tệp tải xuống", "Báo cáo lỗi", "Bộ sưu tập"];
-      const keywordsNote9 = [...keywordsBase.slice(0, 3), "Galaxy Note9", ...keywordsBase.slice(3)];
-
-      if (keywordsNote9.every(kw => xmlContent.includes(kw))) {
+  
+      // Helper function: kiểm tra xem nội dung XML có chứa tất cả keyword (dù là tiếng Anh hay tiếng Việt)
+      const containsAllKeywords = (keys) => {
+        return keys.every(key =>
+          keywordMap[key].some(kw => xmlContent.includes(kw))
+        );
+      };
+  
+      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'bugReports', 'gallery'])) {
         console.log("🔄 Sử dụng coordinatesScanQRMB3 (Galaxy Note9 detected)");
         selectedCoords = coordinatesScanQRMB3;
         break;
       }
-
-      if (keywordsBase.every(kw => xmlContent.includes(kw))) {
+  
+      if (containsAllKeywords(['recent', 'images', 'downloads', 'bugReports', 'gallery'])) {
         console.log("🔄 Sử dụng coordinatesScanQRMB2 (màn hình chứa Bộ sưu tập)");
         selectedCoords = coordinatesScanQRMB2;
         break;
       }
-
-      // running = await isMBRunning({ device_id });
-
-      // if (!running) {
-      //   console.log('🚫 MB Bank đã tắt. Dừng theo dõi.');
-      //   await clearTempFile({ device_id });
-      //   return false;
-      // }
     }
-    
+  
     await adbHelper.tapXY(device_id, ...selectedCoords['Gallery']);
     await delay(800);                                               
-    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);
-    console.log('log ...test:', ...selectedCoords['Gallery']); 
-
+    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);    
+  
     return { status: 200, message: 'Success' };
   }, 
   
@@ -2470,8 +1810,7 @@ module.exports = {
 
 async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRBIDV[deviceModel];
 
@@ -2484,8 +1823,7 @@ async function loadCoordinatesForDeviceScanQRBIDV(device_id) {
 
 async function loadCoordinatesForDeviceScanQRNAB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRNAB[deviceModel];
 
@@ -2496,10 +1834,35 @@ async function loadCoordinatesForDeviceScanQRNAB(device_id) {
   }
 };
 
+async function loadCoordinatesForDeviceScanQRNAB2(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+
+    const deviceCoordinates = coordinatesScanQRNAB2[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesForDeviceScanQRNAB3(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+
+    const deviceCoordinates = coordinatesScanQRNAB3[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
+    throw error;
+  }
+};
+
 async function loadCoordinatesForDeviceScanQRTPB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRTPB[deviceModel];
 
@@ -2512,8 +1875,7 @@ async function loadCoordinatesForDeviceScanQRTPB(device_id) {
 
 async function loadCoordinatesForDeviceScanQRVPB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRVPB[deviceModel];
 
@@ -2526,8 +1888,7 @@ async function loadCoordinatesForDeviceScanQRVPB(device_id) {
 
 async function loadCoordinatesForDeviceScanQRMB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRMB[deviceModel];
 
@@ -2540,8 +1901,7 @@ async function loadCoordinatesForDeviceScanQRMB(device_id) {
 
 async function loadCoordinatesForDeviceScanQRMB2(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRMB2[deviceModel];
 
@@ -2554,8 +1914,7 @@ async function loadCoordinatesForDeviceScanQRMB2(device_id) {
 
 async function loadCoordinatesForDeviceScanQRMB3(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRMB3[deviceModel];
 
@@ -2568,8 +1927,7 @@ async function loadCoordinatesForDeviceScanQRMB3(device_id) {
 
 async function loadCoordinatesForDeviceScanQRSHBSAHA(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRSHBSAHA[deviceModel];
 
@@ -2582,8 +1940,7 @@ async function loadCoordinatesForDeviceScanQRSHBSAHA(device_id) {
 
 async function loadCoordinatesForDeviceLoginACB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesLoginACB[deviceModel];
 
@@ -2596,8 +1953,7 @@ async function loadCoordinatesForDeviceLoginACB(device_id) {
 
 async function loadCoordinatesForDeviceScanQRACB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRACB[deviceModel];
 
@@ -2606,12 +1962,11 @@ async function loadCoordinatesForDeviceScanQRACB(device_id) {
     console.error(`Error loading coordinatesScanQRACB for device: ${error.message}`);
     throw error;
   }
-};
+}
 
 async function loadCoordinatesForDeviceScanQREIB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQREIB[deviceModel];
 
@@ -2620,12 +1975,24 @@ async function loadCoordinatesForDeviceScanQREIB(device_id) {
     console.error(`Error loading coordinatesScanQREIB for device: ${error.message}`);
     throw error;
   }
-};
+}
+
+async function loadCoordinatesForDeviceScanQREIB2(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+
+    const deviceCoordinates = coordinatesScanQREIB2[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQREIB for device: ${error.message}`);
+    throw error;
+  }
+}
 
 async function loadCoordinatesForDeviceScanQRMSB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRMSB[deviceModel];
 
@@ -2638,8 +2005,7 @@ async function loadCoordinatesForDeviceScanQRMSB(device_id) {
 
 async function loadCoordinatesForDeviceScanQRNCB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRNCB[deviceModel];
 
@@ -2652,8 +2018,7 @@ async function loadCoordinatesForDeviceScanQRNCB(device_id) {
 
 async function loadCoordinatesForDeviceScanQRBAB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRBAB[deviceModel];
 
@@ -2666,8 +2031,7 @@ async function loadCoordinatesForDeviceScanQRBAB(device_id) {
 
 async function loadCoordinatesForDeviceScanQROCB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQROCB[deviceModel];
 
@@ -2681,7 +2045,6 @@ async function loadCoordinatesForDeviceScanQROCB(device_id) {
 async function loadCoordinatesForDeviceScanQRVTB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
 
     const deviceCoordinates = coordinatesScanQRVTB[deviceModel];
 
@@ -2694,8 +2057,7 @@ async function loadCoordinatesForDeviceScanQRVTB(device_id) {
 
 async function loadCoordinatesForDeviceLoginVTB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesLoginVTB[deviceModel];
 
@@ -2708,8 +2070,7 @@ async function loadCoordinatesForDeviceLoginVTB(device_id) {
 
 async function loadCoordinatesForDeviceLoginNAB(device_id) {
   try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('deviceModel now:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesLoginNAB[deviceModel];
 

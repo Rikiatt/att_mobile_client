@@ -101,4 +101,4 @@ async function isVPBRunning( { device_id } ) {
     }
 }
 
-module.exports = { isACBRunning, isEIBRunning, isMBRunning, isMSBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning };
+module.exports = { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning };

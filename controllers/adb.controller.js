@@ -4,12 +4,12 @@ const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINVPB, inputPINM
   startAppADBACB, stopAppADBACB, stopAppADBEIB, startAppADBEIB, stopAppADBOCB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBBAB, stopAppADBTPB, stopAppADBVPB, stopAppADBNAB, startAppADBBAB, startAppADBTPB, startAppADBVPB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, startAppADBMSB, stopAppADBMSB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHBSAHA, startAppADBSHBSAHA, 
   tapADB, inputADB, inputADBVTB, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDeviceMB, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  stopAllApps, clickLoginACB, scanQRACB, scanQREIB, clickPasswordFieldEIB, trackACB, trackEIB, trackOCB, trackNAB, trackTPB, trackVPB, trackMSB, trackMB, trackSHBSAHA } = require('../functions/adb.function');
+  closeAll, clickLoginACB, scanQRACB, scanQREIB, clickPasswordFieldEIB, trackACB, trackEIB, trackOCB, trackNAB, trackTPB, trackVPB, trackMSB, trackMB, trackSHBSAHA } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 
-const mapAction = {
-  stopAllApps: stopAllApps,
+const mapAction = {  
+  closeAll: closeAll,
   clickLoginACB: clickLoginACB,  
   scanQRACB: scanQRACB,
   scanQRBAB: scanQRBAB,

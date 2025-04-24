@@ -34,7 +34,9 @@ export const camera = async (data) => {
 
 export const connect = async (data) => {
   await actionADB({ action: 'connect', device_id: data.device_id, title: data.title });
-  await actionADB({ action: 'delImg', device_id: data.device_id });
+  // await actionADB({ action: 'delImg', device_id: data.device_id });
+  // Tại vì đôi khi người ta tạo lệnh xong rồi mới "MỞ THIẾT BỊ"
+  // nên sẽ bị mất ảnh trong thiết bị
 };
 
 export const connectTcpIp = async (data) => {
@@ -48,11 +50,11 @@ export const disconnectTcpIp = async (data) => {
 // ============== ACB ============== //
 
 export const acbScanQR = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceACB', device_id: data.device_id }); 
+  // const deviceCoordinates = await actionADB({ action: 'checkDeviceACB', device_id: data.device_id }); 
 
-  if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ ACB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }  
+  // if (deviceCoordinates.status === 500) {
+  //   return swalNotification("error", "Thiết bị chưa hỗ trợ ACB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  // }  
 
   setLoading(true);    
 
@@ -60,12 +62,12 @@ export const acbScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000); 
 
   console.log('2. Khởi động app ACB...');
   await actionADB({ action: 'startACB', device_id: data.device_id });
-  await delay(14000);
+  await delay(12000);
 
   console.log('3. Scan QR');
   await actionADB({ action: 'scanQRACB', device_id: data.device_id }); 
@@ -77,7 +79,7 @@ export const acbScanQR = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
-  await delay(4000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track
+  await delay(4000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track  
 
   // Track ACB App while it is in process  
   console.log('5. Đang theo dõi ACB...');
@@ -110,7 +112,7 @@ export const eibScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);
 
   console.log('2. Khởi động app EIB...');
@@ -159,12 +161,13 @@ export const ocbScanQR = async (data, setLoading) => {
   if (!text) return;    
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);
 
   console.log('2. Đang khởi động OCB...');
   await actionADB({ action: 'startOCB', device_id: data.device_id });
-  await delay(5000);
+  await delay(6000);
+  // await delay(10000);
 
   console.log('3. Login');
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
@@ -212,7 +215,7 @@ export const ncbScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);  
 
   console.log('2. Khởi động NCB...');
@@ -248,6 +251,34 @@ export const ncbScanQR = async (data, setLoading) => {
   setLoading(false);
 };
 
+export const ncbLogin = async (data, setLoading) => {  
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NCB cần truyền vào thiết bị');
+  if (!text) return;
+
+  console.log('1. Đang đóng các app đang mở...');
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
+  await delay(1000);  
+
+  console.log('2. Khởi động NCB...');
+  await actionADB({ action: 'startNCB', device_id: data.device_id });
+  await delay(6000);
+
+  // Track NCB App while it is in process  
+  // const trackNCBAppPromise = actionADB({ action: 'trackNCBApp', device_id: data.device_id });
+
+  console.log('3. Login...');  
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(1000);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
+
+  setLoading(false);
+};
+
 // ============== NAB ============== //
 
 export const nabScanQR = async (data, setLoading) => {  
@@ -263,7 +294,7 @@ export const nabScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);
 
   console.log('2. Khởi động app NAB...');
@@ -316,7 +347,7 @@ export const tpbScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);
 
   console.log('2. Khởi động app TPB...');
@@ -364,7 +395,7 @@ export const vpbScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);
 
   console.log('2. Khởi động app VPB...');
@@ -427,7 +458,7 @@ export const mbScanQR = async (data, setLoading) => {
   // await actionADB({ action: 'copyQRImages', device_id: data.device_id });
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000); 
 
   console.log('2. Khởi động app MB Bank...');
@@ -478,7 +509,7 @@ export const msbScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000);  
 
   console.log('2. Khởi động app MSB...');
@@ -557,7 +588,7 @@ export const bidvLogin = async (data, setLoading) => {
   try {
     // Start app
     console.log('1. Đang đóng các app đang mở...');
-    await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+    await actionADB({ action: 'closeAll', device_id: data.device_id }); 
     await delay(1000);
 
     console.log('2. Đang khởi động BIDV...');
@@ -805,7 +836,7 @@ export const vietinScanQR = async (data, setLoading) => {
 
     // Start app
     console.log('1. Đang đóng các app đang mở...');
-    await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+    await actionADB({ action: 'closeAll', device_id: data.device_id }); 
     await delay(1000);
 
     console.log('2. Khởi động app VTB...');
@@ -948,7 +979,7 @@ export const shbsahaScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000); 
 
   console.log('2. Khởi động app SHB SAHA...');
@@ -986,7 +1017,7 @@ export const shbsahaLogin = async (data, setLoading) => {
 
   try {
     console.log('1. Đang đóng các app đang mở...');
-    await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+    await actionADB({ action: 'closeAll', device_id: data.device_id }); 
     await delay(1000); 
 
     console.log('2. Khởi động app SHB SAHA...');
@@ -1022,7 +1053,7 @@ export const babScanQR = async (data, setLoading) => {
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'stopAllApps', device_id: data.device_id }); 
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(1000); 
 
   console.log('2. Khởi động app BAB...');
