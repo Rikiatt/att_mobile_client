@@ -27,29 +27,29 @@ function saveCurrentDeviceId(device_id) {
 }
 
 module.exports = {
+  connectScrcpy: async ({ device_id, title }) => {
+    console.log('Kết nối thiết bị');
+    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
+    await delay(5000);
+  },
+
   // connectScrcpy: async ({ device_id, title }) => {
-  //   console.log('Kết nối thiết bị');
+  //   const lastDevice = getLastDeviceId();
+  //   console.log('log lastDevice:', lastDevice);
+
+  //   // Nếu thiết bị mới khác thiết bị đang chạy thì kill process scrcpy
+  //   if (lastDevice && lastDevice !== device_id) {
+  //     console.log(`Đóng scrcpy của thiết bị cũ: ${lastDevice}`);
+  //     await killScrcpy();
+  //   }
+
+  //   // Lưu thiết bị mới
+  //   saveCurrentDeviceId(device_id);
+
+  //   console.log(`Kết nối thiết bị ${device_id}`);
   //   nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
   //   await delay(3000);
   // },
-
-  connectScrcpy: async ({ device_id, title }) => {
-    const lastDevice = getLastDeviceId();
-    console.log('log lastDevice:', lastDevice);
-
-    // Nếu thiết bị mới khác thiết bị đang chạy thì kill process scrcpy
-    if (lastDevice && lastDevice !== device_id) {
-      console.log(`Đóng scrcpy của thiết bị cũ: ${lastDevice}`);
-      await killScrcpy();
-    }
-
-    // Lưu thiết bị mới
-    saveCurrentDeviceId(device_id);
-
-    console.log(`Kết nối thiết bị ${device_id}`);
-    nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
-    await delay(3000);
-  },
 
   // Optional: check xem scrcpy có đang chạy không
   isScrcpyRunning: () => {

@@ -36,7 +36,9 @@ export const connect = async (data) => {
   await actionADB({ action: 'connect', device_id: data.device_id, title: data.title });
   // await actionADB({ action: 'delImg', device_id: data.device_id });
   // Tại vì đôi khi người ta tạo lệnh xong rồi mới "MỞ THIẾT BỊ"
-  // nên sẽ bị mất ảnh trong thiết bị
+  // nên sẽ bị mất ảnh trong thiết bị sau khi tạo lệnh trên ORG hoặc ATTPAY+
+  await actionADB({ action: 'checkRunningBanks', device_id: data.device_id }); 
+  await actionADB({ action: 'mainTracking', device_id: data.device_id }); 
 };
 
 export const connectTcpIp = async (data) => {
@@ -113,7 +115,7 @@ export const eibScanQR = async (data, setLoading) => {
 
   console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-  await delay(1000);
+  await delay(1000); 
 
   console.log('2. Khởi động app EIB...');
   await actionADB({ action: 'startEIB', device_id: data.device_id });

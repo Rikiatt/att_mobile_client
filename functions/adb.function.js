@@ -32,7 +32,7 @@ const coordinatesScanQRSHBSAHA = require('../config/coordinatesScanQRSHBSAHA.jso
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
-const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
+const { checkRunningBanks, isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
   isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning
 } = require('../functions/bankStatus.function');
 
@@ -42,7 +42,7 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 }
 
-const { checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB } = require('../functions/checkBank.function');
+const { checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB } = require('../functions/checkBank.function');
 
 const { qrDevicePath, filename } = require('../functions/endpoint');
 
@@ -303,261 +303,39 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
-  closeAll: async ({ device_id }) => {       
-    const deviceModel = await deviceHelper.getDeviceModel(device_id); 
+  test: async ({ device_id }) => {           
+    await checkRunningBanks( { device_id } );
+        
+    return { status: 200, message: 'Success' };
+  },
+
+  closeAll: async ({ device_id }) => {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
 
     await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
     await delay(1000);
 
     if (deviceModel === "ONEPLUS A5010") {
       // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
-      await client.shell(device_id, 'input swipe 540 1080 2182 1080 100'); 
+      await client.shell(device_id, 'input swipe 540 1080 2182 1080 100');
       await delay(500);
-      await client.shell(device_id, 'input tap 200 1000');
-      console.log('Đã đóng tất cả các app đang mở');      
-    }
+      await client.shell(device_id, 'input tap 200 888');
+      console.log('Đã đóng tất cả các app đang mở');
+    } 
+    else if (deviceModel === "ONEPLUS A5000") {
+      // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
+      await client.shell(device_id, 'input swipe 540 1080 2182 1080 100');
+      await delay(500);
+      await client.shell(device_id, 'input tap 200 888');
+      console.log('Đã đóng tất cả các app đang mở');
+    } 
     else {
       await client.shell(device_id, 'input tap 540 1750'); // Click "Close all", for example: Note9
-      console.log('Đã đóng tất cả các app đang mở');      
-    }        
-        
-    return { status: 200, message: 'Success' };
-  },  
-
-  trackACB : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi ACB...');
-
-    // Click "CLOSE" to close UTILITIES SETTING
-    // await client.shell(device_id, 'input tap 540 900');      
-    await client.shell(device_id, 'input tap 787 1242');  
-
-    let running = await isACBRunning( { device_id } );
-
-    if (!running) {      
-      console.log("ACB đang không chạy.");
-      return;
+      console.log('Đã đóng tất cả các app đang mở');
     }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentACB( device_id, localPath );                
-    
-      running = await isACBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 ACB đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
 
-  trackEIB : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi EIB...');
-
-    let running = await isEIBRunning( { device_id } );
-
-    if (!running) {
-      console.log("EIB đang không chạy.");
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentEIB( device_id, localPath );         
-                      
-      running = await isEIBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 Eximbank EDigi đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
-
-  trackOCB : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi OCB...');
-
-    let running = await isOCBRunning( { device_id } );
-
-    if (!running) {
-      console.log("OCB đang không chạy.");
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentOCB( device_id, localPath );   
-                      
-      running = await isOCBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 OCB OMNI đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
-
-  trackNAB : async ( { device_id } ) => {    
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi NAB...');
-
-    let running = await isNABRunning( { device_id } );
-
-    if (!running) {
-      console.log("NAB đang không chạy");
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentNAB( device_id, localPath );                   
-    
-      running = await isNABRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 NAB đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
-
-  trackTPB : async ( { device_id } ) => {    
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi TPB...');
-
-    let running = await isTPBRunning( { device_id } );
-
-    if (!running) {
-      console.log("TPB đang không chạy");
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentTPB( device_id, localPath );                   
-    
-      running = await isTPBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 TPB đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
-
-  trackVPB : async ( { device_id } ) => {    
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi VPB...');
-
-    let running = await isVPBRunning( { device_id } );
-
-    if (!running) {
-      console.log("VPB đang không chạy");
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentVPB( device_id, localPath );                   
-    
-      running = await isVPBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 VPB đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
-
-  trackMB : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('🔍 Bắt đầu theo dõi MB Bank...');
-
-    let running = await isMBRunning( { device_id } );
-
-    if (!running) {      
-      console.log("MB đang không chạy.");
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {      
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentMB( device_id, localPath );                
-    
-      running = await isMBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 MB Bank đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
+    return { status: 200, message: 'Success'};
+  },            
 
   trackMSB : async ( { device_id } ) => {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
@@ -1383,8 +1161,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRNAB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRNAB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1401,8 +1178,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRTPB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRTPB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1419,8 +1195,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRVPB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRVPB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1437,8 +1212,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRMB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRMB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1455,8 +1229,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRNCB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRNCB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1473,8 +1246,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRMSB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRMSB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1491,8 +1263,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRBAB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRBAB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1509,8 +1280,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQROCB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQROCB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1527,8 +1297,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesScanQRBIDV[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesScanQRBIDV found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1545,8 +1314,7 @@ module.exports = {
   
       const deviceCoordinates = coordinatesLoginVTB[deviceModel];             
       
-      if (deviceCoordinates == undefined) {        
-        console.log(`No coordinatesLoginVTB found for device model: ${deviceModel}`);
+      if (deviceCoordinates == undefined) {                
         return { status: 500, valid: false, message: 'Thiết bị chưa hỗ trợ' };    
       }
   
@@ -1740,8 +1508,7 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  startADB: async ({ device_id }) => {    
-    console.log("Đang khởi động app to check QR...");    
+  startADB: async ({ device_id }) => {         
     return { status: 200, message: 'Success' };
   },
   
@@ -1795,8 +1562,7 @@ module.exports = {
       .then(adb.util.readAll)
       .then((files) => {
         const fileList = files.toString().trim().split('\n');
-        if (fileList.length === 0) {
-          console.log('No files to delete.');
+        if (fileList.length === 0) {          
           return;
         }
         const deleteCommands = fileList.map(file => `rm '${devicePath}${file}'`).join(' && ');

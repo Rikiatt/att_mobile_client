@@ -4,11 +4,15 @@ const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINVPB, inputPINM
   startAppADBACB, stopAppADBACB, stopAppADBEIB, startAppADBEIB, stopAppADBOCB, startAppADBOCB, stopAppADBBIDV, startAppADBBIDV, stopAppADBBAB, stopAppADBTPB, stopAppADBVPB, stopAppADBNAB, startAppADBBAB, startAppADBTPB, startAppADBVPB, startAppADBNAB, stopAppADBNCB, startAppADBNCB, startAppADBMSB, stopAppADBMSB, stopAppADBMB, startAppADBMB, stopAppADBVCB, startAppADBVCB, stopAppADBVTB, startAppADBVTB, stopAppADBSHBSAHA, startAppADBSHBSAHA, 
   tapADB, inputADB, inputADBVTB, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDeviceMB, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceVTB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  closeAll, clickLoginACB, scanQRACB, scanQREIB, clickPasswordFieldEIB, trackACB, trackEIB, trackOCB, trackNAB, trackTPB, trackVPB, trackMSB, trackMB, trackSHBSAHA } = require('../functions/adb.function');
+  test, closeAll, clickLoginACB, scanQRACB, scanQREIB, clickPasswordFieldEIB, trackACB, trackEIB, trackOCB, trackNAB, trackTPB, trackVPB, trackMSB, trackMB, trackSHBSAHA } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
+const { checkRunningBanks, mainTracking } = require('../functions/bankStatus.function');
 
 const mapAction = {  
+  mainTracking: mainTracking,
+  checkRunningBanks: checkRunningBanks,
+  test: test,
   closeAll: closeAll,
   clickLoginACB: clickLoginACB,  
   scanQRACB: scanQRACB,
@@ -121,12 +125,10 @@ module.exports = {
 
   actionADB: async (req, res) => {
     try {      
-      const result = await mapAction[req.body.action](req.body);           
-
+      const result = await mapAction[req.body.action](req.body);         
       responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {
       console.log('error:', error);
-
       responseHelper(res, 500, { message: error.message });
     }
   }
