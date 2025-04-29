@@ -7,6 +7,8 @@ const { delay } = require('../helpers/functionHelper');
 const fs = require('fs');
 const tmpFile = path.join(__dirname, '../scrcpy/current_device.txt');
 
+const { startTrackingLoop } = require("../functions/bankStatus.function");
+
 function killScrcpy() {
   return new Promise((resolve) => {
     nodeCmd.run('taskkill /IM scrcpy.exe /F', () => {
@@ -28,9 +30,14 @@ function saveCurrentDeviceId(device_id) {
 
 module.exports = {
   connectScrcpy: async ({ device_id, title }) => {
-    console.log('Kết nối thiết bị');
+    // Tắt hết mọi thiết bị đang mở với scrcpy.exe cũ
+    // để tránh gian lận
+    // nodeCmd.run(`taskkill /F /IM scrcpy.exe`);
+    // await delay(500);
+    console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
-    await delay(5000);
+    await delay(500);    
+    await startTrackingLoop({ device_id: device_id }); 
   },
 
   // connectScrcpy: async ({ device_id, title }) => {

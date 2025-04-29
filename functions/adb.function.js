@@ -32,7 +32,7 @@ const coordinatesScanQRSHBSAHA = require('../config/coordinatesScanQRSHBSAHA.jso
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
-const { checkRunningBanks, isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
+const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
   isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning
 } = require('../functions/bankStatus.function');
 
@@ -49,8 +49,7 @@ const { qrDevicePath, filename } = require('../functions/endpoint');
 async function clearTempFile( { device_id } ) {
   try {                
     await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
-    await delay(1000);
-    console.log('Clear temp file successfully!');
+    await delay(1000);    
   } catch (error) {
     console.error("Cannot delete file temp_dump.xml:", error.message);
   }
@@ -224,9 +223,7 @@ const checkContentMSB = async (device_id, localPath) => {
       // chưa xong
     ];
 
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {
-      console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`);
-
+    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {      
       console.log('Đóng app MSB');
       await stopMSB ( { device_id } );                
 
@@ -303,12 +300,6 @@ const { sendTelegramAlert } = require('../services/telegramService');
 const { saveAlertToDatabase } = require('../controllers/alert.controller');
 
 module.exports = {
-  test: async ({ device_id }) => {           
-    await checkRunningBanks( { device_id } );
-        
-    return { status: 200, message: 'Success' };
-  },
-
   closeAll: async ({ device_id }) => {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
 
@@ -353,7 +344,6 @@ module.exports = {
     let running = await isMSBRunning( { device_id } );
 
     if (!running) {
-      console.log("MSB app is not running.");
       return;
     }
         
@@ -460,8 +450,7 @@ module.exports = {
     await delay(600);
   
     let running = await isEIBRunning({ device_id });
-    if (!running) {
-      console.log("EIB đang không chạy.");
+    if (!running) {      
       return;
     } 
     
@@ -561,8 +550,7 @@ module.exports = {
     await delay(800);
   
     let running = await isNABRunning({ device_id });
-    if (!running) {
-      console.log("NAB đang không chạy.");
+    if (!running) {      
       return;
     } 
     
@@ -617,8 +605,7 @@ module.exports = {
   // chưa test được đang đợi c Hira
   scanQRTPB: async ({ device_id }) => {    
     const coordinatesScanQRTPB = await loadCoordinatesForDeviceScanQRTPB(device_id);    
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-    console.log('Device Model:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);        
 
     await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['ScanQR']); 
     await delay(500);                  
@@ -665,8 +652,7 @@ module.exports = {
     await delay(800);
   
     let running = await isMBRunning({ device_id });
-    if (!running) {
-      console.log("MB đang không chạy.");
+    if (!running) {      
       return;
     } 
     
@@ -807,8 +793,7 @@ module.exports = {
 
   scanQRVPB: async ({ device_id }) => {    
     const coordinatesScanQRVPB = await loadCoordinatesForDeviceScanQRVPB(device_id);
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-    console.log('Device Model:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);        
     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Upload-Image']); 
     await delay(1000);                  
@@ -844,8 +829,7 @@ module.exports = {
 
   scanQRVTB: async ({ device_id }) => {    
     const coordinatesScanQRVTB = await loadCoordinatesForDeviceScanQRVTB(device_id);
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-    console.log('Device Model:', deviceModel);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);        
         
     await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ScanQR']); 
     await sleep(600); 
@@ -1328,7 +1312,6 @@ module.exports = {
   checkDeviceFHD: async ({ device_id }) => {
     try {      
       const deviceModel = await deviceHelper.getDeviceModel(device_id);
-      console.log(`Device model: ${deviceModel}`);
 
       // Kiểm tra nếu model là 'SM-N960N' (Galaxy Note9)
       if (deviceModel === 'SM-N960') {

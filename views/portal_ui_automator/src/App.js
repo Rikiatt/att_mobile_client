@@ -208,7 +208,7 @@ function App() {
                           </Button>
                         </Grid>
                         <Grid item xs={6}>
-                          <Tooltip title="Điều khiển/thao tác thiết bị - Chú ý là sẽ thực hiện xóa sạch ảnh trong thiết bị khi click vào đây" arrow>
+                          <Tooltip title="Điều khiển/thao tác thiết bị" arrow>
                             <Button
                               variant="outlined"
                               color="secondary"

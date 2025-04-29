@@ -20,8 +20,8 @@ try {
     const jsonData = JSON.parse(fileContent);
 
     if (jsonData.data?.site === 'new88') {        
-        // chatId = '-4607954489';
-        chatId = '-4709837410'; // RIKI & BOT
+        chatId = '-4607954489';
+        // chatId = '-4709837410'; // RIKI & BOT
     }
 } catch (error) {
     console.error('❌ Lỗi khi đọc file info-qr.json:', error);
