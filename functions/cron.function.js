@@ -13,7 +13,7 @@ const cronUpdate = new cron.CronJob(
   async () => {
     try {
       // await updateSource();
-      console.log('Vysor.exe has been killed');
+      // console.log('Vysor.exe has been killed');
       nodeCmd.run(`taskkill /F /IM Vysor.exe`);
     } catch (error) {
       console.error('Lỗi khi cron:', error);
