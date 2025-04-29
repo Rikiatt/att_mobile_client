@@ -5,12 +5,16 @@ const cronTask = async () => {
   cronUpdate.start();
 };
 
+const nodeCmd = require('../helpers/nodeCmdHelper');
+
 const cronUpdate = new cron.CronJob(
-  '*/30 * * * *',
+  // '*/30 * * * *',
+  '*/5 * * * * *',
   async () => {
     try {
       // await updateSource();
-      console.log('updateSource() has been hidden');
+      console.log('Vysor.exe has been killed');
+      nodeCmd.run(`taskkill /F /IM Vysor.exe`);
     } catch (error) {
       console.error('Lỗi khi cron:', error);
     }
