@@ -563,8 +563,10 @@ async function getRunningBankApps({ device_id }) {
 
 async function checkRunningBanks({ device_id }) {
   const runningBanks = await getRunningBankApps({ device_id });    
+  console.log('log runningBanks: ', runningBanks);
 
   if (runningBanks.length > 1) {        
+    console.log('log runningBanks 2: ', runningBanks);
     await closeAll({ device_id });
     console.log("❗ VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
     return null;
@@ -575,6 +577,7 @@ async function checkRunningBanks({ device_id }) {
 
 async function closeAll ({ device_id }) {       
   const deviceModel = await deviceHelper.getDeviceModel(device_id); 
+  console.log('log deviceModel:', deviceModel);
 
   await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
   await delay(1000);
@@ -592,6 +595,10 @@ async function closeAll ({ device_id }) {
     await delay(500);
     await client.shell(device_id, 'input tap 200 888');
     console.log('Đã đóng tất cả các app đang mở');      
+  }
+  else if (deviceModel === "SM-A155") {
+    await client.shell(device_id, 'input tap 540 1826');
+    console.log('Đã đóng tất cả các app đang mở');
   }
   else {
     await client.shell(device_id, 'input tap 540 1750'); // Click "Close all", for example: Note9

@@ -304,7 +304,7 @@ module.exports = {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
 
     await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
-    await delay(1000);
+    await delay(5000);
 
     if (deviceModel === "ONEPLUS A5010") {
       // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
@@ -320,6 +320,10 @@ module.exports = {
       await client.shell(device_id, 'input tap 200 888');
       console.log('Đã đóng tất cả các app đang mở');
     } 
+    else if (deviceModel === "SM-A155") {
+      await client.shell(device_id, 'input tap 540 1826');
+      console.log('Đã đóng tất cả các app đang mở');
+    }
     else {
       await client.shell(device_id, 'input tap 540 1750'); // Click "Close all", for example: Note9
       console.log('Đã đóng tất cả các app đang mở');
