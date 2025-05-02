@@ -7,7 +7,7 @@ const { delay } = require('../helpers/functionHelper');
 const fs = require('fs');
 const tmpFile = path.join(__dirname, '../scrcpy/current_device.txt');
 
-const { startTrackingLoop } = require("../functions/bankStatus.function");
+// const { startTrackingLoop } = require("../functions/bankStatus.function");
 
 function killScrcpy() {
   return new Promise((resolve) => {
@@ -37,7 +37,8 @@ module.exports = {
     console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
     await delay(500);    
-    await startTrackingLoop({ device_id: device_id }); 
+    // just SHBET + NEW88
+    // await startTrackingLoop({ device_id: device_id }); 
   },
 
   // connectScrcpy: async ({ device_id, title }) => {

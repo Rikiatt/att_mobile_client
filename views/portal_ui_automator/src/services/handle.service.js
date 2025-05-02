@@ -36,8 +36,7 @@ export const connect = async (data) => {
   await actionADB({ action: 'connect', device_id: data.device_id, title: data.title });
   // await actionADB({ action: 'delImg', device_id: data.device_id });
   // Tại vì đôi khi người ta tạo lệnh xong rồi mới "MỞ THIẾT BỊ"
-  // nên sẽ bị mất ảnh trong thiết bị sau khi tạo lệnh trên ORG hoặc ATTPAY+    
-  // await actionADB({ action: 'startTrackingLoop', device_id: data.device_id }); 
+  // nên sẽ bị mất ảnh trong thiết bị sau khi tạo lệnh trên ORG hoặc ATTPAY+     
 };
 
 export const connectTcpIp = async (data) => {
