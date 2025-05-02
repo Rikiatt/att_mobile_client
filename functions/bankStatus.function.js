@@ -597,7 +597,8 @@ async function closeAll ({ device_id }) {
     console.log('Đã đóng tất cả các app đang mở');      
   }
   else if (deviceModel === "SM-A155") {
-    await client.shell(device_id, 'input tap 540 1826');
+    // await client.shell(device_id, 'input tap 540 1826');
+    await client.shell(device_id, 'input tap 540 1868');
     console.log('Đã đóng tất cả các app đang mở');
   }
   else {
