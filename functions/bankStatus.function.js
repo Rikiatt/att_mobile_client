@@ -562,11 +562,9 @@ async function getRunningBankApps({ device_id }) {
 }
 
 async function checkRunningBanks({ device_id }) {
-  const runningBanks = await getRunningBankApps({ device_id });    
-  console.log('log runningBanks: ', runningBanks);
+  const runningBanks = await getRunningBankApps({ device_id });      
 
-  if (runningBanks.length > 1) {        
-    console.log('log runningBanks 2: ', runningBanks);
+  if (runningBanks.length > 1) {            
     await closeAll({ device_id });
     console.log("❗ VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
     return null;
