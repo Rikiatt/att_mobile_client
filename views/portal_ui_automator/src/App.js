@@ -46,10 +46,8 @@ import HandleEIB from './sections/bank_handle/HandleEIB';
 import HandleOCB from './sections/bank_handle/HandleOCB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleNAB from './sections/bank_handle/HandleNAB';
-// import HandleBAB from './sections/bank_handle/HandleBAB';
 import HandleTPB from './sections/bank_handle/HandleTPB';
 import HandleVPB from './sections/bank_handle/HandleVPB';
-// import HandleMSB from './sections/bank_handle/HandleMSB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleMB from './sections/bank_handle/HandleMB';
 import HandleVCB from './sections/bank_handle/HandleVCB';
@@ -57,7 +55,7 @@ import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHBSAHA from './sections/bank_handle/HandleSHBSAHA';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
-import HandleShowQr from './sections/HandleShowQr';
+import HandleQR from './sections/HandleQR';
 import Swal from 'sweetalert2';
 import { getIpPublic, getSetting } from './api/setting';
 
@@ -192,6 +190,7 @@ function App() {
                             Nhập ký tự
                           </Button>
                         </Grid>
+
                         <Grid item xs={6}>
                           <Button
                             variant="contained"
@@ -207,6 +206,7 @@ function App() {
                             Enter
                           </Button>
                         </Grid>
+
                         <Grid item xs={6}>
                           <Tooltip title="Điều khiển/thao tác thiết bị" arrow>
                             <Button
@@ -215,9 +215,11 @@ function App() {
                               fullWidth
                               fontSize={'11'}
                               onClick={async () => {
-                                setLoading(true);
-                                await connect({ device_id: item.id, title });
-                                setLoading(false);
+                                // setLoading(true);
+                                // await connect({ device_id: item.id, title });
+                                // setLoading(false);
+                                
+                                await connect({ device_id: item.id, title });                                
                               }}
                               startIcon={<Launch />}
                             >
@@ -225,40 +227,7 @@ function App() {
                             </Button>
                           </Tooltip>
                         </Grid>
-                        {/* <Grid item xs={6}>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            fontSize={'11'}
-                            onClick={async () => {
-                              setLoading(true);
-                              await home({ device_id: item.id });
-                              setLoading(false);
-                            }}
-                          >
-                            Home
-                          </Button>
-                        </Grid> */}
-                        {/* <Grid item xs={6}>
-                          <Tooltip title="Thao tác mở khóa màn hình thiết bị" arrow>
-                            <Button
-                              variant="outlined"
-                              color="secondary"
-                              fullWidth
-                              fontSize={'11'}
-                              onClick={async () => {
-                                const text = await swalInputPass('Nhập mã PIN thiết bị', '', 'Nhập mã PIN thiết bị');                                  
-                                setLoading(true);                                
-                                await actionADB({ action: 'unlockScreen', device_id: item.id, text: text.trim() });    
-                                setLoading(false);
-                              }}
-                              startIcon={<KeyOff />}
-                            >
-                              Mở màn hình
-                            </Button>
-                          </Tooltip>
-                        </Grid> */}
+
                         <Grid item xs={6}>
                           <Button
                             variant="contained"
@@ -279,7 +248,7 @@ function App() {
                       {qr &&
                         <>
                           <Divider sx={{ mt: 2, mb: 2 }} />
-                          <HandleShowQr item={item} />
+                          <HandleQR item={item} />
                         </>
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
@@ -287,18 +256,14 @@ function App() {
                       <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} /> 
-                      {/* <HandleBAB item={item} X={X} Y={Y} setLoading={setLoading} />                        */}
+                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                                              
                       <HandleTPB item={item} X={X} Y={Y} setLoading={setLoading} />                    
                       <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />                                              
                       <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />
-                      {/* <HandleMSB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
-                      <HandleSHBSAHA item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      {/* <HandleABB item={item} X={X} Y={Y} setLoading={setLoading} /> */}
-                      {/* <HandleShinhan item={item} X={X} Y={Y} setLoading={setLoading} /> */}
+                      <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleSHBSAHA item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
                     </CardContent>
                   </Card>
                 </Grid>

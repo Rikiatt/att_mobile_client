@@ -7,7 +7,14 @@ const { delay } = require('../helpers/functionHelper');
 const fs = require('fs');
 const tmpFile = path.join(__dirname, '../scrcpy/current_device.txt');
 
-// const { startTrackingLoop } = require("../functions/bankStatus.function");
+const { startTrackingLoop } = require("../functions/bankStatus.function");
+// Đọc file localdata.json
+const localDataPath = path.join(__dirname, '../database/localdata.json');
+const localRaw = fs.readFileSync(localDataPath, 'utf-8');
+const local = JSON.parse(localRaw);
+// Tách site cuối cùng, ví dụ: "ui_manual/connect/new88" => "new88"
+const siteFull = local?.att?.site || '';
+const site = siteFull.split('/').pop();
 
 function killScrcpy() {
   return new Promise((resolve) => {
@@ -37,8 +44,12 @@ module.exports = {
     console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
     await delay(500);    
-    // just SHBET + NEW88
-    // await startTrackingLoop({ device_id: device_id }); 
+    if (!site) {
+      return res.status(400).json({ status: false, message: 'Không xác định được site từ localdata.json' });
+    }
+    if (site === 'new88' || site === 'shbet') {
+      await startTrackingLoop({ device_id: device_id }); 
+    }    
   },
 
   // connectScrcpy: async ({ device_id, title }) => {
