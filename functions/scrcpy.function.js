@@ -7,7 +7,7 @@ const { delay } = require('../helpers/functionHelper');
 const fs = require('fs');
 const tmpFile = path.join(__dirname, '../scrcpy/current_device.txt');
 
-const { startTrackingLoop } = require("../functions/bankStatus.function");
+const { trackingLoop } = require("../functions/bankStatus.function");
 // Đọc file localdata.json
 const localDataPath = path.join(__dirname, '../database/localdata.json');
 const localRaw = fs.readFileSync(localDataPath, 'utf-8');
@@ -48,7 +48,7 @@ module.exports = {
       return res.status(400).json({ status: false, message: 'Không xác định được site từ localdata.json' });
     }
     if (site === 'new88' || site === 'shbet') {
-      await startTrackingLoop({ device_id: device_id }); 
+      await trackingLoop({ device_id: device_id }); 
     }    
   },
 

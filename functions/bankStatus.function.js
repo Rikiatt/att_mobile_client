@@ -58,7 +58,7 @@ async function trackACB ( { device_id } ) {
   let running = await isACBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
         
   await clearTempFile( { device_id } );
@@ -78,19 +78,19 @@ async function trackACB ( { device_id } ) {
       if (!running) {
         console.log('🚫 ACB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'mobile.acb.com.vn') {
       console.log(`🚫 ACB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 ACB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
   return { status: 200, message: 'Success' };
@@ -122,7 +122,7 @@ async function trackEIB ( { device_id } ) {
   let running = await isEIBRunning( { device_id } );
 
   if (!running) {
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
         
   await clearTempFile( { device_id } );
@@ -142,19 +142,19 @@ async function trackEIB ( { device_id } ) {
       if (!running) {
         console.log('🚫 EIB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.vnpay.EximBankOmni') {
       console.log(`🚫 EIB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 EIB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
   return { status: 200, message: 'Success' };
@@ -169,7 +169,7 @@ async function trackOCB ( { device_id } ) {
   let running = await isOCBRunning( { device_id } );
 
   if (!running) {
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
         
   await clearTempFile( { device_id } );
@@ -189,19 +189,19 @@ async function trackOCB ( { device_id } ) {
       if (!running) {
         console.log('🚫 OCB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'vn.com.ocb.awe') {
       console.log(`🚫 OCB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   
     if (!running) {
       console.log('🚫 OCB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
   return { status: 200, message: 'Success' };
@@ -215,7 +215,7 @@ async function trackNCB ( { device_id } ) {
   let running = await isNCBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -235,19 +235,19 @@ async function trackNCB ( { device_id } ) {
       if (!running) {
         console.log('🚫 NCB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.ncb.bank') {
       console.log(`🚫 NCB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 NCB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -263,7 +263,7 @@ async function trackNCB ( { device_id } ) {
     let running = await isNABRunning( { device_id } );
 
     if (!running) {
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
         
     await clearTempFile( { device_id } );
@@ -283,19 +283,19 @@ async function trackNCB ( { device_id } ) {
         if (!running) {
           console.log('🚫 NAB process đã tắt. Dừng theo dõi.');
           await clearTempFile({ device_id });
-          return await startTrackingLoop({ device_id });
+          return await trackingLoop({ device_id });
         }
         // Nếu vẫn chạy, tiếp tục bình thường
       } else if (currentApp !== 'ops.namabank.com.vn') {
         console.log(`🚫 NAB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
   
       if (!running) {
         console.log('🚫 NAB đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
     }
     return { status: 200, message: 'Success' };
@@ -310,7 +310,7 @@ async function trackTPB ( { device_id } ) {
   let running = await isTPBRunning( { device_id } );
 
   if (!running) {
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
       
   await clearTempFile( { device_id } );
@@ -330,19 +330,19 @@ async function trackTPB ( { device_id } ) {
       if (!running) {
         console.log('🚫 TPB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.tpb.mb.gprsandroid') {
       console.log(`🚫 TPB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 TPB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
   return { status: 200, message: 'Success' };
@@ -357,7 +357,7 @@ async function trackVPB ( { device_id } ) {
   let running = await isVPBRunning( { device_id } );
 
   if (!running) {
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
       
   await clearTempFile( { device_id } );
@@ -377,19 +377,19 @@ async function trackVPB ( { device_id } ) {
       if (!running) {
         console.log('🚫 VPB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.vnpay.vpbankonline') {
       console.log(`🚫 VPB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 VPB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
   return { status: 200, message: 'Success' };
@@ -404,7 +404,7 @@ async function trackMB({ device_id }) {
   let running = await isMBRunning({ device_id });
 
   if (!running) {
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile({ device_id });
@@ -424,19 +424,19 @@ async function trackMB({ device_id }) {
       if (!running) {
         console.log('🚫 MB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.mbmobile') {
       console.log(`🚫 MB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 MB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -451,7 +451,7 @@ async function trackSHBSAHA({ device_id }) {
   let running = await isSHBSAHARunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -465,19 +465,19 @@ async function trackSHBSAHA({ device_id }) {
       if (!running) {
         console.log('🚫 SHB SAHA process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'shb.saha.mbanking') {
       console.log(`🚫 SHB SAHA không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 SHB SAHA đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -492,7 +492,7 @@ async function trackBIDV({ device_id }) {
   let running = await isBIDVRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -512,19 +512,19 @@ async function trackBIDV({ device_id }) {
       if (!running) {
         console.log('🚫 BIDV process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.vnpay.bidv') {
       console.log(`🚫 BIDV không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }    
 
     if (!running) {
       console.log('🚫 BIDV đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -539,7 +539,7 @@ async function trackVCB({ device_id }) {
   let running = await isVCBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -559,19 +559,19 @@ async function trackVCB({ device_id }) {
       if (!running) {
         console.log('🚫 VCB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.VCB') {
       console.log(`🚫 VCB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 VCB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -586,7 +586,7 @@ async function trackSEA({ device_id }) {
   let running = await isSEARunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -600,19 +600,19 @@ async function trackSEA({ device_id }) {
       if (!running) {
         console.log('🚫 SEA process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'vn.com.seabank.mb1') {
       console.log(`🚫 SEA không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 SEA đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -627,7 +627,7 @@ async function trackICB({ device_id }) {
   let running = await isICBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -641,19 +641,19 @@ async function trackICB({ device_id }) {
       if (!running) {
         console.log('🚫 ICB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.vietinbank.ipay') {
       console.log(`🚫 ICB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 ICB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -668,7 +668,7 @@ async function trackPVC({ device_id }) {
   let running = await isPVCRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -682,19 +682,19 @@ async function trackPVC({ device_id }) {
       if (!running) {
         console.log('🚫 PVC process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.pvcombank.retail') {
       console.log(`🚫 PVC không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 PVC đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -709,7 +709,7 @@ async function trackLPB({ device_id }) {
   let running = await isLPBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -723,19 +723,19 @@ async function trackLPB({ device_id }) {
       if (!running) {
         console.log('🚫 LPB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'vn.com.lpb.lienviet24h') {
       console.log(`🚫 LPB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 LPB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -750,7 +750,7 @@ async function trackABB({ device_id }) {
   let running = await isABBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -764,19 +764,19 @@ async function trackABB({ device_id }) {
       if (!running) {
         console.log('🚫 ABB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'com.vnpay.abbank') {
       console.log(`🚫 ABB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 ABB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -791,7 +791,7 @@ async function trackMSB({ device_id }) {
   let running = await isMSBRunning( { device_id } );
 
   if (!running) {      
-    return await startTrackingLoop({ device_id });
+    return await trackingLoop({ device_id });
   }
 
   await clearTempFile( { device_id } );
@@ -805,19 +805,19 @@ async function trackMSB({ device_id }) {
       if (!running) {
         console.log('🚫 MSB process đã tắt. Dừng theo dõi.');
         await clearTempFile({ device_id });
-        return await startTrackingLoop({ device_id });
+        return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
     } else if (currentApp !== 'vn.com.msb.mobileBanking.corp') {
       console.log(`🚫 MSB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
 
     if (!running) {
       console.log('🚫 MSB đã tắt. Dừng theo dõi.');
       await clearTempFile({ device_id });
-      return await startTrackingLoop({ device_id });
+      return await trackingLoop({ device_id });
     }
   }
 
@@ -844,7 +844,7 @@ const trackFunctions = {
   MSB: trackMSB
 };
 
-async function startTrackingLoop({ device_id }) {
+async function trackingLoop({ device_id }) {
   while (true) {
     const bankName = await checkRunningBanks({ device_id });
 
@@ -1179,4 +1179,4 @@ async function closeAll ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkDeviceSemiAuto, checkRunningBanks, startTrackingLoop, isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning };
+module.exports = { checkDeviceSemiAuto, checkRunningBanks, trackingLoop, isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning };

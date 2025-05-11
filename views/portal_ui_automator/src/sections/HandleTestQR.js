@@ -2,7 +2,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Stack, Tooltip, Button, 
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 import { useEffect, useState } from 'react';
-import { getQrDevice, downloadQrForAccount } from '../api/device';
+import { downloadQrForAccount } from '../api/device';
 
 const bankLabels = {
     abb: 'An Bình Bank',
@@ -71,22 +71,10 @@ const bankLabels = {
 
 const HandleTestQR = ({ item }) => {
   const [expand, setExpand] = useState(false);
-  const [qrcode, setQrcode] = useState('https://media.tenor.com/tga0EoNOH-8AAAAC/loading-load.gif');
   const [open, setOpen] = useState(false);
   const [bankCode, setBankCode] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
-
-  useEffect(() => {
-    const handel = async () => {
-      if (expand) {
-        const response = await getQrDevice(item.id);
-        setQrcode(response?.result ?? 'https://media.tenor.com/tga0EoNOH-8AAAAC/loading-load.gif');
-      }
-    };
-    const intervalId = setInterval(handel, 1500);
-    return () => clearInterval(intervalId);
-  }, [expand, item.id]);
 
   const handleGenerateQR = async () => {
     if (!bankCode || !accountNumber || !amount) {
@@ -121,11 +109,10 @@ const HandleTestQR = ({ item }) => {
         sx={{ boxShadow: 0, border: `1px solid ${grey[400]}`, '&::before': { display: 'none' } }}
         onChange={(event, expanded) => { setExpand(expanded); }}
       >
-        <AccordionSummary expandIcon={<ExpandMore />}>Test thẻ</AccordionSummary>
+        <AccordionSummary expandIcon={<ExpandMore />}>TEST THẺ</AccordionSummary>
 
         <AccordionDetails>
-          <Stack spacing={1} alignItems="center" justifyContent="space-between">
-            <img width={180} src={qrcode} alt="QR Code" />
+          <Stack spacing={1} alignItems="center" justifyContent="space-between">            
             <Tooltip title="Test thẻ" arrow>
               <Button
                 size="small"

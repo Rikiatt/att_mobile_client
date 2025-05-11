@@ -4,7 +4,7 @@ import { grey } from '@mui/material/colors';
 import { useEffect, useState } from 'react';
 import { getQrDevice } from '../api/device';
 
-const HandleShowQr = ({ item }) => {
+const HandleShowQR = ({ item }) => {
   const [expand, setExpand] = useState(false);
   // device_id: item.id
   const [qrcode, setQrcode] = useState('https://media.tenor.com/tga0EoNOH-8AAAAC/loading-load.gif');
@@ -41,4 +41,4 @@ const HandleShowQr = ({ item }) => {
   );
 };
 
-export default HandleShowQr;
+export default HandleShowQR;

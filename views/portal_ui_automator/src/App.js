@@ -55,7 +55,7 @@ import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHBSAHA from './sections/bank_handle/HandleSHBSAHA';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
-import HandleShowQr from './sections/HandleShowQr';
+import HandleShowQR from './sections/HandleShowQR';
 import HandleTestQR from './sections/HandleTestQR';
 import Swal from 'sweetalert2';
 import { getIpPublic, getSetting } from './api/setting';
@@ -249,7 +249,7 @@ function App() {
                       {qr &&
                         <>
                           <Divider sx={{ mt: 2, mb: 2 }} />
-                          <HandleShowQr item={item} />
+                          <HandleShowQR item={item} />
                         </>
                       }
                       {qr &&

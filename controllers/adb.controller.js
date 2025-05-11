@@ -7,10 +7,10 @@ const { listDevice, startADB, delADBImg, clickConfirmVTB, inputPINVPB, inputPINM
   closeAll, clickLoginACB, scanQRACB, scanQREIB, clickPasswordFieldEIB, trackMSB, trackSHBSAHA } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
-const { startTrackingLoop } = require('../functions/bankStatus.function');
+const { trackingLoop } = require('../functions/bankStatus.function');
 
 const mapAction = {  
-  startTrackingLoop: startTrackingLoop,  
+  trackingLoop: trackingLoop,  
   closeAll: closeAll,
   clickLoginACB: clickLoginACB,  
   scanQRACB: scanQRACB,
