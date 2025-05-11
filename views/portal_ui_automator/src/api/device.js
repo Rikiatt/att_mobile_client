@@ -39,9 +39,9 @@ export async function getQrDevice(device_id) {
   }
 }
 
-export async function downloadQrForAccount({ bank_code, bank_account, device_id }) {
+export async function downloadQrForAccount({ bank_code, bank_account, device_id, amount }) {
   try {
-    const url = `${endpoints.key}${endpoints.downloadQr}?bank_code=${encodeURIComponent(bank_code)}&bank_account=${encodeURIComponent(bank_account)}&device_id=${encodeURIComponent(device_id)}`;
+    const url = `${endpoints.key}${endpoints.downloadQr}?bank_code=${encodeURIComponent(bank_code)}&bank_account=${encodeURIComponent(bank_account)}&device_id=${encodeURIComponent(device_id)}&amount=${encodeURIComponent(amount)}`;
     const response = await axios.get(url);
     return response.data;
   } catch (error) {

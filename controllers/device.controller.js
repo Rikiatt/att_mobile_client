@@ -93,7 +93,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
     });
 
     // adb push
-    const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/`;
+    const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera`;
     const pushResult = await new Promise((resolve, reject) => {
       exec(pushCmd, (error, stdout, stderr) => {
         if (error) {
@@ -106,7 +106,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
 
     return {
       success: true,
-      path: `/sdcard/${fileName}`,
+      path: `/sdcard/DCIM/Camera/${fileName}`,
       localPath,
       adbLog: pushResult
     };
@@ -150,19 +150,25 @@ module.exports = {
 
   download_qr_for_account : async (req, res) => {
     try {
-      const { bank_code, bank_account, device_id } = req.query;
-
-      if (!bank_code || !bank_account || !device_id) {
-        return res.status(400).json({ status: false, message: 'Thiếu tham số bank_code, bank_account hoặc device_id' });
+      const { bank_code, bank_account, device_id, amount } = req.query;
+  
+      if (!bank_code || !bank_account || !device_id || !amount) {
+        return res.status(400).json({
+          status: false,
+          message: 'Thiếu tham số bank_code, bank_account, device_id hoặc amount'
+        });
       }
-
+  
       const bin = bankBins[bank_code.toLowerCase()];
   
       if (!bin) {
-        return res.status(400).json({ status: false, message: 'Không hỗ trợ ngân hàng này trong danh sách BIN' });
+        return res.status(400).json({
+          status: false,
+          message: 'Không hỗ trợ ngân hàng này trong danh sách BIN'
+        });
       }
-  
-      const qrUrl = `https://img.vietqr.io/image/${bin}-${bank_account}-qr.png?amount=10000&addInfo=`;
+        
+      const qrUrl = `https://img.vietqr.io/image/${bin}-${bank_account}-qr.png?amount=${amount}&addInfo=`;      
       const result = await downloadQrFromVietQR(qrUrl, device_id);
   
       if (!result.success) {
