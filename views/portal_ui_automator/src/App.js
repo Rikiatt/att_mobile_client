@@ -55,7 +55,8 @@ import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHBSAHA from './sections/bank_handle/HandleSHBSAHA';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
-import HandleQR from './sections/HandleQR';
+import HandleShowQr from './sections/HandleShowQr';
+import HandleTestQR from './sections/HandleTestQR';
 import Swal from 'sweetalert2';
 import { getIpPublic, getSetting } from './api/setting';
 
@@ -244,25 +245,31 @@ function App() {
                           </Button>
                         </Grid>
                       </Grid>
-
+                      
                       {qr &&
                         <>
                           <Divider sx={{ mt: 2, mb: 2 }} />
-                          <HandleQR item={item} />
+                          <HandleShowQr item={item} />
                         </>
                       }
-                      <Divider sx={{ mt: 2, mb: 2 }} />
-                      <HandleACB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                                              
-                      <HandleTPB item={item} X={X} Y={Y} setLoading={setLoading} />                    
-                      <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />                                              
-                      <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
-                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      {qr &&
+                        <>
+                          {/* <Divider sx={{ mt: 2, mb: 2 }} /> */}
+                          <HandleTestQR item={item} />
+                        </>
+                      }
+                      <Divider sx={{ mt: 2, mb: 2 }} />                      
+                      <HandleACB item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
+                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
+                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                    
+                      <HandleTPB item={item} X={X} Y={Y} setLoading={setLoading} />                                          
+                      <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                    
+                      <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                                        
+                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />                      
+                      <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
+                      <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleSHBSAHA item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
                     </CardContent>
                   </Card>

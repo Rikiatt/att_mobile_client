@@ -4,37 +4,72 @@ import { grey } from '@mui/material/colors';
 import { useEffect, useState } from 'react';
 import { getQrDevice, downloadQrForAccount } from '../api/device';
 
-const bankBins = {
-  vcb: '970436', bidv: '970418', vietbank: '970433', tcb: '970407', stb: '970403', vpb: '970432',
-  eib: '970431', abb: '970425', vba: '970405', bab: '970409', bvb: '970438', vcbneo: '970444',
-  cimb: '422589', citibank: '533948', coopbank: '970446', dbs: '796500', vikki: '970406',
-  gpb: '970408', hdb: '970437', hlbvn: '970442', hsbc: '458761', icb: '970415', ivb: '970434',
-  ncb: '970419', nab: '970428', acb: '970416', shb: '970443', shbvn: '970424', cake: '546034',
-  sgicb: '970400', seab: '970440', scb: '970429', pvcb: '970412', pgb: '970430', pbvn: '970439',
-  mbv: '970414', ocb: '970448', lio: '963369', msb: '970426', mb: '970422', mafc: '977777',
-  lpbank: '970449', kbank: '668888', klb: '970452', kebhanahcm: '970466', kebhanahn: '970467',
-  kbhn: '970462', kbhcm: '970463', ubank: '546035', scvn: '970410', tpb: '970423', timo: '963388',
-  uob: '970458', vab: '970427', vbsp: '999888', vccb: '970454', vib: '970441', vnpbmoney: '971011',
-  vrb: '970421', vtlmoney: '971005', wvn: '970457'
-};
-
 const bankLabels = {
-  vcb: 'Vietcombank', bidv: 'BIDV', vietbank: 'VietBank', tcb: 'Techcombank', stb: 'Sacombank',
-  vpb: 'VPBank', eib: 'Eximbank', abb: 'An Bình Bank', vba: 'VietinBank', bab: 'Bắc Á Bank',
-  bvb: 'Bản Việt', vcbneo: 'Vietcombank Neo', cimb: 'CIMB', citibank: 'CitiBank', coopbank: 'Co-opBank',
-  dbs: 'DBS Bank', vikki: 'Viet Capital Bank', gpb: 'GPBank', hdb: 'HDBank', hlbvn: 'Hong Leong Bank',
-  hsbc: 'HSBC', icb: 'VietinBank', ivb: 'Indovina Bank', ncb: 'NCB', nab: 'Nam Á Bank',
-  acb: 'ACB', shb: 'SHB', shbvn: 'SHB Finance', cake: 'Cake Digital Bank', sgicb: 'Saigon Industry Bank',
-  seab: 'SeaBank', scb: 'SCB', pvcb: 'PVcomBank', pgb: 'PG Bank', pbvn: 'Public Bank Vietnam',
-  mbv: 'MB Bank (VP)', ocb: 'OCB', lio: 'LienvietPostBank', msb: 'MSB', mb: 'MB Bank',
-  mafc: 'MAFC', lpbank: 'LPBank', kbank: 'KBank', klb: 'KLB', kebhanahcm: 'KEB Hana HCM',
-  kebhanahn: 'KEB Hana HN', kbhn: 'KB HN', kbhcm: 'KB HCM', ubank: 'Ubank', scvn: 'Standard Chartered',
-  tpb: 'TPBank', timo: 'Timo', uob: 'UOB', vab: 'VAB', vbsp: 'Ngân hàng Chính sách',
-  vccb: 'Viet Capital Bank', vib: 'VIB', vnpbmoney: 'VNPayMoney', vrb: 'VRB', vtlmoney: 'Viettel Money',
-  wvn: 'Woori Bank'
+    abb: 'An Bình Bank',
+    acb: 'ACB',
+    bab: 'Bắc Á Bank',
+    bab: 'Bắc Á Bank',
+    bidv: 'BIDV',
+    bvb: 'Bản Việt',
+    cake: 'Cake Digital Bank',
+    cimb: 'CIMB',
+    citibank: 'CitiBank',
+    coopbank: 'Co-opBank',
+    dbs: 'DBS Bank',
+    eib: 'Eximbank',
+    gpb: 'GPBank',
+    hdb: 'HDBank',
+    hlbvn: 'Hong Leong Bank',
+    hsbc: 'HSBC',
+    icb: 'VietinBank',
+    ivb: 'Indovina Bank',
+    kbhn: 'KB HN',
+    kbhcm: 'KB HCM',
+    kbank: 'KBank',
+    kebhanahcm: 'KEB Hana HCM',
+    kebhanahn: 'KEB Hana HN',
+    klb: 'KLB',
+    lio: 'LienvietPostBank',
+    lpbank: 'LPBank',
+    mafc: 'MAFC',
+    mb: 'MB Bank',
+    mbv: 'MB Bank (VP)',
+    msb: 'MSB',
+    nab: 'Nam Á Bank',
+    ncb: 'NCB',
+    ocb: 'OCB',
+    pbvn: 'Public Bank Vietnam',
+    pgb: 'PG Bank',
+    pvcb: 'PVcomBank',
+    scb: 'SCB',
+    scvn: 'Standard Chartered',
+    seab: 'SeaBank',
+    sgicb: 'Saigon Industry Bank',
+    shb: 'SHB',
+    shbvn: 'SHB Finance',
+    stb: 'Sacombank',
+    tcb: 'Techcombank',
+    timo: 'Timo',
+    tpb: 'TPBank',
+    ubank: 'Ubank',
+    uob: 'UOB',
+    vab: 'VAB',
+    vba: 'VietinBank',
+    vcb: 'Vietcombank',
+    vcbneo: 'Vietcombank Neo',
+    vccb: 'Viet Capital Bank',
+    vib: 'VIB',
+    vietbank: 'VietBank',
+    vikki: 'Viet Capital Bank',
+    vnpbmoney: 'VNPayMoney',
+    vrb: 'VRB',
+    vpb: 'VPBank',
+    vtlmoney: 'Viettel Money',
+    wb: 'Woori Bank',
+    wvn: 'Woori Bank'
 };
 
-const HandleQR = ({ item }) => {
+const HandleTestQR = ({ item }) => {
   const [expand, setExpand] = useState(false);
   const [qrcode, setQrcode] = useState('https://media.tenor.com/tga0EoNOH-8AAAAC/loading-load.gif');
   const [open, setOpen] = useState(false);
@@ -86,12 +121,12 @@ const HandleQR = ({ item }) => {
         sx={{ boxShadow: 0, border: `1px solid ${grey[400]}`, '&::before': { display: 'none' } }}
         onChange={(event, expanded) => { setExpand(expanded); }}
       >
-        <AccordionSummary expandIcon={<ExpandMore />}>QR</AccordionSummary>
+        <AccordionSummary expandIcon={<ExpandMore />}>Test thẻ</AccordionSummary>
 
         <AccordionDetails>
           <Stack spacing={1} alignItems="center" justifyContent="space-between">
             <img width={180} src={qrcode} alt="QR Code" />
-            <Tooltip title="Test chuyển tiền" arrow>
+            <Tooltip title="Test thẻ" arrow>
               <Button
                 size="small"
                 variant="contained"
@@ -164,4 +199,4 @@ const HandleQR = ({ item }) => {
   );
 };
 
-export default HandleQR;
+export default HandleTestQR;
