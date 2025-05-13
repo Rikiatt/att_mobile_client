@@ -138,7 +138,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
     });
 
     // Push vào /sdcard
-    const pushCmd1 = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/`;
+    const pushCmd1 = `"${adbPath}" -s "${device_id}" push "${localPath}" /sdcard/`;
     const result1 = await new Promise((resolve, reject) => {
       exec(pushCmd1, (error, stdout, stderr) => {
         if (error) {
@@ -149,7 +149,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
     });
 
     // Push vào /sdcard/DCIM/Camera
-    const pushCmd2 = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera/`;
+    const pushCmd2 = `"${adbPath}" -s "${device_id}" push "${localPath}" /sdcard/DCIM/Camera/`;
     const result2 = await new Promise((resolve, reject) => {
       exec(pushCmd2, (error, stdout, stderr) => {
         if (error) {
