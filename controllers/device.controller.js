@@ -71,6 +71,53 @@ const bankBins = {
   wvn: '970457'
 };
 
+// const downloadQrFromVietQR = async (url, device_id) => {
+//   try {
+//     const qrBuffer = await axios.get(url, { responseType: 'arraybuffer' });
+//     const fileName = `${device_id}_vietqr.png`;
+//     const localPath = path.join(__dirname, '../database', fileName);
+//     fs.writeFileSync(localPath, qrBuffer.data);
+
+//     // Dùng adb push nhưng đảm bảo adb server đang chạy
+//     const adbPath = path.join(__dirname, '../platform-tools/adb.exe');
+
+//     // Kiểm tra thiết bị đã authorized chưa
+//     const checkCmd = `"${adbPath}" -s ${device_id} get-state`;
+//     await new Promise((resolve, reject) => {
+//       exec(checkCmd, (err, stdout, stderr) => {
+//         if (err || stdout.trim() !== 'device') {
+//           return reject(new Error('Thiết bị chưa authorized hoặc offline'));
+//         }
+//         return resolve();
+//       });
+//     });
+
+//     // adb push
+//     const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera`;    
+//     const pushResult = await new Promise((resolve, reject) => {
+//       exec(pushCmd, (error, stdout, stderr) => {
+//         if (error) {
+//           console.error('adb push error:', stderr || error.message);
+//           return reject(new Error(stderr || error.message));
+//         }
+//         resolve(stdout.trim());
+//       });
+//     });
+
+//     return {
+//       success: true,
+//       path: `/sdcard/DCIM/Camera/${fileName}`,
+//       localPath,
+//       adbLog: pushResult
+//     };
+//   } catch (e) {
+//     console.error('downloadQrFromVietQR ERROR:', e.message);
+//     return {
+//       success: false,
+//       message: e.message
+//     };
+//   }
+// };
 const downloadQrFromVietQR = async (url, device_id) => {
   try {
     const qrBuffer = await axios.get(url, { responseType: 'arraybuffer' });
@@ -78,10 +125,8 @@ const downloadQrFromVietQR = async (url, device_id) => {
     const localPath = path.join(__dirname, '../database', fileName);
     fs.writeFileSync(localPath, qrBuffer.data);
 
-    // Dùng adb push nhưng đảm bảo adb server đang chạy
     const adbPath = path.join(__dirname, '../platform-tools/adb.exe');
 
-    // Kiểm tra thiết bị đã authorized chưa
     const checkCmd = `"${adbPath}" -s ${device_id} get-state`;
     await new Promise((resolve, reject) => {
       exec(checkCmd, (err, stdout, stderr) => {
@@ -92,13 +137,23 @@ const downloadQrFromVietQR = async (url, device_id) => {
       });
     });
 
-    // adb push
-    const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera`;    
-    const pushResult = await new Promise((resolve, reject) => {
-      exec(pushCmd, (error, stdout, stderr) => {
+    // Push vào /sdcard
+    const pushCmd1 = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/`;
+    const result1 = await new Promise((resolve, reject) => {
+      exec(pushCmd1, (error, stdout, stderr) => {
         if (error) {
-          console.error('adb push error:', stderr || error.message);
-          return reject(new Error(stderr || error.message));
+          return reject(new Error(`adb push /sdcard lỗi: ${stderr || error.message}`));
+        }
+        resolve(stdout.trim());
+      });
+    });
+
+    // Push vào /sdcard/DCIM/Camera
+    const pushCmd2 = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera/`;
+    const result2 = await new Promise((resolve, reject) => {
+      exec(pushCmd2, (error, stdout, stderr) => {
+        if (error) {
+          return reject(new Error(`adb push /DCIM/Camera lỗi: ${stderr || error.message}`));
         }
         resolve(stdout.trim());
       });
@@ -106,9 +161,10 @@ const downloadQrFromVietQR = async (url, device_id) => {
 
     return {
       success: true,
-      path: `/sdcard/DCIM/Camera/${fileName}`,
+      path: `/sdcard/${fileName}`,
+      cameraPath: `/sdcard/DCIM/Camera/${fileName}`,
       localPath,
-      adbLog: pushResult
+      adbLog: result1 + '\n' + result2
     };
   } catch (e) {
     console.error('downloadQrFromVietQR ERROR:', e.message);
