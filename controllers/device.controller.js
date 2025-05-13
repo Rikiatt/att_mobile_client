@@ -6,6 +6,9 @@ const { stopGnirehtet, autoRunGnirehtet } = require('../functions/gnirehtet.func
 const fs = require('fs');
 const axios = require('axios');
 const { exec } = require('child_process');
+const adb = require('adbkit');
+const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
+const client = adb.createClient({ bin: adbPath });
 
 const bankBins = {
   vcb: '970436',
@@ -125,52 +128,23 @@ const downloadQrFromVietQR = async (url, device_id) => {
     const localPath = path.join(__dirname, '../database', fileName);
     fs.writeFileSync(localPath, qrBuffer.data);
 
-    const adbPath = path.join(__dirname, '../platform-tools/adb.exe');
+    const devicePath = `/sdcard/DCIM/Camera/${fileName}`;
 
-    // Kiểm tra thiết bị có đang kết nối
-    const checkCmd = `"${adbPath}" -s "${device_id}" get-state`;
-    await new Promise((resolve, reject) => {
-      exec(checkCmd, (err, stdout) => {
-        if (err || stdout.trim() !== 'device') {
-          return reject(new Error('Thiết bị chưa authorized hoặc offline'));
-        }
-        resolve();
-      });
-    });
+    // Đẩy file vào thiết bị
+    await client.push(device_id, localPath, devicePath);
+    await delay(500);
 
-    // Danh sách thư mục ưu tiên để đẩy QR vào
-    const targetDirs = ["/sdcard/DCIM/Camera/", "/sdcard/Download/", "/sdcard/"];
-    let pushSuccess = false;
-    let finalPath = '';
-    let pushLog = '';
-
-    for (const dir of targetDirs) {
-      const pushCmd = `"${adbPath}" -s "${device_id}" push "${localPath}" "${dir}"`;
-      try {
-        const result = await new Promise((resolve, reject) => {
-          exec(pushCmd, (error, stdout, stderr) => {
-            if (error) return reject(stderr || error.message);
-            resolve(stdout.trim());
-          });
-        });
-        finalPath = path.posix.join(dir, fileName);
-        pushLog = result;
-        pushSuccess = true;
-        break; // Thành công thì dừng vòng lặp
-      } catch (err) {
-        console.warn(`⚠ adb push tới ${dir} thất bại: ${err}`);
-      }
-    }
-
-    if (!pushSuccess) {
-      throw new Error('Đẩy ảnh QR vào thiết bị không thành công.');
-    }
+    // Gửi broadcast để hiển thị lên Gallery
+    await client.shell(
+      device_id,
+      `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`
+    );
+    await delay(100);
 
     return {
       success: true,
-      path: finalPath,
-      localPath,
-      adbLog: pushLog
+      path: devicePath,
+      localPath
     };
   } catch (e) {
     console.error('downloadQrFromVietQR ERROR:', e.message);
