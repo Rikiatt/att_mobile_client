@@ -92,7 +92,7 @@ const HandleTestQR = ({ item }) => {
     if (!result.status) {
       alert(result.message || 'Không thể tạo QR');
     } else {
-      alert(`QR đã được tạo và lưu vào /sdcard/${item.id}_vietqr.png`);
+      alert(`QR đã được tạo và lưu vào /sdcard/DCIM/Camera/${item.id}_vietqr.png`);
       console.log("QR created successfully:", result.vietqr_url);
       setOpen(false);
       setBankCode('');

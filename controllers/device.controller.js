@@ -93,7 +93,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
     });
 
     // adb push
-    const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera`;
+    const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera`;    
     const pushResult = await new Promise((resolve, reject) => {
       exec(pushCmd, (error, stdout, stderr) => {
         if (error) {

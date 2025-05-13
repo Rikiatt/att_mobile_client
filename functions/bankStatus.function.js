@@ -1137,6 +1137,9 @@ async function checkRunningBanks({ device_id }) {
     console.log("VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
     return null;
   }
+  else {
+    console.log('Đang bắt đầu theo dõi xem có đơn không, nếu có thì ');
+  }
 
   return runningBanks[0] || null;
 }
@@ -1147,7 +1150,7 @@ async function closeAll ({ device_id }) {
   await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
   await delay(1000);
 
-  if (deviceModel === "ONEPLUS A5010" || deviceModel === "ONEPLUS A5010") {
+  if (deviceModel === "ONEPLUS A5010") {
     // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
     await client.shell(device_id, 'input swipe 540 1080 2182 1080 100'); 
     await delay(500);
