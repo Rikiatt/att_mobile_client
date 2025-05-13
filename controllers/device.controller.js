@@ -127,44 +127,50 @@ const downloadQrFromVietQR = async (url, device_id) => {
 
     const adbPath = path.join(__dirname, '../platform-tools/adb.exe');
 
-    const checkCmd = `"${adbPath}" -s ${device_id} get-state`;
+    // Kiểm tra thiết bị có đang kết nối
+    const checkCmd = `"${adbPath}" -s "${device_id}" get-state`;
     await new Promise((resolve, reject) => {
-      exec(checkCmd, (err, stdout, stderr) => {
+      exec(checkCmd, (err, stdout) => {
         if (err || stdout.trim() !== 'device') {
           return reject(new Error('Thiết bị chưa authorized hoặc offline'));
         }
-        return resolve();
+        resolve();
       });
     });
 
-    // Push vào /sdcard
-    const pushCmd1 = `"${adbPath}" -s "${device_id}" push "${localPath}" /sdcard/`;
-    const result1 = await new Promise((resolve, reject) => {
-      exec(pushCmd1, (error, stdout, stderr) => {
-        if (error) {
-          return reject(new Error(`adb push /sdcard lỗi: ${stderr || error.message}`));
-        }
-        resolve(stdout.trim());
-      });
-    });
+    // Danh sách thư mục ưu tiên để đẩy QR vào
+    const targetDirs = ["/sdcard/DCIM/Camera/", "/sdcard/Download/", "/sdcard/"];
+    let pushSuccess = false;
+    let finalPath = '';
+    let pushLog = '';
 
-    // Push vào /sdcard/DCIM/Camera
-    const pushCmd2 = `"${adbPath}" -s "${device_id}" push "${localPath}" /sdcard/DCIM/Camera/`;
-    const result2 = await new Promise((resolve, reject) => {
-      exec(pushCmd2, (error, stdout, stderr) => {
-        if (error) {
-          return reject(new Error(`adb push /DCIM/Camera lỗi: ${stderr || error.message}`));
-        }
-        resolve(stdout.trim());
-      });
-    });
+    for (const dir of targetDirs) {
+      const pushCmd = `"${adbPath}" -s "${device_id}" push "${localPath}" "${dir}"`;
+      try {
+        const result = await new Promise((resolve, reject) => {
+          exec(pushCmd, (error, stdout, stderr) => {
+            if (error) return reject(stderr || error.message);
+            resolve(stdout.trim());
+          });
+        });
+        finalPath = path.posix.join(dir, fileName);
+        pushLog = result;
+        pushSuccess = true;
+        break; // Thành công thì dừng vòng lặp
+      } catch (err) {
+        console.warn(`⚠ adb push tới ${dir} thất bại: ${err}`);
+      }
+    }
+
+    if (!pushSuccess) {
+      throw new Error('Đẩy ảnh QR vào thiết bị không thành công.');
+    }
 
     return {
       success: true,
-      path: `/sdcard/${fileName}`,
-      cameraPath: `/sdcard/DCIM/Camera/${fileName}`,
+      path: finalPath,
       localPath,
-      adbLog: result1 + '\n' + result2
+      adbLog: pushLog
     };
   } catch (e) {
     console.error('downloadQrFromVietQR ERROR:', e.message);
