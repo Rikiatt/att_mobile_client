@@ -281,16 +281,30 @@ function App() {
         <Grid item xs={12}>
           <Divider sx={{ borderWidth: 'thin', mt: 2 }} />
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <MacroComp devices={devices} />
         </Grid>
 
         <Grid item xs={12}>
           <ImportFileComp devices={devices} />
+        </Grid> */}
+        <Grid item xs={12}>
+          <Stack spacing={3}>
+            <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 2 }}>
+              <MacroComp devices={devices} />
+            </Box>
+            <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 2 }}>
+              <ImportFileComp devices={devices} />
+            </Box>
+          </Stack>
+        </Grid>
+
+        <Grid item xs={12}>
+          
         </Grid>
       </Grid>
 
-      <SpeedDial
+      {/* <SpeedDial
         ariaLabel="SpeedDial openIcon example"
         icon={<SpeedDialIcon openIcon={<Settings style={{ fontSize: '1.3rem' }} />} />}
         onClose={handleCloseDial}
@@ -308,7 +322,7 @@ function App() {
         ))}
       </SpeedDial>
 
-      <Loading loading={loading} setLoading={setLoading} />
+      <Loading loading={loading} setLoading={setLoading} /> */}
     </>
   );
 }
