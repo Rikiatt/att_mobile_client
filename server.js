@@ -16,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'views', 'portal_ui_automator', 'build')));
+app.use('/database', express.static(path.join(__dirname, 'database')));
 
 Router(app);
 

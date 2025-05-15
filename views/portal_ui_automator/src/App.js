@@ -55,6 +55,7 @@ import HandleVietin from './sections/bank_handle/HandleVietin';
 import HandleSHBSAHA from './sections/bank_handle/HandleSHBSAHA';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
+import ImportFileComp from './components/Import';
 import HandleShowQR from './sections/HandleShowQR';
 import HandleTestQR from './sections/HandleTestQR';
 import Swal from 'sweetalert2';
@@ -282,6 +283,10 @@ function App() {
         </Grid>
         <Grid item xs={12}>
           <MacroComp devices={devices} />
+        </Grid>
+
+        <Grid item xs={12}>
+          <ImportFileComp devices={devices} />
         </Grid>
       </Grid>
 

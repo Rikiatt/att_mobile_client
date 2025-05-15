@@ -24,7 +24,7 @@ try {
         // chatId = '-4709837410'; // RIKI & BOT
     }
 } catch (error) {
-    console.error('❌ Lỗi khi đọc file info-qr.json:', error);
+    console.error('Lỗi khi đọc file info-qr.json:', error);
     return;
 }
 
@@ -46,7 +46,7 @@ async function checkContentACB (device_id, localPath) {
                 screen.vi.every(kw => content.includes(kw)) ||
                 screen.en.every(kw => content.includes(kw))
             ) {
-                console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
+                console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
         
                 console.log('Đóng app ACB');
                 await stopACB({ device_id });
@@ -54,7 +54,7 @@ async function checkContentACB (device_id, localPath) {
                 await sendTelegramAlert(
                     telegramToken,
                     chatId,
-                    `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
                 );
         
                 await saveAlertToDatabase({
@@ -67,7 +67,7 @@ async function checkContentACB (device_id, localPath) {
             }
         }         
     } catch (error) {    
-        console.error("❌ Lỗi xử lý XML:", error.message);
+        console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -82,7 +82,7 @@ async function checkContentEIB (device_id, localPath) {
       if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
         const screenName = "Chuyển tiền";
   
-        console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName}`);
+        console.log(`Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName}`);
   
         console.log('Đóng app EIB');
         await stopEIB({ device_id });
@@ -90,7 +90,7 @@ async function checkContentEIB (device_id, localPath) {
         await sendTelegramAlert(
           telegramToken,
           chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName} (id thiết bị: ${device_id})`
+          `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với EIB ở màn hình: ${screenName} (id thiết bị: ${device_id})`
         );
   
         await saveAlertToDatabase({
@@ -103,7 +103,7 @@ async function checkContentEIB (device_id, localPath) {
       }
   
     } catch (error) {
-      console.error("❌ Lỗi xử lý XML:", error.message);
+      console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -124,7 +124,7 @@ async function checkContentOCB (device_id, localPath) {
                 screen.vi.every(kw => content.includes(kw)) ||
                 screen.en.every(kw => content.includes(kw))
             ) {
-                console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);        
+                console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);        
         
                 console.log('Đóng app OCB');
                 await stopOCB({ device_id });
@@ -132,7 +132,7 @@ async function checkContentOCB (device_id, localPath) {
                 await sendTelegramAlert(
                     telegramToken,
                     chatId,
-                    `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
                 );
         
                 await saveAlertToDatabase({
@@ -146,49 +146,49 @@ async function checkContentOCB (device_id, localPath) {
         }
     
         const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-        const extractedData = extractNodesOCB(parsed);    
+        // const extractedData = extractNodesOCB(parsed);    
     
-        if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-            console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
+        // if (extractedData.bin && extractedData.account_number && extractedData.amount) {
+        //     console.log("XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
     
-            let jsonData = {};
-            if (fs.existsSync(jsonFilePath)) {
-                try {        
-                    const rawData = fs.readFileSync(jsonFilePath, "utf8");
-                    jsonData = JSON.parse(rawData).data || {};        
-                } catch (error) {          
-                    console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-                    jsonData = {};          
-                }
-            }
+        //     let jsonData = {};
+        //     if (fs.existsSync(jsonFilePath)) {
+        //         try {        
+        //             const rawData = fs.readFileSync(jsonFilePath, "utf8");
+        //             jsonData = JSON.parse(rawData).data || {};        
+        //         } catch (error) {          
+        //             console.warn("Không thể đọc dữ liệu cũ, đặt về object rỗng.");
+        //             jsonData = {};          
+        //         }
+        //     }
     
-            const differences = compareData(extractedData, jsonData);
-            if (differences.length > 0) {
-            console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+        //     const differences = compareData(extractedData, jsonData);
+        //     if (differences.length > 0) {
+        //     console.log(`Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
     
-            console.log('Đóng app OCB OMNI');
-            await stopOCB ( { device_id } );          
+        //     console.log('Đóng app OCB OMNI');
+        //     await stopOCB ( { device_id } );          
     
-            await sendTelegramAlert(
-                telegramToken,
-                chatId,
-                `🚨 Cảnh báo! Phát hiện có thay đổi dữ liệu giao dịch khi xuất với OCB (id thiết bị: ${device_id})`
-            );
+        //     await sendTelegramAlert(
+        //         telegramToken,
+        //         chatId,
+        //         `Cảnh báo! Phát hiện có thay đổi dữ liệu giao dịch khi xuất với OCB (id thiết bị: ${device_id})`
+        //     );
     
-            await saveAlertToDatabase({
-                timestamp: new Date().toISOString(),
-                reason: `Phát hiện có thay đổi dữ liệu giao dịch khi xuất với OCB (id thiết bị: ${device_id})`,
-                filePath: localPath 
-            });
+        //     await saveAlertToDatabase({
+        //         timestamp: new Date().toISOString(),
+        //         reason: `Phát hiện có thay đổi dữ liệu giao dịch khi xuất với OCB (id thiết bị: ${device_id})`,
+        //         filePath: localPath 
+        //     });
     
-            return true;
-            } else {
-                console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-                return false;
-            }
-        }   
+        //     return true;
+        //     } else {
+        //         console.log("Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+        //         return false;
+        //     }
+        // }   
     } catch (error) {    
-        console.error("❌ Lỗi xử lý XML:", error.message);
+        console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -220,7 +220,7 @@ async function checkContentNAB (device_id, localPath) {
             screen.vi.every(kw => content.includes(kw)) ||
             screen.en.every(kw => content.includes(kw))
         ) {
-            console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name}`);
+            console.log(`Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name}`);
 
             console.log('Đóng app NAB');
             await stopNAB({ device_id });
@@ -228,7 +228,7 @@ async function checkContentNAB (device_id, localPath) {
             await sendTelegramAlert(
                 telegramToken,
                 chatId,
-                `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name} (${device_id})`
+                `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name} (${device_id})`
             );
 
             await saveAlertToDatabase({
@@ -242,7 +242,7 @@ async function checkContentNAB (device_id, localPath) {
         }   
     } 
     catch (error) {    
-        console.error("❌ Lỗi xử lý XML:", error.message);
+        console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -269,7 +269,7 @@ async function checkContentTPB (device_id, localPath) {
                 screen.vi.every(kw => content.includes(kw)) ||
                 screen.en.every(kw => content.includes(kw))
             ) {
-                console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name}`);
+                console.log(`Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name}`);
 
                 console.log('Đóng app TPB');
                 await stopTPB({ device_id });
@@ -277,7 +277,7 @@ async function checkContentTPB (device_id, localPath) {
                 await sendTelegramAlert(
                     telegramToken,
                     chatId,
-                    `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
                 );
 
                 await saveAlertToDatabase({
@@ -291,7 +291,7 @@ async function checkContentTPB (device_id, localPath) {
         }
         // scan QR xong >> chi co the edit duoc description => khong can extract data o day nua.           
     } catch (error) {    
-        console.error("❌ Lỗi xử lý XML:", error.message);
+        console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -318,7 +318,7 @@ async function checkContentVPB (device_id, localPath) {
                 screen.vi.every(kw => content.includes(kw)) ||
                 screen.en.every(kw => content.includes(kw))
             ) {
-                console.log(`🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
+                console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
                 console.log('Đóng app VPB');
                 await stopVPB({ device_id });
@@ -326,7 +326,7 @@ async function checkContentVPB (device_id, localPath) {
                 await sendTelegramAlert(
                 telegramToken,
                 chatId,
-                `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
                 );
 
                 await saveAlertToDatabase({
@@ -339,7 +339,7 @@ async function checkContentVPB (device_id, localPath) {
             }
         }   
     } catch (error) {    
-        console.error("❌ Lỗi xử lý XML:", error.message);
+        console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -358,7 +358,7 @@ async function checkContentMB(device_id, localPath) {
                 screen.vi.every(kw => content.includes(kw)) ||
                 screen.en.every(kw => content.includes(kw))
             ) {
-                console.log(`🚨 Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`);
+                console.log(`Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`);
 
                 console.log('Đóng app MB');
                 await stopMB({
@@ -368,7 +368,7 @@ async function checkContentMB(device_id, localPath) {
                 await sendTelegramAlert(
                     telegramToken,
                     chatId,
-                    `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
                 );
 
                 await saveAlertToDatabase({
@@ -385,51 +385,52 @@ async function checkContentMB(device_id, localPath) {
             explicitArray: false,
             mergeAttrs: true
         });
-        const extractedData = extractNodesMB(parsed);
 
-        if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-            console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");
+        // const extractedData = extractNodesMB(parsed);
 
-            let jsonData = {};
-            if (fs.existsSync(jsonFilePath)) {
-                try {
-                    const rawData = fs.readFileSync(jsonFilePath, "utf8");
-                    jsonData = JSON.parse(rawData).data || {};
-                } catch (error) {
-                    console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-                    jsonData = {};
-                }
-            }
+        // if (extractedData.bin && extractedData.account_number && extractedData.amount) {
+        //     console.log("XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");
 
-            const differences = compareData(extractedData, jsonData);
-            if (differences.length > 0) {
-                console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+        //     let jsonData = {};
+        //     if (fs.existsSync(jsonFilePath)) {
+        //         try {
+        //             const rawData = fs.readFileSync(jsonFilePath, "utf8");
+        //             jsonData = JSON.parse(rawData).data || {};
+        //         } catch (error) {
+        //             console.warn("Không thể đọc dữ liệu cũ, đặt về object rỗng.");
+        //             jsonData = {};
+        //         }
+        //     }
 
-                console.log('Dừng luôn app MB Bank');
-                await stopMB({
-                    device_id
-                });
+        //     const differences = compareData(extractedData, jsonData);
+        //     if (differences.length > 0) {
+        //         console.log(`Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
 
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `🚨 Cảnh báo! Phát hiện có thay đổi dữ liệu QR khi xuất với MB (id thiết bị: ${device_id})`
-                );
+        //         console.log('Dừng luôn app MB Bank');
+        //         await stopMB({
+        //             device_id
+        //         });
 
-                await saveAlertToDatabase({
-                    timestamp: new Date().toISOString(),
-                    reason: `Phát hiện có thay đổi dữ liệu QR khi xuất với MB (id thiết bị: ${device_id})`,
-                    filePath: localPath
-                });
+        //         await sendTelegramAlert(
+        //             telegramToken,
+        //             chatId,
+        //             `Cảnh báo! Phát hiện có thay đổi dữ liệu QR khi xuất với MB (id thiết bị: ${device_id})`
+        //         );
 
-                return true;
-            } else {
-                console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-                return false;
-            }
-        }
+        //         await saveAlertToDatabase({
+        //             timestamp: new Date().toISOString(),
+        //             reason: `Phát hiện có thay đổi dữ liệu QR khi xuất với MB (id thiết bị: ${device_id})`,
+        //             filePath: localPath
+        //         });
+
+        //         return true;
+        //     } else {
+        //         console.log("Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+        //         return false;
+        //     }
+        // }
     } catch (error) {
-        console.error("❌ Lỗi xử lý XML:", error.message);
+        console.error("Lỗi xử lý XML:", error.message);
     }
 }
 
@@ -583,6 +584,7 @@ const bankBinMapOCB = {
     "Military (MB)": "970422", "Ngân hàng TMCP Quân Đội": "970422",
     "NCB": "970419", "Ngân hàng TMCP Quốc Dân": "970419"  
 }
+
 
 // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng MB Bank
 const bankBinMapMB = {

@@ -42,8 +42,6 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 }
 
-const { checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB } = require('../functions/checkBank.function');
-
 const { qrDevicePath, filename } = require('../functions/endpoint');
 
 async function clearTempFile( { device_id } ) {
