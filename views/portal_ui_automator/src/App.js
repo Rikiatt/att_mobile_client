@@ -39,7 +39,7 @@ import {
 } from '@mui/icons-material';
 
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
-import { connect, connectTcpIp, disconnectTcpIp, enter, delImg, typeText } from './services/handle.service';
+import { connect, connectTcpIp, disconnectTcpIp, enter, copyQRImages, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
 import HandleACB from './sections/bank_handle/HandleACB';
 import HandleEIB from './sections/bank_handle/HandleEIB';
@@ -193,7 +193,7 @@ function App() {
                           </Button>
                         </Grid>
 
-                        <Grid item xs={6}>
+                        {/* <Grid item xs={6}>
                           <Button
                             variant="contained"
                             color="primary"
@@ -206,6 +206,21 @@ function App() {
                             }}
                           >
                             Enter
+                          </Button>
+                        </Grid> */}
+                        <Grid item xs={6}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            fontSize={'11'}
+                            onClick={async () => {
+                              setLoading(true);
+                              await copyQRImages({ device_id: item.id });
+                              setLoading(false);
+                            }}
+                          >
+                            FIX QR
                           </Button>
                         </Grid>
 

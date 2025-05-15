@@ -42,8 +42,6 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 }
 
-const { qrDevicePath, filename } = require('../functions/endpoint');
-
 async function clearTempFile( { device_id } ) {
   try {                
     await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
@@ -757,30 +755,67 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  copyQRImages : async ({ device_id }) => {    
-    if (!qrDevicePath) {
-      console.error("❌ Cannot find the directory of QR!");
-      return;
-    }
-    
-    const sourcePath = qrDevicePath;
-    const destinationDir = `/sdcard/`;
+  // copyQRImages: async ({ device_id }) => {        
+  //   try {
+  //     const jsonPath = path.join(__dirname, '../database/info-qr.json');
+  //     const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+  //     const timestamp = jsonData.timestamp;
+  //     const date = new Date(timestamp);
+  //     const pad = (n) => n.toString().padStart(2, '0');
+  //     const filename = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
 
-    console.log(`Copying img from ${sourcePath} in device: ${device_id}...`);
+  //     const sourcePath = `/sdcard/DCIM/Camera/${filename}.jpg`;
+  //     const destinationDir = `/sdcard/DCIM/Camera/`;
 
-    for (let i = 1; i <= 10; i++) {
-      const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
-
-      try {
-        await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-        console.log(`✅ Copied img to: ${destinationPath}`);
-      } catch (error) {
-        console.error(`❌ Got an error when copying img ${destinationPath}: ${error}`);
+  //     for (let i = 1; i <= 2; i++) {
+  //       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
+  //       try {
+  //         await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
+  //         console.log(`Copied to: ${destinationPath}`);
+  //       } catch (err) {
+  //         console.error(`Failed to copy to ${destinationPath}: ${err.message}`);
+  //       }
+  //     }
+  //     return { status: 200, message: 'Success' };
+  //   } catch (error) {
+  //     console.log('copyQRImages got an error: ', error);
+  //     return { status: 500, message: 'Failed to copy QR images' };
+  //   }    
+  // }, 
+  copyQRImages: async ({ device_id }) => {
+    try {
+      // Lấy danh sách file trong thư mục Camera
+      const lsOutput = await client.shell(device_id, `ls /sdcard/DCIM/Camera/`);
+      const lsBuffer = await adb.util.readAll(lsOutput);
+      const fileList = lsBuffer.toString().split('\n').map(f => f.trim()).filter(f => f.endsWith('.jpg'));
+  
+      if (!fileList.length) {
+        throw new Error('Không tìm thấy ảnh .jpg nào trong thư mục Camera.');
       }
+  
+      // Sắp xếp theo tên (mặc định thường là theo timestamp), lấy ảnh cuối cùng (mới nhất)
+      fileList.sort();
+      const latestFile = fileList[fileList.length - 1]; // ảnh mới nhất
+      const sourcePath = `/sdcard/DCIM/Camera/${latestFile}`;
+      const baseName = latestFile.replace(/\.jpg$/, '');
+      const destinationDir = `/sdcard/DCIM/Camera/`;
+  
+      for (let i = 1; i <= 2; i++) {
+        const destinationPath = `${destinationDir}${baseName}_copy_${i}.jpg`;
+        try {
+          await client.shell(device_id, `cp "${sourcePath}" "${destinationPath}"`);
+          console.log(`Copied to: ${destinationPath}`);
+        } catch (err) {
+          console.error(`Failed to copy to ${destinationPath}: ${err.message}`);
+        }
+      }
+  
+      return { status: 200, message: 'Copied QR image and its copies successfully' };      
+    } catch (error) {
+      console.error("Error in copyQRImages:", error.message);
+      return { status: 500, message: 'Failed to copy QR images' };
     }
-
-    return { status: 200, message: 'Success' };
-  },  
+  }, 
 
   scanQRBAB: async ({ device_id }) => {    
     const coordinatesScanQRBAB = await loadCoordinatesForDeviceScanQRBAB(device_id);    

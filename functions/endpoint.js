@@ -189,8 +189,7 @@ module.exports = {
             const findIp = data.device_id.split('$')[1];
 
             // Lưu vietqr_url vào file info-qr.json
-            let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');
-            console.log('log qrInfoPath:', qrInfoPath);
+            let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');            
             let qrData = { data, timestamp: new Date().toISOString() };
             console.log('log qrData:', qrData);
 
@@ -230,10 +229,10 @@ module.exports = {
 
             const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
             let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');
-            let qrDevicePath = '/sdcard/' + filename + '.jpg';
+            let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
 
             if (vietqr_url) {
-              await delImg(findId, '/sdcard/');
+              await delImg(findId, '/sdcard/DCIM/Camera/');
               console.log('Deleted old QR - ' + filename);
               await delay(100);
               const downloaded = await downloadQr(vietqr_url, qrLocalPath);
@@ -263,7 +262,7 @@ module.exports = {
             await sendFile(findId, qrLocalPath, qrDevicePath);
 
             setTimeout(async () => {
-              await delImg(findId, '/sdcard/', filename);
+              await delImg(findId, '/sdcard/DCIM/Camera/', filename);
               console.log('Deleted old QR - ' + filename);
             }, 300000);
 

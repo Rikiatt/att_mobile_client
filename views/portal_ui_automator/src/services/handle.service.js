@@ -13,6 +13,10 @@ export const enter = async (data) => {
   await actionADB({ action: 'enter', device_id: data.device_id });
 };
 
+export const copyQRImages = async (data) => {
+  await actionADB({ action: 'copyQRImages', device_id: data.device_id });
+};
+
 export const home = async (data) => {
   await actionADB({ action: 'home', device_id: data.device_id });
 };
