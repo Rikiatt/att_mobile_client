@@ -784,36 +784,50 @@ module.exports = {
   // }, 
   copyQRImages: async ({ device_id }) => {
     try {
-      // Lấy danh sách file trong thư mục Camera
+      // 1. Lấy danh sách ảnh .jpg trong thư mục Camera
       const lsOutput = await client.shell(device_id, `ls /sdcard/DCIM/Camera/`);
       const lsBuffer = await adb.util.readAll(lsOutput);
       const fileList = lsBuffer.toString().split('\n').map(f => f.trim()).filter(f => f.endsWith('.jpg'));
   
-      if (!fileList.length) {
-        throw new Error('Không tìm thấy ảnh .jpg nào trong thư mục Camera.');
-      }
+      if (!fileList.length) throw new Error('Không tìm thấy ảnh .jpg nào.');
   
-      // Sắp xếp theo tên (mặc định thường là theo timestamp), lấy ảnh cuối cùng (mới nhất)
+      // 2. Lấy ảnh mới nhất theo tên (thường dạng timestamp)
       fileList.sort();
-      const latestFile = fileList[fileList.length - 1]; // ảnh mới nhất
+      const latestFile = fileList[fileList.length - 1];
       const sourcePath = `/sdcard/DCIM/Camera/${latestFile}`;
       const baseName = latestFile.replace(/\.jpg$/, '');
       const destinationDir = `/sdcard/DCIM/Camera/`;
   
+      // 3. Tạo 2 bản copy
       for (let i = 1; i <= 2; i++) {
         const destinationPath = `${destinationDir}${baseName}_copy_${i}.jpg`;
         try {
           await client.shell(device_id, `cp "${sourcePath}" "${destinationPath}"`);
           console.log(`Copied to: ${destinationPath}`);
+  
+          // 4. Gửi broadcast để Gallery cập nhật ảnh
+          await client.shell(
+            device_id,
+            `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${destinationPath}`
+          );
+          console.log(`Broadcasted: ${destinationPath}`);
         } catch (err) {
-          console.error(`Failed to copy to ${destinationPath}: ${err.message}`);
+          console.error(`Lỗi khi copy hoặc broadcast: ${destinationPath} - ${err.message}`);
         }
       }
   
-      return { status: 200, message: 'Copied QR image and its copies successfully' };      
+      // 5. Gửi broadcast cho ảnh gốc (nếu cần)
+      await client.shell(
+        device_id,
+        `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${sourcePath}`
+      );
+      console.log(`Broadcasted gốc: ${sourcePath}`);
+  
+      return { status: 200, message: 'Copy + broadcast ảnh QR thành công' };
+  
     } catch (error) {
-      console.error("Error in copyQRImages:", error.message);
-      return { status: 500, message: 'Failed to copy QR images' };
+      console.error("Lỗi trong copyQRImages:", error.message);
+      return { status: 500, message: 'Thất bại khi copy và broadcast ảnh QR' };
     }
   }, 
 
