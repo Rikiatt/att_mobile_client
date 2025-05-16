@@ -100,16 +100,16 @@ const HandleTestQR = ({ item }) => {
               <Select
                 labelId="bank-entry-label"
                 value={selectedEntry}
-                label="NGÂN HÀNG - SỐ TÀI KHOẢN"
+                label="NGÂN HÀNG - SỐ TÀI KHOẢN - TÊN CHỦ THẺ - TÊN"
                 onChange={(e) => setSelectedEntry(e.target.value)}
                 MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
               >
                 {Array.isArray(bankData) && bankData.map((entry, idx) => (
                   <MenuItem
                     key={idx}
-                    value={`${entry['NGÂN HÀNG']}|${entry['SỐ TÀI KHOẢN']}`}
+                    value={`${entry['NGÂN HÀNG']}|${entry['SỐ TÀI KHOẢN']}|${entry['TÊN CHỦ THẺ']}|${entry['TÊN']}`}
                   >
-                    {`${entry['NGÂN HÀNG']} - ${entry['SỐ TÀI KHOẢN']}`}
+                    {`${entry['NGÂN HÀNG']} - ${entry['SỐ TÀI KHOẢN']} - ${entry['TÊN CHỦ THẺ']} - ${entry['TÊN']}`}
                   </MenuItem>
                 ))}
               </Select>
