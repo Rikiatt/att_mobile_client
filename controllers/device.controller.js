@@ -159,7 +159,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
 
 const fetchGoogleSheet = async (req, res) => {
   try {
-    const response = await axios.get('https://script.google.com/macros/s/AKfycbxrD0ogvIdZOUzpa50Qlra4Tg7BIVWUFf57Ct9VF7sTeOlVkhY0qZwkkBwqAvVmm37B/exec');
+    const response = await axios.get('https://script.google.com/macros/s/AKfycbwuaVY68BTa5VI0sgb56-AuohNfd_tRmcB3KfCJzZ6G_0ccPz2jZ1fIb9Ts3DQ3QgMm/exec');
     
     return res.json(response.data);
   } catch (error) {
@@ -174,9 +174,9 @@ const get_google_sheet = async (req, res) => {
     const localRaw = fs.readFileSync(localPath, 'utf-8');
     const local = JSON.parse(localRaw);
     const siteFull = local?.att?.site || '';
-    const site = siteFull.split('/').pop().toUpperCase(); // new88 → NEW88
-
-    const url = `https://script.google.com/macros/s/AKfycbxrD0ogvIdZOUzpa50Qlra4Tg7BIVWUFf57Ct9VF7sTeOlVkhY0qZwkkBwqAvVmm37B/exec?site=${site}`;
+    const site = siteFull.split('/').pop().toUpperCase(); // 'ui_manual/connect/new88' -> 'NEW88'    
+    
+    const url = `https://script.google.com/macros/s/AKfycbwZ7YWAOMaFGk9XyRBVgfEvluschY4IUp5LeDzYpLPeKE-_AGGr2BV6msNwzAjE_8sJ/exec?site=${site}`;
     const response = await axios.get(url);
 
     if (!Array.isArray(response.data)) {
