@@ -890,7 +890,7 @@ module.exports = {
     if (deviceModel === 'SM-N960') {  // Nếu là S20 FE 5G thì chỉ cần Target-Img ở đây
       await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Img']);             
     }
-    else {      
+    else if (deviceModel === 'ONEPLUS A5010' || deviceModel === 'ONEPLUS A5000') {      
       await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Hamburger-Menu']);
       await delay(800);   
       await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['ONEPLUS A5010']); // = Galaxy Note9
@@ -900,6 +900,21 @@ module.exports = {
       await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Img']); 
       await delay(700);      
       await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Finish']);
+    }
+    else if (deviceModel === 'CPH2321') {      
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Overflow-Menu']);
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Browse']);            
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Hamburger-Menu']);
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['OPPO-A55-5G']);
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['DCIM']);
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Camera']);
+      await delay(700);
+      await adbHelper.tapXY(device_id, ...coordinatesScanQRVTB['Target-Image']);
     }
      
 

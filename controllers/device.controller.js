@@ -10,7 +10,6 @@ const adb = require('adbkit');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 const crypto = require('crypto');
-const md5 = require('md5');
 require('dotenv').config();
 
 const bankBins = {
@@ -160,7 +159,7 @@ const downloadQrFromVietQR = async (url, device_id) => {
 
 const fetchGoogleSheet = async (req, res) => {
   try {
-    const response = await axios.get('https://script.google.com/macros/s/AKfycbwuaVY68BTa5VI0sgb56-AuohNfd_tRmcB3KfCJzZ6G_0ccPz2jZ1fIb9Ts3DQ3QgMm/exec');
+    const response = await axios.get('https://script.google.com/macros/s/AKfycbwVg5WXpDzkSZYUPrUqh8P_PYubQ2is1kwr-w6jkMLRTLVZ1Fiq6BMaR1sexuiZmUSA/exec');
     
     return res.json(response.data);
   } catch (error) {
@@ -175,15 +174,16 @@ const get_google_sheet = async (req, res) => {
     const localRaw = fs.readFileSync(localPath, 'utf-8');
     const local = JSON.parse(localRaw);
     const siteFull = local?.att?.site || '';
-    const site = siteFull.split('/').pop().toUpperCase(); // 'ui_manual/connect/new88' -> 'NEW88'    
-      
-    const GOOGLE_SHEET_JSON_URL = process.env.GOOGLE_SHEET_JSON_URL;
-    const url = `${GOOGLE_SHEET_JSON_URL}?site=${site}`;
-        
+    const site = siteFull.split('/').pop().trim().toUpperCase();
+
+    const key = require('md5')(`${site}||RIKI`);    
+    const GOOGLE_SHEET_JSON_URL = process.env.GOOGLE_SHEET_JSON_URL;        
+    const url = `${GOOGLE_SHEET_JSON_URL}?key=${key}`;
+    
     const response = await axios.get(url);
 
     if (!Array.isArray(response.data)) {
-      return res.status(500).json("Phản hồi Google Sheets không hợp lệ!");
+      return res.status(500).json({ status: false, message: "Phản hồi Google Sheets không hợp lệ" });
     }
 
     return res.json(response.data);
