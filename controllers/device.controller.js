@@ -11,6 +11,7 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 const crypto = require('crypto');
 const md5 = require('md5');
+require('dotenv').config();
 
 const bankBins = {
   vcb: '970436',
@@ -175,12 +176,14 @@ const get_google_sheet = async (req, res) => {
     const local = JSON.parse(localRaw);
     const siteFull = local?.att?.site || '';
     const site = siteFull.split('/').pop().toUpperCase(); // 'ui_manual/connect/new88' -> 'NEW88'    
-    
-    const url = `https://script.google.com/macros/s/AKfycbwZ7YWAOMaFGk9XyRBVgfEvluschY4IUp5LeDzYpLPeKE-_AGGr2BV6msNwzAjE_8sJ/exec?site=${site}`;
+      
+    const GOOGLE_SHEET_JSON_URL = process.env.GOOGLE_SHEET_JSON_URL;
+    const url = `${GOOGLE_SHEET_JSON_URL}?site=${site}`;
+        
     const response = await axios.get(url);
 
     if (!Array.isArray(response.data)) {
-      return res.status(500).json("Phản hồi Google Sheets không hợp lệ");
+      return res.status(500).json("Phản hồi Google Sheets không hợp lệ!");
     }
 
     return res.json(response.data);

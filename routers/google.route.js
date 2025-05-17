@@ -3,7 +3,7 @@ const axios = require('axios');
 
 const router = express.Router();
 
-const GOOGLE_SHEET_JSON_URL = 'https://script.google.com/macros/s/AKfycbwZ7YWAOMaFGk9XyRBVgfEvluschY4IUp5LeDzYpLPeKE-_AGGr2BV6msNwzAjE_8sJ/exec';
+const GOOGLE_SHEET_JSON_URL = process.env.GOOGLE_SHEET_JSON_URL;
 
 router.get('/sync-banks', async (req, res) => {
   try {
