@@ -7,7 +7,6 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 import { useEffect, useState } from 'react';
 import { downloadQrForAccount } from '../api/device';
-import axios from 'axios';
 
 const HandleTestQR = ({ item }) => {
   const [expand, setExpand] = useState(false);
@@ -17,15 +16,22 @@ const HandleTestQR = ({ item }) => {
   const [amount, setAmount] = useState('');
 
   useEffect(() => {
-    const stored = localStorage.getItem('local-banks');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setBankData(parsed);
-      } catch (e) {
-        console.error('Lỗi đọc local-banks từ localStorage:', e);
+    const loadBanks = () => {
+      const stored = localStorage.getItem('local-banks');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setBankData(parsed);
+        } catch (e) {
+          console.error('Lỗi đọc local-banks từ localStorage:', e);
+        }
       }
-    }
+    };
+  
+    loadBanks();
+    window.addEventListener('banks-updated', loadBanks);
+  
+    return () => window.removeEventListener('banks-updated', loadBanks);
   }, []);
 
   const handleGenerateQR = async () => {
@@ -100,16 +106,16 @@ const HandleTestQR = ({ item }) => {
               <Select
                 labelId="bank-entry-label"
                 value={selectedEntry}
-                label="NGÂN HÀNG - SỐ TÀI KHOẢN - TÊN CHỦ THẺ - TÊN"
+                label="NGÂN HÀNG - SỐ TÀI KHOẢN"
                 onChange={(e) => setSelectedEntry(e.target.value)}
                 MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
               >
                 {Array.isArray(bankData) && bankData.map((entry, idx) => (
                   <MenuItem
                     key={idx}
-                    value={`${entry['NGÂN HÀNG']}|${entry['SỐ TÀI KHOẢN']}|${entry['TÊN CHỦ THẺ']}|${entry['TÊN']}`}
+                    value={`${entry['NGÂN HÀNG']}|${entry['SỐ TÀI KHOẢN']}`}
                   >
-                    {`${entry['NGÂN HÀNG']} - ${entry['SỐ TÀI KHOẢN']} - ${entry['TÊN CHỦ THẺ']} - ${entry['TÊN']}`}
+                    {`${entry['NGÂN HÀNG']} - ${entry['SỐ TÀI KHOẢN']}${entry['TÊN CHỦ THẺ'] ? ' - ' + entry['TÊN CHỦ THẺ'] : ''}${entry['TÊN'] ? ' - ' + entry['TÊN'] : ''}`}
                   </MenuItem>
                 ))}
               </Select>

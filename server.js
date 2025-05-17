@@ -11,12 +11,14 @@ const { autoRunGnirehtet, stopGnirehtet } = require('./functions/gnirehtet.funct
 const { delay } = require('./helpers/functionHelper');
 
 const server = require('http').createServer(app);
+const googleRoute = require('./routers/google.route');
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'views', 'portal_ui_automator', 'build')));
 app.use('/database', express.static(path.join(__dirname, 'database')));
+app.use('/google', googleRoute);
 
 Router(app);
 

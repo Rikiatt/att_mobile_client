@@ -9,6 +9,8 @@ const { exec } = require('child_process');
 const adb = require('adbkit');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
+const crypto = require('crypto');
+const md5 = require('md5');
 
 const bankBins = {
   vcb: '970436',
@@ -155,6 +157,39 @@ const downloadQrFromVietQR = async (url, device_id) => {
   }
 };
 
+const fetchGoogleSheet = async (req, res) => {
+  try {
+    const response = await axios.get('https://script.google.com/macros/s/AKfycbxrD0ogvIdZOUzpa50Qlra4Tg7BIVWUFf57Ct9VF7sTeOlVkhY0qZwkkBwqAvVmm37B/exec');
+    
+    return res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching Google Sheet:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch data from Google Sheet' });
+  }
+};
+
+const get_google_sheet = async (req, res) => {
+  try {
+    const localPath = path.join(__dirname, '../database/localdata.json');
+    const localRaw = fs.readFileSync(localPath, 'utf-8');
+    const local = JSON.parse(localRaw);
+    const siteFull = local?.att?.site || '';
+    const site = siteFull.split('/').pop().toUpperCase(); // new88 → NEW88
+
+    const url = `https://script.google.com/macros/s/AKfycbxrD0ogvIdZOUzpa50Qlra4Tg7BIVWUFf57Ct9VF7sTeOlVkhY0qZwkkBwqAvVmm37B/exec?site=${site}`;
+    const response = await axios.get(url);
+
+    if (!Array.isArray(response.data)) {
+      return res.status(500).json("Phản hồi Google Sheets không hợp lệ");
+    }
+
+    return res.json(response.data);
+  } catch (error) {
+    console.error('Lỗi khi lấy dữ liệu Google Sheet:', error.message);
+    return res.status(500).json({ status: false, message: "Lỗi hệ thống hoặc kết nối" });
+  }
+};
+
 module.exports = {
   restart: async (req, res) => {
     // updateSource();
@@ -184,7 +219,7 @@ module.exports = {
     });
   },
 
-  download_qr_for_account : async (req, res) => {
+  download_qr_for_account: async (req, res) => {
     try {
       const { bank_code, bank_account, device_id, amount } = req.query;
   
@@ -221,7 +256,11 @@ module.exports = {
       console.error('download-qr_for_account got an ERROR:', error);
       res.status(500).json({ status: false, message: 'Server error' });
     }
-  }
+  },
+
+  fetchGoogleSheet,
+
+  get_google_sheet
 };
 
 /**
