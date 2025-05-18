@@ -26,6 +26,7 @@ import {
   import Loading from './Loading';
   
   const GOOGLE_SHEET_PROXY_URL = 'http://localhost:3456/device/google-sheet';
+  const SYNC_TO_MONGODB_URL = 'http://localhost:3456/device/sync-banks';
   
   const ImportFileComp = ({ devices }) => {
     const [list, setList] = useState([]);
@@ -82,6 +83,8 @@ import {
         localStorage.setItem('local-banks', JSON.stringify(data));
         window.dispatchEvent(new Event('banks-updated'));
         swalToast('success', 'Đồng bộ từ Google Sheets thành công');
+        
+        await fetch(SYNC_TO_MONGODB_URL);
       } catch (err) {
         console.error('Lỗi khi đồng bộ:', err);
         swalToast('error', 'Không thể đồng bộ từ Google Sheets');

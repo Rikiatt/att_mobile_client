@@ -11,6 +11,7 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 const crypto = require('crypto');
 require('dotenv').config();
+const { getDatabase } = require('../database/mongoClient');
 
 const bankBins = {
   vcb: '970436',
@@ -193,6 +194,74 @@ const get_google_sheet = async (req, res) => {
   }
 };
 
+const sync_banks_to_mongodb = async (req, res) => {
+  try {    
+    const localPath = path.join(__dirname, '../database/localdata.json');
+    const localRaw = fs.readFileSync(localPath, 'utf-8');
+    const local = JSON.parse(localRaw);
+
+    const siteFull = local?.att?.site || '';
+    const siteUpper = siteFull.split('/').pop().trim().toUpperCase(); // để MD5
+    const siteLower = siteFull.split('/').pop().trim().toLowerCase(); // để lưu mongodb
+
+    const key = require('md5')(`${siteUpper}||RIKI`);
+    const url = `${process.env.GOOGLE_SHEET_JSON_URL}?key=${key}`;
+
+    const response = await axios.get(url);
+    const data = response.data;
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ status: false, message: 'Phản hồi Google Sheets không hợp lệ!' });
+    }
+
+    const db = await getDatabase();
+    const collection = db.collection('banks');
+
+    let insertCount = 0, updateCount = 0;
+
+    for (const item of data) {
+      const bank_account = item['SỐ TÀI KHOẢN']?.toString().trim();
+      const bank = item['NGÂN HÀNG']?.toString().trim();
+
+      if (!bank_account || !bank) {
+        console.warn('Bỏ qua dòng vì thiếu SỐ TÀI KHOẢN hoặc NGÂN HÀNG:', item);
+        continue;
+      }
+
+      const filter = {
+        site: siteLower,
+        bank_account,
+        bank
+      };
+
+      const update = {
+        $set: {
+          bank,
+          holder_name: item['TÊN CHỦ THẺ']?.toString().trim(),
+          account_name: item['TÊN']?.toString().trim(),
+          source: 'google-sheet',
+          synced_at: new Date(),
+          site: siteLower
+        }
+      };
+
+      const result = await collection.updateOne(filter, update, { upsert: true });
+      if (result.upsertedCount) insertCount++;
+      else if (result.modifiedCount) updateCount++;
+    }
+
+    return res.json({
+      status: true,
+      message: 'Đồng bộ thành công',
+      inserted: insertCount,
+      updated: updateCount
+    });
+  } catch (err) {
+    console.error('sync_banks_to_mongodb ERROR:', err);
+    return res.status(500).json({ status: false, message: 'Đồng bộ thất bại', error: err.message });
+  }
+};
+
 module.exports = {
   restart: async (req, res) => {
     // updateSource();
@@ -263,7 +332,9 @@ module.exports = {
 
   fetchGoogleSheet,
 
-  get_google_sheet
+  get_google_sheet,
+
+  sync_banks_to_mongodb
 };
 
 /**
