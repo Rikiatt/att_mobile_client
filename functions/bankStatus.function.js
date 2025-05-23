@@ -16,7 +16,7 @@ const ensureDirectoryExists = ( dirPath ) => {
 };
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB } = require('../functions/checkBank.function');
+const { checkContentABB, checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB } = require('../functions/checkBank.function');
 
 async function clearTempFile( { device_id } ) {
   try {                
@@ -43,6 +43,54 @@ async function dumpXmlToLocal ( device_id, localPath ) {
   } catch (error) {
       console.error(`Error occurred while dumping XML to local. ${error.message}`);
   }
+}
+
+async function trackABB({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  ensureDirectoryExists(targetDir);
+  console.log('Đang theo dõi ABB...');
+
+  let running = await isABBRunning( { device_id } );
+  console.log('log running in trackABB:',running);
+
+  if (!running) {      
+    return await trackingLoop({ device_id });
+  }
+
+  await clearTempFile( { device_id } );
+
+  while (running) {   
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+    await dumpXmlToLocal(device_id, localPath);
+    await checkContentABB(device_id, localPath);
+
+    running = await isABBRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });
+    if (currentApp === null) {      
+      // Nếu isABBRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        console.log('ABB process đã tắt. Dừng theo dõi.');
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'vn.abbank.retail') {
+      console.log(`ABB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+
+    if (!running) {
+      console.log('ABB đã tắt. Dừng theo dõi.');
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+
+  return { status: 200, message: 'Success' };
 }
 
 async function trackACB ( { device_id } ) {
@@ -446,7 +494,7 @@ async function trackMB({ device_id }) {
 async function trackSHBSAHA({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
   ensureDirectoryExists(targetDir);
-  console.log('SHB SAHA đang đợi chị Hira nên không hỗ trợ theo dõi...');
+  console.log('Đang theo dõi SHB SAHA...');
 
   let running = await isSHBSAHARunning( { device_id } );
 
@@ -456,7 +504,13 @@ async function trackSHBSAHA({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {   
+  while (running) {
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+    await dumpXmlToLocal(device_id, localPath);
+    await checkContentSHBSAHA(device_id, localPath);
+
     running = await isSHBSAHARunning({ device_id });
 
     const currentApp = await getCurrentForegroundApp({ device_id });
@@ -468,7 +522,7 @@ async function trackSHBSAHA({ device_id }) {
         return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'shb.saha.mbanking') {
+    } else if (currentApp !== 'vn.shb.saha.mbanking') {
       console.log(`SHB SAHA không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
       await clearTempFile({ device_id });
       return await trackingLoop({ device_id });
@@ -622,7 +676,7 @@ async function trackSEA({ device_id }) {
 async function trackICB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
   ensureDirectoryExists(targetDir);
-  console.log('Vietin không cho phép dump màn hình nên không hỗ trợ theo dõi...');
+  console.log('ICB không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
   let running = await isICBRunning( { device_id } );
 
@@ -742,47 +796,6 @@ async function trackLPB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-async function trackABB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
-  ensureDirectoryExists(targetDir);
-  console.log('ABB không có thiết bị để nghiên cứu nên không hỗ trợ theo dõi...');
-
-  let running = await isABBRunning( { device_id } );
-
-  if (!running) {      
-    return await trackingLoop({ device_id });
-  }
-
-  await clearTempFile( { device_id } );
-
-  while (running) {   
-    running = await isABBRunning({ device_id });
-
-    const currentApp = await getCurrentForegroundApp({ device_id });
-    if (currentApp === null) {      
-      // Nếu isABBRunning vẫn true, tiếp tục theo dõi
-      if (!running) {
-        console.log('ABB process đã tắt. Dừng theo dõi.');
-        await clearTempFile({ device_id });
-        return await trackingLoop({ device_id });
-      }
-      // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'com.vnpay.abbank') {
-      console.log(`ABB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
-      await clearTempFile({ device_id });
-      return await trackingLoop({ device_id });
-    }
-
-    if (!running) {
-      console.log('ABB đã tắt. Dừng theo dõi.');
-      await clearTempFile({ device_id });
-      return await trackingLoop({ device_id });
-    }
-  }
-
-  return { status: 200, message: 'Success' };
-}
-
 async function trackMSB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -824,7 +837,55 @@ async function trackMSB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function trackSTB({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  ensureDirectoryExists(targetDir);
+  console.log('Đang theo dõi Sacom...');
+
+  let running = await isSTBRunning( { device_id } );
+
+  if (!running) {      
+    return await trackingLoop({ device_id });
+  }
+
+  await clearTempFile( { device_id } );
+
+  while (running) {   
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+    await dumpXmlToLocal(device_id, localPath);
+    await checkContentSTB(device_id, localPath);
+
+    running = await isSTBRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });
+    if (currentApp === null) {      
+      // Nếu isSTBRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        console.log('STB process đã tắt. Dừng theo dõi.');
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'com.sacombank.ewallet') {
+      console.log(`STB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+
+    if (!running) {
+      console.log('STB đã tắt. Dừng theo dõi.');
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+
+  return { status: 200, message: 'Success' };
+}
+
 const trackFunctions = {
+  ABB: trackABB,
   ACB: trackACB,
   EIB: trackEIB,
   OCB: trackOCB,
@@ -833,15 +894,15 @@ const trackFunctions = {
   TPB: trackTPB,
   VPB: trackVPB,
   MB: trackMB,
-  SHBSAHA: trackSHBSAHA,
+  SHB: trackSHBSAHA,
   BIDV: trackBIDV,
   VCB: trackVCB,
   SEA: trackSEA,
   ICB: trackICB,
   PVC: trackPVC,
-  LPB: trackLPB,
-  ABB: trackABB,
-  MSB: trackMSB
+  LPB: trackLPB,  
+  MSB: trackMSB,
+  STB: trackSTB
 };
 
 async function trackingLoop({ device_id }) {
@@ -1063,9 +1124,9 @@ async function isLPBRunning( { device_id } ) {
   }
 }
 
-async function isABBRunning( { device_id } ) {             
+async function isABBRunning( { device_id } ) {         
   try {
-    const output = await client.shell(device_id, 'pidof com.vnpay.abbank')
+    const output = await client.shell(device_id, 'pidof vn.abbank.retail')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString().trim());                
     if (output !== '') return true;        
@@ -1087,7 +1148,20 @@ async function isMSBRunning( { device_id } ) {
   }
 }
 
+async function isSTBRunning( { device_id } ) {                  
+  try {
+    const output = await client.shell(device_id, 'pidof com.sacombank.ewallet')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString().trim());                
+    if (output !== '') return true;        
+  } catch (error) {
+    console.error("Error checking STB app status:", error.message);
+    return false;
+  }
+}
+
 const bankApps = [
+  { name: "ABB", package: "vn.abbank.retail" },  
   { name: "ACB", package: "mobile.acb.com.vn" },  
   { name: "EIB", package: "com.vnpay.EximBankOmni" },
   { name: "OCB", package: "vn.com.ocb.awe" },  
@@ -1096,11 +1170,12 @@ const bankApps = [
   { name: "TPB", package: "com.tpb.mb.gprsandroid" },
   { name: "VPB", package: "com.vnpay.vpbankonline" },
   { name: "MB",  package: "com.mbmobile" },  
-  { name: "SHBSAHA", package: "vn.shb.saha.mbanking" },  
+  { name: "SHB", package: "vn.shb.saha.mbanking" },  
   { name: "BIDV", package: "com.vnpay.bidv" },
   { name: "VCB", package: "com.VCB" },
   { name: "SEA", package: "vn.com.seabank.mb1" },
-  { name: "ICB", package: "com.vietinbank.ipay" }
+  { name: "ICB", package: "com.vietinbank.ipay" },
+  { name: "STB", package: "com.sacombank.ewallet" },
 ];
 
 async function getRunningBankApps({ device_id }) {
@@ -1151,7 +1226,7 @@ async function closeAll ({ device_id }) {
   await delay(1000);
 
   if (deviceModel === "ONEPLUS A5010") {
-    // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
+    // input swipe <x1> <y1> <x2> <y2> <duration>
     await client.shell(device_id, 'input swipe 540 1080 2182 1080 100'); 
     await delay(500);
     await client.shell(device_id, 'input tap 200 888');

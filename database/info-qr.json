@@ -1,0 +1,17 @@
+{
+  "type": "org",
+  "appId": "eib",
+  "data": {
+    "child_id": "D1747895001267",
+    "site": "shbet",
+    "device_id": "262327d30e057ece",
+    "trans_id": "20250522142312904",
+    "bin": 970422,
+    "account_number": "0336998970",
+    "amount": 2222,
+    "add_info": "",
+    "vietqr_url": "https://img.vietqr.io/image/970422-0336998970-qr.png?amount=2222&addInfo=",
+    "trans_status": "success"
+  },
+  "timestamp": "2025-05-22T06:23:38.910Z"
+}

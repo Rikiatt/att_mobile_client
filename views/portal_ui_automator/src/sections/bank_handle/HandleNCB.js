@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { ncbScanQR, ncbLogin } from '../../services/handle.service';
+import { ncbLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -21,19 +21,7 @@ const HandleNCB = ({ item, X, Y, setLoading }) => {
     >
       <AccordionSummary expandIcon={<ExpandMore />}>NCB</AccordionSummary>
       <AccordionDetails>
-        <Stack spacing={1}>
-          <Tooltip title="Start >> ScanQR" arrow>
-            <Button
-              size="small"
-              variant="contained"
-              color="inherit"
-              fullWidth
-              onClick={() => ncbScanQR({ device_id: item.id, X, Y }, setLoading)}
-            >
-              Quét QR
-            </Button>
-          </Tooltip>
-
+        <Stack spacing={1}>          
           <Tooltip title="Nhập mật khẩu và đăng nhập" arrow>
             <Button
               size="small"

@@ -28,6 +28,48 @@ try {
     return;
 }
 
+async function checkContentABB(device_id, localPath) {
+    try {
+        const content = fs.readFileSync(localPath, "utf-8").trim();
+
+        const screenKeywords = [{
+            name: "Chuyển tiền",
+            vi: ["Bạn muốn chuyển tiền", "Tới người nhận khác"],            
+            en: ["Bạn muốn chuyển tiền", "Tới người nhận khác"]
+        }];
+
+        for (const screen of screenKeywords) {
+            if (
+                screen.vi.every(kw => content.includes(kw)) ||
+                screen.en.every(kw => content.includes(kw))
+            ) {
+                console.log(`Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name}`);
+
+                console.log('Đóng app ABB');
+                await stopABB({
+                    device_id
+                });
+
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
+
+                await saveAlertToDatabase({
+                    timestamp: new Date().toISOString(),
+                    reason: `Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+                    filePath: localPath
+                });
+
+                return;
+            }
+        }        
+    } catch (error) {
+        console.error("Lỗi xử lý XML:", error.message);
+    }
+}
+
 async function checkContentACB (device_id, localPath) {
     try {
         // Đọc nội dung XML đã dump ra
@@ -434,6 +476,48 @@ async function checkContentMB(device_id, localPath) {
     }
 }
 
+async function checkContentSTB(device_id, localPath) {
+    try {
+        const content = fs.readFileSync(localPath, "utf-8").trim();
+
+        const screenKeywords = [{
+            name: "Chuyển tiền",
+            vi: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ"],
+            en: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ"]
+        }];
+
+        for (const screen of screenKeywords) {
+            if (
+                screen.vi.every(kw => content.includes(kw)) ||
+                screen.en.every(kw => content.includes(kw))
+            ) {
+                console.log(`Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name}`);
+
+                console.log('Đóng app STB');
+                await stopSTB({
+                    device_id
+                });
+
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
+
+                await saveAlertToDatabase({
+                    timestamp: new Date().toISOString(),
+                    reason: `Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+                    filePath: localPath
+                });
+
+                return;
+            }
+        }        
+    } catch (error) {
+        console.error("Lỗi xử lý XML:", error.message);
+    }
+}
+
 function extractNodesOCB(obj) {
     let bin = null,
         account_number = null,
@@ -613,6 +697,13 @@ const compareData = (xmlData, jsonData) => {
     return differences;
 }
 
+async function stopABB ({ device_id }) {    
+    await client.shell(device_id, 'am force-stop vn.abbank.retail');
+    console.log('Đã dừng app ABB');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+}
+
 async function stopACB ({ device_id }) {    
     await client.shell(device_id, 'am force-stop mobile.acb.com.vn');
     console.log('Đã dừng app ACB');
@@ -665,4 +756,11 @@ async function stopMB ({ device_id }) {
     return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB }
+async function stopSTB ({ device_id }) {    
+    await client.shell(device_id, 'am force-stop com.sacombank.ewallet');
+    console.log('Đã dừng app STB');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+}
+
+module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB }

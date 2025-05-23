@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { mbScanQR } from '../../services/handle.service';
+import { bankTransfer } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleMB = ({ item, X, Y, setLoading }) => {
+const HandleTransfer = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,18 +19,18 @@ const HandleMB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>MB</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>CHUYỂN TIỀN</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Start >> ScanQR" arrow>
+          <Tooltip title="Bật tự động" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => mbScanQR({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => bankTransfer({ device_id: item.id, X, Y }, setLoading)}
             >
-              Quét QR
+              BẬT TỰ ĐỘNG
             </Button>
           </Tooltip>
         </Stack>
@@ -39,4 +39,4 @@ const HandleMB = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleMB;
+export default HandleTransfer;

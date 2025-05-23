@@ -16,9 +16,6 @@ import {
   FormControlLabel,
   Grid,
   IconButton,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
   Stack,
   Switch,
   TextField,
@@ -31,27 +28,17 @@ import {
   Edit,
   Cancel,
   Launch,  
-  PowerSettingsNew,
-  Phonelink,
-  PhonelinkOff,
-  Settings,
   WifiTetheringError  
 } from '@mui/icons-material';
 
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
-import { connect, connectTcpIp, disconnectTcpIp, enter, copyQRImages, delImg, typeText } from './services/handle.service';
+import { connect, connectTcpIp, disconnectTcpIp, copyQRImages, delImg, typeText } from './services/handle.service';
 import { blue } from '@mui/material/colors';
-import HandleACB from './sections/bank_handle/HandleACB';
-import HandleEIB from './sections/bank_handle/HandleEIB';
-import HandleOCB from './sections/bank_handle/HandleOCB';
-import HandleNCB from './sections/bank_handle/HandleNCB';
-import HandleNAB from './sections/bank_handle/HandleNAB';
-import HandleTPB from './sections/bank_handle/HandleTPB';
-import HandleVPB from './sections/bank_handle/HandleVPB';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
-import HandleMB from './sections/bank_handle/HandleMB';
+import HandleTransfer from './sections/bank_handle/HandleTransfer';
 import HandleVCB from './sections/bank_handle/HandleVCB';
-import HandleVietin from './sections/bank_handle/HandleVietin';
+import HandleICB from './sections/bank_handle/HandleICB';
+import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleSHBSAHA from './sections/bank_handle/HandleSHBSAHA';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
@@ -66,17 +53,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [mutate, setMutate] = useState(false);
   const [newVersion, setNewVersion] = useState('');
-  const [openDial, setOpenDial] = useState(false);
+  
   const [qr, setQr] = useState(false);
   const [seting, setSeting] = useState({});
   const [ipPublic, setIpPublic] = useState(' - ');
-  const handleOpenDial = () => {
-    setOpenDial(true);
-  };
-
-  const handleCloseDial = () => {
-    setOpenDial(false);
-  };
 
   useEffect(() => {
     const callAPI = async () => {
@@ -192,22 +172,7 @@ function App() {
                             Nhập ký tự
                           </Button>
                         </Grid>
-
-                        {/* <Grid item xs={6}>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            fontSize={'11'}
-                            onClick={async () => {
-                              setLoading(true);
-                              await enter({ device_id: item.id });
-                              setLoading(false);
-                            }}
-                          >
-                            Enter
-                          </Button>
-                        </Grid> */}
+                        
                         <Grid item xs={6}>
                           <Button
                             variant="contained"
@@ -274,18 +239,12 @@ function App() {
                           <HandleTestQR item={item} />
                         </>
                       }
-                      <Divider sx={{ mt: 2, mb: 2 }} />                      
-                      <HandleACB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleOCB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
-                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleNAB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                    
-                      <HandleTPB item={item} X={X} Y={Y} setLoading={setLoading} />                                          
-                      <HandleVPB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                    
-                      <HandleMB item={item} X={X} Y={Y} setLoading={setLoading} />                                                                                        
+                      <Divider sx={{ mt: 2, mb: 2 }} />                                            
+                      <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />                                                                                        
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleVietin item={item} X={X} Y={Y} setLoading={setLoading} />                                            
+                      <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
+                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />  
                       <HandleSHBSAHA item={item} X={X} Y={Y} setLoading={setLoading} />                                                                  
                     </CardContent>
                   </Card>
@@ -303,7 +262,9 @@ function App() {
         <Grid item xs={12}>
           <ImportFileComp devices={devices} />
         </Grid> */}
-        <Grid item xs={12}>
+        {/* <Grid item xs={12} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: '200px', mt: 'auto' }}> */}
+        <Grid item xs={12} sx={{ minHeight: '250px', pb: 4 }}>
+          <Box sx={{ flexGrow: 1 }} />
           <Stack spacing={3}>
             <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 2 }}>
               <MacroComp devices={devices} />
@@ -314,30 +275,12 @@ function App() {
           </Stack>
         </Grid>
 
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           
-        </Grid>
+        </Grid> */}
       </Grid>
 
-      {/* <SpeedDial
-        ariaLabel="SpeedDial openIcon example"
-        icon={<SpeedDialIcon openIcon={<Settings style={{ fontSize: '1.3rem' }} />} />}
-        onClose={handleCloseDial}
-        onOpen={handleOpenDial}
-        open={openDial}
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-      >
-        {actionsDial.map((action) => (
-          <SpeedDialAction
-            key={action.name}
-            icon={action.icon}
-            tooltipTitle={action.name}
-            onClick={() => handleDevice(action.typeHandle)}
-          />
-        ))}
-      </SpeedDial>
-
-      <Loading loading={loading} setLoading={setLoading} /> */}
+      
     </>
   );
 }
@@ -431,12 +374,6 @@ function TitleComp({ title, item, setMutate }) {
     </Stack>
   );
 }
-
-const actionsDial = [
-  { icon: <Phonelink color="primary" />, name: 'Mở kết nối ngược - VPN điện thoại theo máy tính', typeHandle: 'startShare' },
-  { icon: <PhonelinkOff />, name: 'Tắt kết nối ngược', typeHandle: 'stopShare' },
-  { icon: <PowerSettingsNew color="error" />, name: 'Restart tool', typeHandle: 'restart' }
-];
 
 function SetupConnect({ setMutate, seting, setSeting }) {
   let att_connect = seting.att?.connected || false;

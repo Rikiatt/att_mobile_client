@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vietinScanQR, vietinLogin, vietinConfirmAfterFace } from '../../services/handle.service';
+import { icbScanQR, icbLogin, icbConfirmAfterFace } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleVietin = ({ item, X, Y, setLoading }) => {
+const HandleICB = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,7 +19,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>VTB</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>ICB</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>          
           <Tooltip title="Scan QR >> Login" arrow>
@@ -28,7 +28,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinScanQR({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => icbScanQR({ device_id: item.id, X, Y }, setLoading)}
             >
               Quét QR
             </Button>
@@ -40,7 +40,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => icbLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>
@@ -52,7 +52,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinConfirmAfterFace({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => icbConfirmAfterFace({ device_id: item.id, X, Y }, setLoading)}
             >
               Xác nhận (sau quét mặt - thủ công)
             </Button>
@@ -64,7 +64,7 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vietinConfirm({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => icbConfirm({ device_id: item.id, X, Y }, setLoading)}
             >
               Xác nhận (sau quét QR)
             </Button>
@@ -75,4 +75,4 @@ const HandleVietin = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleVietin;
+export default HandleICB;

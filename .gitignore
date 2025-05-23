@@ -19,7 +19,7 @@ views/portal_ui_automator/node_modules/
 
 images/*.png
 images/*.jpg
-database/*json
+database/local-banks.json
 
 # misc
 .DS_Store

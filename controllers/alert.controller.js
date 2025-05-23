@@ -1,4 +1,4 @@
-const getDatabase = require('../database/mongoClient');
+const { getDatabase } = require('../database/mongoClient');
 
 async function saveAlertToDatabase(alert) {
     const db = await getDatabase();

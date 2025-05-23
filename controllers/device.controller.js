@@ -187,6 +187,14 @@ const get_google_sheet = async (req, res) => {
       return res.status(500).json({ status: false, message: "Phản hồi Google Sheets không hợp lệ" });
     }
 
+    // Ghi file cho backend dùng password
+    const backendPath = path.join(__dirname, '../database/local-banks.json');
+    fs.writeFileSync(backendPath, JSON.stringify(response.data, null, 2), 'utf-8');
+
+    // Ghi thêm file cho frontend (Import UI, Test QR, Macro...)
+    const frontendPath = path.join(__dirname, '../views/portal_ui_automator/public/banks/local-banks.json');
+    fs.writeFileSync(frontendPath, JSON.stringify(response.data, null, 2), 'utf-8');
+
     return res.json(response.data);
   } catch (error) {
     console.error('Lỗi khi lấy dữ liệu Google Sheet:', error.message);

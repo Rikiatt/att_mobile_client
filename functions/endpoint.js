@@ -182,15 +182,16 @@ module.exports = {
           // Nhận phản hồi từ server
           currentSocket.on('broadcast', async (data) => {
             const now = Date.now();
-            console.log('data ' + type, data);
+            console.log('log data ' + type, data);
             const devices = await listDevice();
 
             const findId = data.device_id.split('$')[0];
             const findIp = data.device_id.split('$')[1];
 
             // Lưu vietqr_url vào file info-qr.json
-            let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');            
-            let qrData = { data, timestamp: new Date().toISOString() };
+            let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
+            data.trans_status = 'in_process';           
+            let qrData = { type, data, timestamp: new Date().toISOString() };
             console.log('log qrData:', qrData);
 
             try {
@@ -219,17 +220,20 @@ module.exports = {
               return;
             }
 
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
+            // const date = new Date();
+            // const year = date.getFullYear();
+            // const month = String(date.getMonth() + 1).padStart(2, '0');
+            // const day = String(date.getDate()).padStart(2, '0');
+            // const hours = String(date.getHours()).padStart(2, '0');
+            // const minutes = String(date.getMinutes()).padStart(2, '0');
+            // const seconds = String(date.getSeconds()).padStart(2, '0');
 
-            const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-            let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');
-            let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+            // const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+            // let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');
+            // let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
+            const filename = `${trans_id}`;
+            let qrLocalPath = path.join(__dirname, '..', 'images', `${trans_id}.jpg`);
+            let qrDevicePath = `/sdcard/DCIM/Camera/${trans_id}.jpg`;
 
             if (vietqr_url) {
               await delImg(findId, '/sdcard/DCIM/Camera/');
@@ -239,19 +243,7 @@ module.exports = {
               if (!downloaded) {
                 console.log('Download Failed -> create QR by library:', qrLocalPath);
                 await transToQr(data, qrLocalPath);
-              }
-              // // Lưu vietqr_url vào file info-qr.json
-              // let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');
-              // console.log('log qrInfoPath:', qrInfoPath);
-              // let qrData = { vietqr_url, timestamp: new Date().toISOString() };
-              // console.log('log qrData:', qrData);
-
-              // try {
-              //   fs.writeFileSync(qrInfoPath, JSON.stringify(qrData, null, 2));
-              //   console.log("Saved vietqr_url to info-qr.json");
-              // } catch (error) {
-              //   console.error("Got an error when saving vietqr_url:", error);
-              // }
+              }              
             } else {
               await transToQr(data, qrLocalPath);
             }

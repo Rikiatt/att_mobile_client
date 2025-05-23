@@ -1,9 +1,9 @@
-import { postActionADB } from '../api/adb';
+import { postActionBank } from '../api/bank';
 import { swalToast } from '../utils/swal';
 
-export async function actionADB(data) {
+export async function actionBank(data) {
   try {
-    const result = await postActionADB(data);    
+    const result = await postActionBank(data);    
 
     if (result.status && result.status === false) {
       return swalToast('error', result.msg);
