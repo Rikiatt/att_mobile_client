@@ -1,17 +1,12 @@
 {
-  "type": "org",
-  "appId": "eib",
+  "type": "att",
   "data": {
-    "child_id": "D1747895001267",
-    "site": "shbet",
-    "device_id": "262327d30e057ece",
-    "trans_id": "20250522142312904",
-    "bin": 970422,
-    "account_number": "0336998970",
-    "amount": 2222,
-    "add_info": "",
-    "vietqr_url": "https://img.vietqr.io/image/970422-0336998970-qr.png?amount=2222&addInfo=",
-    "trans_status": "success"
+    "child_id": "D1748084657395",
+    "site": "new88",
+    "device_id": "27dd861cd4217ece",
+    "trans_id": "17306468_0524110408",
+    "vietqr_url": "https://img.vietqr.io/image/970415-103871815560-qr.png?amount=35500000&addInfo=",
+    "trans_status": "in_process"
   },
-  "timestamp": "2025-05-22T06:23:38.910Z"
+  "timestamp": "2025-05-24T11:04:19.505Z"
 }

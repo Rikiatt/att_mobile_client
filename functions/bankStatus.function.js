@@ -1212,9 +1212,9 @@ async function checkRunningBanks({ device_id }) {
     console.log("VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
     return null;
   }
-  else {
-    console.log('Đang bắt đầu theo dõi xem có đơn không, nếu có thì ');
-  }
+  // else {
+  //   console.log('Đang bắt đầu theo dõi xem có đơn không, nếu có thì ');
+  // }
 
   return runningBanks[0] || null;
 }

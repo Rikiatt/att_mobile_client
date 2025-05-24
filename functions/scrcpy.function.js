@@ -44,9 +44,6 @@ module.exports = {
     console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
     await delay(500);    
-    if (!site) {
-      return res.status(400).json({ status: false, message: 'Không xác định được site từ localdata.json' });
-    }
     if (site === 'new88' || site === 'shbet') {
       await trackingLoop({ device_id: device_id }); 
     }    

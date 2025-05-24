@@ -1,14 +1,2 @@
 {
-  "org": {
-    "endpoint": "https://device.attpay.org",
-    "site": "shbet",
-    "connected": false,
-    "message": "Success"
-  },
-  "connect": "",
-  "att": {
-    "endpoint": "https://device.attapps.net",
-    "site": "ui_manual/connect/shbet",
-    "connected": false
-  }
 }

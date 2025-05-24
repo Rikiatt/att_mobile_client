@@ -274,6 +274,34 @@ const mapStartBank = {
   stb: startSTB
 };
 
+const bankPackages = {
+  abb: 'vn.abbank.retail',
+  acb: 'mobile.acb.com.vn',
+  eib: 'com.vnpay.EximBankOmni',
+  ocb: 'vn.com.ocb.awe',
+  nab: 'ops.namabank.com.vn',
+  tpb: 'com.tpb.mb.gprsandroid',
+  vpb: 'com.vnpay.vpbankonline',
+  mb: 'com.mbmobile',
+  shb: 'vn.shb.saha.mbanking',
+  stb: 'com.sacombank.ewallet'
+};
+
+async function isBankAppRunning({ appId, device_id }) {
+  const packageName = bankPackages[appId.toLowerCase()];
+  if (!packageName) return false;
+
+  try {
+    const output = await client.shell(device_id, `pidof ${packageName}`)
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString().trim());
+    return output !== '';
+  } catch (error) {
+    console.error(`[ERROR] Kiểm tra app ${appId} không chạy được:`, error.message);
+    return false;
+  }
+}
+
 function getPasswordFromLocalBanks(appId, device_id) {
   const filePath = path.join(__dirname, '../database/local-banks.json');
   const raw = fs.readFileSync(filePath, 'utf-8');
@@ -283,10 +311,9 @@ function getPasswordFromLocalBanks(appId, device_id) {
   const normalizedDeviceId = device_id?.trim();
 
   const matched = list.find(e => {
-  const bankName = e["NGÂN HÀNG"]?.toUpperCase().trim();
-  const deviceField = e["THIẾT BỊ"]?.trim() || "";
-  const match = bankName === normalizedAppId && deviceField.includes(normalizedDeviceId);        
-  return match;
+    const bankName = e["NGÂN HÀNG"]?.toUpperCase().trim();
+    const deviceField = e["THIẾT BỊ"]?.trim() || "";
+    return bankName === normalizedAppId && deviceField.includes(normalizedDeviceId);
   });
 
   if (!matched || !matched["MẬT KHẨU"]) {
@@ -295,7 +322,7 @@ function getPasswordFromLocalBanks(appId, device_id) {
   }
 
   return matched["MẬT KHẨU"].toString().trim();
-};
+}
 
 const loginABB = async ({ device_id }) => {    
   console.log('Login ABB...');
@@ -304,7 +331,7 @@ const loginABB = async ({ device_id }) => {
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
 
-  const appId = info?.appId;
+  const appId = info?.data?.appId?.toUpperCase(); // googlesheet viết hoa appId
   const password = getPasswordFromLocalBanks(appId, device_id);
         
   // nó có cái nhập mật khẩu bằng mã PIN hoặc chuỗi chưa làm.
@@ -316,14 +343,14 @@ const loginABB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
-const loginEIB = async ({ device_id }) => {    
+const loginEIB = async ({ device_id, appId }) => {    
   console.log('Login EIB...');
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
 
-  const appId = info?.appId;
+  appId = info?.data?.appId;
   const password = getPasswordFromLocalBanks(appId, device_id);        
   await client.shell(device_id, 'input tap 918 305');
   await delay(1000);
@@ -394,7 +421,25 @@ const mapLoginBank = {
   stb: loginSTB
 };
 
-// let isAppStarted = {}; // Bộ nhớ cache theo device_id
+const reset = async (timer, device_id, appId) => {
+  timer++;
+  const count = 30;
+
+  if (isNaN(timer)) {
+    Logger.log(2, `Reset vì timer không hợp lệ: ${timer}`, __filename);
+    await runBankTransfer({ device_id, appId });
+    return 0;
+  }
+
+  if (timer >= count) {
+    Logger.log(1, `Đã đạt giới hạn retry (${timer}/${count}), reset lại...`, __filename);
+    await runBankTransfer({ device_id, appId });
+    return 0;
+  }
+
+  Logger.log(1, `Retry lần ${timer}/${count}`, __filename);
+  return timer;
+};
 
 const checkTransactions = async ({ device_id }) => {
   const infoPath = path.join(__dirname, '../database/info-qr.json');
@@ -598,17 +643,15 @@ const runBankTransfer = async ({ device_id, appId }) => {
   await loginApp({ device_id });
   await delay(3000);
 
-  // isAppStarted[device_id] = true;
-
   return { status: 200, valid: true, message: 'Đăng nhập thành công' };
 };
 
-const bankTransfer = async ({ device_id }) => {
+const bankTransfer = async ({ device_id, appId }) => {
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const json = JSON.parse(raw);
-  const type = json?.type;
-  const appId = json?.appId;
+  const type = json?.type;  
+  appId = json?.data?.appId;  
 
   if (type !== 'org' || !device_id || !appId) {
     return { status: 400, valid: false, message: 'Thiếu thông tin hoặc sai kiểu kết nối' };
@@ -620,43 +663,38 @@ const bankTransfer = async ({ device_id }) => {
   }
 
   let retries = 0;
-  const maxRetries = 30;
 
-  if (!isAppStarted[device_id]) {
-    await runBankTransfer({ device_id, appId });
-  }
-
-  while (retries < maxRetries) {
+  while (retries < 30) {
     const transStatus = await checkTransactions({ device_id });
+    const started = await isBankAppRunning({ appId, device_id });
 
-    if (transStatus === 'in_process') {
-      Logger.log(0, `4. ScanQR ${appId.toUpperCase()}`, __filename);
+    if (transStatus === 'in_process' && started) {
+      Logger.log(0, `TH1 - Đã login app + có đơn: ScanQR`, __filename);
       await scanQRApp({ device_id });
-      return { status: 200, valid: true, message: 'ScanQR thành công' };
+      return { status: 200, valid: true, message: 'TH1: ScanQR thành công' };
     }
 
-    if (transStatus === 'success') {
-      console.log(`[${retries + 1}/${maxRetries}] Giao dịch đã hoàn tất. Đợi giao dịch mới...`);
-    } else {
-      console.log(`[${retries + 1}/${maxRetries}] Chưa có giao dịch hợp lệ. Đợi tiếp...`);
+    if (transStatus !== 'in_process' && started) {
+      Logger.log(0, `TH2 - Đã login app + chưa có đơn`, __filename);
+    }
+
+    if (transStatus === 'in_process' && !started) {
+      Logger.log(0, `TH3 - Có đơn + chưa login app → chạy lại`, __filename);
+      await runBankTransfer({ device_id, appId });
+      await scanQRApp({ device_id });
+      return { status: 200, valid: true, message: 'TH3: ScanQR thành công sau login' };
+    }
+
+    if (transStatus !== 'in_process' && !started) {
+      Logger.log(0, `TH4 - Chưa login app + chưa có đơn → chạy login trước`, __filename);
+      await runBankTransfer({ device_id, appId });
     }
 
     await delay(1000);
-    retries++;
+    retries = await reset(retries, device_id, appId);
   }
 
-  console.log('⏳ Hết thời gian chờ đơn. Thực hiện lại start/login app...');
-  // isAppStarted[device_id] = false;
-  await runBankTransfer({ device_id, appId });
-
-  const transStatusRetry = await checkTransactions({ device_id });
-  if (transStatusRetry === 'in_process') {
-    Logger.log(0, `4. ScanQR ${appId.toUpperCase()} (sau khi login lại)`, __filename);
-    await scanQRApp({ device_id });
-    return { status: 200, valid: true, message: 'ScanQR thành công sau login lại' };
-  }
-
-  return { status: 200, valid: true, message: 'Đã login lại. Chờ đơn tiếp theo...' };
+  return { status: 200, valid: true, message: 'Hết retry, đã reset lại app và chờ đơn mới' };
 };
 
 module.exports = {
