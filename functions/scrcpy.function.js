@@ -36,17 +36,14 @@ function saveCurrentDeviceId(device_id) {
 }
 
 module.exports = {
-  connectScrcpy: async ({ device_id, title }) => {
-    // Tắt hết mọi thiết bị đang mở với scrcpy.exe cũ
-    // để tránh gian lận
-    // nodeCmd.run(`taskkill /F /IM scrcpy.exe`);
-    // await delay(500);
+  connectScrcpy: async ({ device_id, title }) => {    
     console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
     await delay(500);    
-    if (site === 'new88' || site === 'shbet') {
+    if (site === 'new88' || site === 'shbet' || site === 'jun88k36' || site === 'jun88cmd') {
       await trackingLoop({ device_id: device_id }); 
-    }    
+    } 
+    return { status: 200, message: 'Success' };   
   },
 
   // connectScrcpy: async ({ device_id, title }) => {

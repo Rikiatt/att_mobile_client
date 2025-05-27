@@ -1,4 +1,5 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const adb = require('adbkit');
 const fs = require('fs');
 const path = require('path');
@@ -8,11 +9,11 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
 const filePath = 'C:\\att_mobile_client\\database\\info-qr.json';
-let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
+// let chatId = '-4725254373'; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
+let chatId = process.env.chatId;
 const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-const { sendTelegramAlert } = require('../services/telegramService');
-const { saveAlertToDatabase } = require('../controllers/alert.controller');
-const jsonFilePath = "C:\\att_mobile_client\\database\\info-qr.json";
+const { sendTelegramAlert, saveAlertToDatabase } = require('../functions/alert.function');
+// const jsonFilePath = "C:\\att_mobile_client\\database\\info-qr.json";
 
 // Đọc file config để xác định chatId phù hợp
 try {
@@ -284,6 +285,45 @@ async function checkContentNAB (device_id, localPath) {
         }   
     } 
     catch (error) {    
+        console.error("Lỗi xử lý XML:", error.message);
+    }
+}
+
+async function checkContentSHBSAHA (device_id, localPath) {
+    try {
+        const content = fs.readFileSync(localPath, "utf-8").trim();
+
+        const screenKeywords = [
+            {
+                name: "Chuyển tiền",                
+                vi: ["Đến người khác", "Đến tôi tại SHB", "SHS"],
+                en: ["Đến người khác", "Đến tôi tại SHB", "SHS"], // app chỉ có tiếng việt
+            }            
+        ];
+
+        for (const screen of screenKeywords) {
+            if ( screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
+                console.log(`Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name}`);
+
+                console.log('Đóng app SHB SAHA');
+                await stopSHBSAHA({ device_id });
+
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
+
+                await saveAlertToDatabase({
+                    timestamp: new Date().toISOString(),
+                    reason: `Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+                    filePath: localPath
+                });
+
+                return;
+            }
+        }                  
+    } catch (error) {    
         console.error("Lỗi xử lý XML:", error.message);
     }
 }
@@ -733,6 +773,13 @@ async function stopNAB ({ device_id }) {
     return { status: 200, message: 'Success' };
 }
 
+async function stopSHBSAHA ({ device_id }) {    
+    await client.shell(device_id, 'am force-stop vn.shb.saha.mbanking');
+    console.log('Đã dừng SHB SAHA');
+    await delay(500);
+    return { status: 200, message: 'Success' };
+}
+
 async function stopTPB ({ device_id }) {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
@@ -763,4 +810,4 @@ async function stopSTB ({ device_id }) {
     return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB }
+module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB }

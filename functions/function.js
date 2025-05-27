@@ -88,7 +88,7 @@ module.exports = {
     if (fs.existsSync(filePath)) {
       const fileContent = fs.readFileSync(filePath, 'utf-8');
       const jsonData = JSON.parse(fileContent);
-      console.log('File:', JSON.stringify(jsonData));
+      console.log('Data in file json:', JSON.stringify(jsonData));
       return jsonData;
     }
     return null;

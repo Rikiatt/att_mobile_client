@@ -16,7 +16,7 @@ const ensureDirectoryExists = ( dirPath ) => {
 };
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentABB, checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB } = require('../functions/checkBank.function');
+const { checkContentABB, checkContentACB, checkContentEIB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB } = require('../functions/checkBank.function');
 
 async function clearTempFile( { device_id } ) {
   try {                
@@ -27,26 +27,45 @@ async function clearTempFile( { device_id } ) {
   }
 }
 
-async function dumpXmlToLocal ( device_id, localPath ) {  
-  try {          
-    const tempPath = `/sdcard/temp_dump.xml`;
-      
-    await client.shell(device_id, `uiautomator dump ${tempPath}`);    
-      
-    await client.pull( device_id , tempPath)
-      .then(stream => new Promise((resolve, reject) => {        
-        const fileStream = fs.createWriteStream(localPath);
-        stream.pipe(fileStream);
-        fileStream.on('finish', resolve);
-        fileStream.on('error', reject);
-    }));    
+async function waitForXmlReady(device_id, remotePath = '/sdcard/temp_dump.xml', timeout = 3000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    try {
+      const output = await client.shell(device_id, `ls ${remotePath}`)
+        .then(adb.util.readAll)
+        .then(buf => buf.toString().trim());
+
+      if (output === remotePath) return true;
+    } catch (_) {
+      // file chưa tồn tại, tiếp tục vòng lặp
+    }
+    await delay(200); // không nên để thấp hơn 200ms để tránh spam shell
+  }
+  return false;
+}
+
+async function dumpXmlToLocal(device_id, localPath) {
+  try {
+    const remotePath = `/sdcard/temp_dump.xml`;
+    await client.shell(device_id, `uiautomator dump ${remotePath}`);
+
+    const ready = await waitForXmlReady(device_id, remotePath);
+    if (!ready) throw new Error('XML file not ready after dump');
+
+    const transfer = await client.pull(device_id, remotePath);
+    await new Promise((resolve, reject) => {
+      const fileStream = fs.createWriteStream(localPath);
+      transfer.pipe(fileStream);
+      fileStream.on('finish', resolve);
+      fileStream.on('error', reject);
+    });
   } catch (error) {
-      console.error(`Error occurred while dumping XML to local. ${error.message}`);
+    console.error(`dumpXmlToLocal error: ${error.message}`);
   }
 }
 
 async function trackABB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('Đang theo dõi ABB...');
 
@@ -94,10 +113,10 @@ async function trackABB({ device_id }) {
 }
 
 async function trackACB ( { device_id } ) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
 
-  console.log('🔍 Bắt đầu theo dõi ACB...');
+  console.log('Đang theo dõi ACB...');
 
   // Click "CLOSE" to close UTILITIES SETTING
   // await client.shell(device_id, 'input tap 540 900');      
@@ -162,10 +181,10 @@ async function getCurrentForegroundApp({ device_id }) {
 }
 
 async function trackEIB ( { device_id } ) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
 
-  console.log('Bắt đầu theo dõi EIB...');
+  console.log('Đang theo dõi EIB...');
 
   let running = await isEIBRunning( { device_id } );
 
@@ -209,10 +228,10 @@ async function trackEIB ( { device_id } ) {
 }
 
 async function trackOCB ( { device_id } ) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
 
-  console.log('Bắt đầu theo dõi OCB...');
+  console.log('Đang theo dõi OCB...');
 
   let running = await isOCBRunning( { device_id } );
 
@@ -256,7 +275,7 @@ async function trackOCB ( { device_id } ) {
 }
 
 async function trackNCB ( { device_id } ) {                      
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('NCB không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
@@ -303,10 +322,10 @@ async function trackNCB ( { device_id } ) {
 }
 
  async function trackNAB ( { device_id } ) {    
-    const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('Bắt đầu theo dõi NAB...');
+    console.log('Đang theo dõi NAB...');
 
     let running = await isNABRunning( { device_id } );
 
@@ -349,11 +368,58 @@ async function trackNCB ( { device_id } ) {
     return { status: 200, message: 'Success' };
 }
 
-async function trackTPB ( { device_id } ) {    
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+async function trackSHBSAHA ( { device_id } ) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
 
-  console.log('Bắt đầu theo dõi TPB...');
+  console.log('Đang theo dõi SHB SAHA...');
+
+  let running = await isSHBSAHARunning( { device_id } );
+
+  if (!running) {
+    return await trackingLoop({ device_id });
+  }
+        
+  await clearTempFile( { device_id } );
+    
+  while (running) {
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+    await dumpXmlToLocal(device_id, localPath);    
+    await checkContentSHBSAHA(device_id, localPath);
+
+    running = await isSHBSAHARunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });
+    if (currentApp === null) {      
+      // Nếu isSHBSAHARunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        console.log('SHB SAHA process đã tắt. Dừng theo dõi.');
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'vn.shb.saha.mbanking') {
+      console.log(`SHB SAHA không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+
+    if (!running) {
+      console.log('SHB SAHA đã tắt. Dừng theo dõi.');
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+  return { status: 200, message: 'Success' };
+}
+
+async function trackTPB ( { device_id } ) {    
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+
+  console.log('Đang theo dõi TPB...');
 
   let running = await isTPBRunning( { device_id } );
 
@@ -397,10 +463,10 @@ async function trackTPB ( { device_id } ) {
 }
 
 async function trackVPB ( { device_id } ) {    
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
 
-  console.log('🔍 Bắt đầu theo dõi VPB...');
+  console.log('Đang theo dõi VPB...');
 
   let running = await isVPBRunning( { device_id } );
 
@@ -444,7 +510,7 @@ async function trackVPB ( { device_id } ) {
 }
 
 async function trackMB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
 
   console.log('Đang theo dõi MB Bank...');
@@ -491,55 +557,8 @@ async function trackMB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-async function trackSHBSAHA({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
-  ensureDirectoryExists(targetDir);
-  console.log('Đang theo dõi SHB SAHA...');
-
-  let running = await isSHBSAHARunning( { device_id } );
-
-  if (!running) {      
-    return await trackingLoop({ device_id });
-  }
-
-  await clearTempFile( { device_id } );
-
-  while (running) {
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const localPath = path.join(targetDir, `${timestamp}.xml`);
-
-    await dumpXmlToLocal(device_id, localPath);
-    await checkContentSHBSAHA(device_id, localPath);
-
-    running = await isSHBSAHARunning({ device_id });
-
-    const currentApp = await getCurrentForegroundApp({ device_id });
-    if (currentApp === null) {      
-      // Nếu isSHBSAHARunning vẫn true, tiếp tục theo dõi
-      if (!running) {
-        console.log('SHB SAHA process đã tắt. Dừng theo dõi.');
-        await clearTempFile({ device_id });
-        return await trackingLoop({ device_id });
-      }
-      // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'vn.shb.saha.mbanking') {
-      console.log(`SHB SAHA không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`);
-      await clearTempFile({ device_id });
-      return await trackingLoop({ device_id });
-    }
-
-    if (!running) {
-      console.log('SHB SAHA đã tắt. Dừng theo dõi.');
-      await clearTempFile({ device_id });
-      return await trackingLoop({ device_id });
-    }
-  }
-
-  return { status: 200, message: 'Success' };
-}
-
 async function trackBIDV({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('BIDV không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
@@ -586,7 +605,7 @@ async function trackBIDV({ device_id }) {
 }
 
 async function trackVCB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('VCB không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
@@ -633,7 +652,7 @@ async function trackVCB({ device_id }) {
 }
 
 async function trackSEA({ device_id }) {      
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('SEA không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
@@ -674,7 +693,7 @@ async function trackSEA({ device_id }) {
 }
 
 async function trackICB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('ICB không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
@@ -715,7 +734,7 @@ async function trackICB({ device_id }) {
 }
 
 async function trackPVC({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('PVC không có thiết bị để nghiên cứu nên không hỗ trợ theo dõi...');
 
@@ -756,7 +775,7 @@ async function trackPVC({ device_id }) {
 }
 
 async function trackLPB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('LPB không có thiết bị để nghiên cứu nên không hỗ trợ theo dõi...');
 
@@ -797,7 +816,7 @@ async function trackLPB({ device_id }) {
 }
 
 async function trackMSB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('MSB không cho phép dump màn hình nên không hỗ trợ theo dõi...');
 
@@ -838,7 +857,7 @@ async function trackMSB({ device_id }) {
 }
 
 async function trackSTB({ device_id }) {
-  const targetDir = path.join('C:\\att_mobile_client_newsh\\logs\\');
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   console.log('Đang theo dõi Sacom...');
 
@@ -913,7 +932,7 @@ async function trackingLoop({ device_id }) {
       const trackFunction = trackFunctions[bankName];
 
       if (trackFunction) {
-        console.log(`Bắt đầu theo dõi ${bankName}...`);
+        console.log(`Đang theo dõi ${bankName}...`);
         await trackFunction({ device_id });
       } 
       // else {
@@ -921,7 +940,7 @@ async function trackingLoop({ device_id }) {
       // }
       break; // break loop nếu theo dõi được app hợp lệ
     } else {
-      console.log('⏳ Đang chờ user mở đúng 1 app ngân hàng...');
+      console.log('Đang chờ user mở đúng 1 app ngân hàng...');
       await delay(3000); // đợi 3s rồi check lại
     }
   }
@@ -1078,7 +1097,7 @@ async function isSEARunning( { device_id } ) {
 
 async function isSHBSAHARunning( { device_id } ) {             
   try {
-    const output = await client.shell(device_id, 'pidof shb.saha.mbanking')
+    const output = await client.shell(device_id, 'pidof vn.shb.saha.mbanking')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString().trim());                
     if (output !== '') return true;        
@@ -1213,7 +1232,7 @@ async function checkRunningBanks({ device_id }) {
     return null;
   }
   // else {
-  //   console.log('Đang bắt đầu theo dõi xem có đơn không, nếu có thì ');
+  //   console.log('Đang theo dõi xem có đơn không, nếu có thì ');
   // }
 
   return runningBanks[0] || null;

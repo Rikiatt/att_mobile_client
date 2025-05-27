@@ -15,7 +15,6 @@ const coordinatesScanQREIB2 = require('../config/coordinatesScanQREIB2.json');
 const coordinatesLoginICB = require('../config/coordinatesLoginICB.json');
 const coordinatesLoginNAB = require('../config/coordinatesLoginNAB.json');
 const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
-const coordinatesScanQRNAB2 = require('../config/coordinatesScanQRNAB2.json');
 const coordinatesScanQRTPB = require('../config/coordinatesScanQRTPB.json');
 const coordinatesScanQRVPB = require('../config/coordinatesScanQRVPB.json');
 const coordinatesDevice = require('../config/coordinatesDevice.json');
@@ -32,9 +31,7 @@ const coordinatesScanQRSHBSAHA = require('../config/coordinatesScanQRSHBSAHA.jso
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
-const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
-  isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning
-} = require('../functions/bankStatus.function');
+const { isEIBRunning, isMBRunning, isMSBRunning } = require('../functions/bankStatus.function');
 
 const ensureDirectoryExists = ( dirPath ) => {
   if (!fs.existsSync(dirPath)) {
@@ -292,8 +289,7 @@ async function stopMSB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-const { sendTelegramAlert } = require('../services/telegramService');
-const { saveAlertToDatabase } = require('../controllers/alert.controller');
+const { sendTelegramAlert, saveAlertToDatabase } = require('../functions/alert.function');
 
 module.exports = {
   closeAll: async ({ device_id }) => {
@@ -333,7 +329,7 @@ module.exports = {
     const targetDir = path.join('C:\\att_mobile_client\\logs\\');
     ensureDirectoryExists(targetDir);
 
-    console.log('🔍 Bắt đầu theo dõi MSB...');
+    console.log('Đang theo dõi MSB...');
     
     const chatId = '-4725254373';    
 
@@ -430,298 +426,11 @@ module.exports = {
     const coordinatesScanQRMSB = await loadCoordinatesScanQRMSB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['ScanQR']);      
     return { status: 200, message: 'Success' };
-  },
-
-  scanQRACB: async ({ device_id }) => {    
-    const coordinatesScanQRACB = await loadCoordinatesScanQRACB(device_id);
-    
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
-    // await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Hide-Popup']);
-    // await delay(500);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['ScanQR']);
-    await delay(600);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Image']);           
-    await delay(600); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRACB['Select-Target-Img']);     
-
-    return { status: 200, message: 'Success' };
-  },
-
-  scanQREIB: async ({ device_id, localPath }) => {
-    const coordinatesScanQREIB = await loadCoordinatesScanQREIB(device_id);    
-    const coordinatesScanQREIB2 = await loadCoordinatesScanQREIB2(device_id);         
-  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['ScanQR']);             
-    await delay(600);  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Image']);
-    await delay(600);      
-    await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Hamburger-Menu']);
-    await delay(600);
-  
-    let running = await isEIBRunning({ device_id });
-    if (!running) {      
-      return;
-    } 
-    
-    await clearTempFile({ device_id });
-  
-    let selectedCoords = coordinatesScanQREIB;
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-      
-    const keywordMap = {
-      recent: ["Recent", "Gần đây"],
-      images: ["Images", "Hình ảnh"],
-      downloads: ["Downloads", "Tệp tải xuống"],
-      galaxyNote9: ["Galaxy Note9"]  
-    };
-  
-    while (running) {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
-  
-      await dumpXmlToLocal(device_id, localDumpPath);
-      const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
-        
-      const containsAllKeywords = (keys) => {
-        return keys.every(key =>
-          keywordMap[key].some(kw => xmlContent.includes(kw))
-        );
-      };
-  
-      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9'])) {
-        console.log("🔄 Sử dụng coordinatesScanQREIB.json (màn hình có mục Downloads)");
-        selectedCoords = coordinatesScanQREIB;
-        break;
-      }
-  
-      if (containsAllKeywords(['recent', 'downloads', 'galaxyNote9'])) {
-        console.log("🔄 Sử dụng coordinatesScanQREIB2.json (màn hình không có mục Downloads)");
-        selectedCoords = coordinatesScanQREIB2;
-        break;
-      }
-    }
-  
-    await adbHelper.tapXY(device_id, ...selectedCoords['Galaxy-Note9']);
-    await delay(600);                 
-    await client.shell(device_id, `input swipe 500 1800 500 300`);                                               
-    await delay(600); 
-    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);    
-    await delay(600);
-    await adbHelper.tapXY(device_id, ...selectedCoords['Finish']); 
-  
-    return { status: 200, message: 'Success' };
-  },
-
-  scanQROCB: async ({ device_id }) => {    
-    const coordinatesScanQROCB = await loadCoordinatesScanQROCB(device_id);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['ScanQR']);
-    await delay(500);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Image']);
-    await delay(1000);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Hamburger-Menu']);
-    await delay(800);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Galaxy-Note9']);
-    await delay(600);                 
-    await client.shell(device_id, `input swipe 500 1800 500 300`);          
-    await delay(600);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Target-Img']); 
-    await delay(600);
-    await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Finish']);       
-
-    return { status: 200, message: 'Success' };
-  },
+  },    
 
   clickScanQRNCB: async ({ device_id }) => {    
     const coordinatesScanQRNCB = await loadCoordinatesScanQRNCB(device_id);    
     await adbHelper.tapXY(device_id, ...coordinatesScanQRNCB['Select-ScanQR']);      
-    return { status: 200, message: 'Success' };
-  },
-
-  scanQRNCB: async ({ device_id }) => {    
-    const coordinatesScanQRNCB = await loadCoordinatesScanQRNCB(device_id);    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNCB['Select-Image']);        
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNCB['Select-Target-Img']); 
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNCB['Finish']); 
-    return { status: 200, message: 'Success' };
-  },
-
-  scanQRNAB: async ({ device_id, localPath }) => {
-    const coordinatesScanQRNAB = await loadCoordinatesScanQRNAB(device_id);    
-    const coordinatesScanQRNAB2 = await loadCoordinatesScanQRNAB2(device_id);         
-  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['ScanQR']);             
-    await delay(800);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Image']);
-    await delay(800);       
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRNAB['Hamburger-Menu']);
-    await delay(800);
-  
-    let running = await isNABRunning({ device_id });
-    if (!running) {      
-      return;
-    } 
-    
-    await clearTempFile({ device_id });
-  
-    let selectedCoords = coordinatesScanQRNAB;
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-      
-    const keywordMap = {
-      recent: ["Recent", "Gần đây"],
-      images: ["Images", "Hình ảnh"],
-      downloads: ["Downloads", "Tệp tải xuống"],
-      galaxyNote9: ["Galaxy Note9"],
-      bugReports: ["Bug reports", "Báo cáo lỗi"],
-      gallery: ["Gallery", "Bộ sưu tập"]      
-    };
-  
-    while (running) {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
-  
-      await dumpXmlToLocal(device_id, localDumpPath);
-      const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
-  
-      // Helper function: kiểm tra xem nội dung XML có chứa tất cả keyword (dù là tiếng Anh hay tiếng Việt)
-      const containsAllKeywords = (keys) => {
-        return keys.every(key =>
-          keywordMap[key].some(kw => xmlContent.includes(kw))
-        );
-      };
-  
-      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'bugReports', 'gallery'])) {
-        console.log("🔄 Sử dụng coordinatesScanQRNAB2.json (Bug reports detected)");
-        selectedCoords = coordinatesScanQRNAB2;
-        break;
-      }
-  
-      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'gallery'])) {
-        console.log("🔄 Sử dụng coordinatesScanQRNAB.json (màn hình không có Bug reports)");
-        selectedCoords = coordinatesScanQRNAB2;
-        break;
-      }
-    }
-  
-    await adbHelper.tapXY(device_id, ...selectedCoords['Gallery']);
-    await delay(800);                                               
-    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);    
-  
-    return { status: 200, message: 'Success' };
-  },
-
-  // chưa test được đang đợi c Hira
-  scanQRTPB: async ({ device_id }) => {    
-    const coordinatesScanQRTPB = await loadCoordinatesScanQRTPB(device_id);    
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);        
-
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['ScanQR']); 
-    await delay(500);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Select-Image']); 
-    await delay(500);     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-1']); 
-
-    // if (deviceModel === 'SM-G973') {  // Nếu là S10 thì click thêm Target-Image-2
-    //   await delay(500);     
-    //   await adbHelper.tapXY(device_id, ...coordinatesScanQRTPB['Target-Image-2']); 
-    // }
-
-    return { status: 200, message: 'Success' };
-  },
-
-  // Nếu mà dùng đã cài đăng nhập bằng mã PIN
-  scanQRVPB: async ({ device_id }) => {    
-    const coordinatesScanQRVPB = await loadCoordinatesScanQRVPB(device_id);
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-ScanQR']);                                
-
-    return { status: 200, message: 'Success' };
-  },
-
-  // Nếu mà dùng mật khẩu để đăng nhập
-  scanQRVPB2: async ({ device_id }) => {    
-    const coordinatesScanQRVPB = await loadCoordinatesScanQRVPB(device_id);
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-ScanQR-2']);                                
-
-    return { status: 200, message: 'Success' };
-  },
-
-  scanQRMB: async ({ device_id, localPath }) => {
-    const coordinatesDevice = await loadCoordinatesScanQRMB(device_id);    
-    const coordinatesScanQRMB2 = await loadCoordinatesScanQRMB2(device_id);    
-    const coordinatesScanQRMB3 = await loadCoordinatesScanQRMB3(device_id);    
-  
-    await adbHelper.tapXY(device_id, ...coordinatesDevice['ScanQR']);             
-    await delay(800);   
-    await adbHelper.tapXY(device_id, ...coordinatesDevice['Image']);
-    await delay(800);       
-    await adbHelper.tapXY(device_id, ...coordinatesDevice['Hamburger-Menu']);
-    await delay(800);
-  
-    let running = await isMBRunning({ device_id });
-    if (!running) {      
-      return;
-    } 
-    
-    await clearTempFile({ device_id });
-  
-    let selectedCoords = coordinatesDevice;
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-      
-    const keywordMap = {
-      recent: ["Recent", "Gần đây"],
-      images: ["Images", "Hình ảnh"],
-      downloads: ["Downloads", "Tệp tải xuống"],
-      bugReports: ["Bug reports", "Báo cáo lỗi"],
-      gallery: ["Gallery", "Bộ sưu tập"],
-      galaxyNote9: ["Galaxy Note9"]
-    };
-  
-    while (running) {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localDumpPath = path.join(targetDir, `${timestamp}.xml`);
-  
-      await dumpXmlToLocal(device_id, localDumpPath);
-      const xmlContent = fs.readFileSync(localDumpPath, "utf-8").trim();
-  
-      // Helper function: kiểm tra xem nội dung XML có chứa tất cả keyword (dù là tiếng Anh hay tiếng Việt)
-      const containsAllKeywords = (keys) => {
-        return keys.every(key =>
-          keywordMap[key].some(kw => xmlContent.includes(kw))
-        );
-      };
-  
-      if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'bugReports', 'gallery'])) {
-        console.log("🔄 Sử dụng coordinatesScanQRMB3 (Galaxy Note9 detected)");
-        selectedCoords = coordinatesScanQRMB3;
-        break;
-      }
-  
-      if (containsAllKeywords(['recent', 'images', 'downloads', 'bugReports', 'gallery'])) {
-        console.log("🔄 Sử dụng coordinatesScanQRMB2 (màn hình chứa Bộ sưu tập)");
-        selectedCoords = coordinatesScanQRMB2;
-        break;
-      }
-    }
-  
-    await adbHelper.tapXY(device_id, ...selectedCoords['Gallery']);
-    await delay(800);                                               
-    await adbHelper.tapXY(device_id, ...selectedCoords['Target-Img']);    
-  
-    return { status: 200, message: 'Success' };
-  }, 
-  
-  scanQRSHBSAHA: async ({ device_id }) => {    
-    const coordinatesScanQRSHBSAHA = await loadCoordinatesScanQRSHBSAHA(device_id);
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRSHBSAHA['ScanQR']);
-    await delay(600);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRSHBSAHA['Image']);
-    await delay(1000);   
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRSHBSAHA['Target-Img']);        
-
     return { status: 200, message: 'Success' };
   },
 
@@ -731,25 +440,6 @@ module.exports = {
     await adbHelper.tapXY(device_id, ...coordinatesScanQREIB['Password-Field']);
     return { status: 200, message: 'Success' };
   },    
-
-  clickSelectImageMSB: async ({ device_id }) => {    
-    const coordinatesScanQRMSB = await loadCoordinatesScanQRMSB(device_id);
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Select-Image']);
-    await delay(800);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Select-Hamburgur-Menu']);           
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Select-Galaxy-Note9']); 
-    await delay(800);
-    await client.shell(device_id, `input swipe 500 1800 500 300`);    
-    await client.shell(device_id, `input swipe 500 1800 500 300`);
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Select-Target-Img']); 
-    await delay(800); 
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRMSB['Finish']); 
-
-    return { status: 200, message: 'Success' };
-  },
 
   clickConfirmMB: async ({ device_id }) => {    
     const coordinatesDevice = await loadCoordinatesScanQRMB(device_id);    
@@ -849,25 +539,7 @@ module.exports = {
     await delay(500);     
     await adbHelper.tapXY(device_id, ...coordinatesScanQRBAB['Target-Image']);                 
     return { status: 200, message: 'Success' };
-  },    
-
-  scanQRVPB: async ({ device_id }) => {    
-    const coordinatesScanQRVPB = await loadCoordinatesScanQRVPB(device_id);
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);        
-    
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Upload-Image']); 
-    await delay(1000);                  
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Select-Image']); 
-    await delay(2000);     
-    await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image']); 
-
-    if (deviceModel === 'ONEPLUS A5000') {  // Nếu là ONEPLUS A5000 thì click thêm Target-Image-2
-      await delay(500);     
-      await adbHelper.tapXY(device_id, ...coordinatesScanQRVPB['Target-Image-2']); 
-    }
-
-    return { status: 200, message: 'Success' };
-  },    
+  },         
 
   clickConfirmOCB: async ({ device_id }) => {    
     const coordinatesScanQROCB = await loadCoordinatesScanQROCB(device_id);  
@@ -1001,82 +673,6 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  stopNAB: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
-    console.log('Đã dừng app NAB');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  stopTPB: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
-    console.log('Đã dừng app TPB');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  stopVPB: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
-    console.log('Đã dừng app VPB');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },      
-
-  stopMB: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop com.mbmobile');
-    console.log('Đã dừng app MB');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  stopNCB: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop com.ncb.bank');
-    console.log('Đã dừng app NCB');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  startNCB: async ({ device_id }) => {
-    console.log('Đang khởi động app NCB...');
-    await client.shell(device_id, 'monkey -p com.ncb.bank -c android.intent.category.LAUNCHER 1');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  startMSB: async ({ device_id }) => {
-    console.log('Đang khởi động app MSB...');
-    await client.shell(device_id, 'monkey -p vn.com.msb.smartBanking -c android.intent.category.LAUNCHER 1');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  stopMSB: async ({ device_id }) => {
-    console.log('Đã dừng app MSB...');
-    await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  stopVCB: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop com.VCB');
-    console.log('Đã dừng app VCB');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
-  startVCB: async ({ device_id }) => {
-    console.log('Đang khởi động app VCB...');
-    await client.shell(device_id, 'monkey -p com.VCB -c android.intent.category.LAUNCHER 1');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },
-
   stopICB: async ({ device_id }) => {    
     await client.shell(device_id, 'input keyevent 3');
     await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
@@ -1090,15 +686,7 @@ module.exports = {
     await client.shell(device_id, 'monkey -p com.vietinbank.ipay -c android.intent.category.LAUNCHER 1');
     await delay(500);
     return { status: 200, message: 'Success' };
-  },
-
-  stopSHBSAHA: async ({ device_id }) => {    
-    await client.shell(device_id, 'input keyevent 3');
-    await client.shell(device_id, 'am force-stop vn.shb.saha.mbanking');
-    console.log('Đã dừng app SHB SAHA');
-    await delay(500);
-    return { status: 200, message: 'Success' };
-  },    
+  }, 
 
   tapADB: async ({ device_id, percent, screenSize }) => {
     console.log(`Click::[${percentSize(percent.X, screenSize.X)} - ${percentSize(percent.Y, screenSize.Y)}]`);
@@ -1508,10 +1096,6 @@ module.exports = {
     await delay(100);
     return { status: 200, message: 'Success' };
   },
-
-  startADB: async ({ device_id }) => {         
-    return { status: 200, message: 'Success' };
-  },
   
   delADBImg: async ({ device_id }) => {
     const devicePaths = [
@@ -1593,32 +1177,6 @@ async function loadCoordinatesScanQRNAB(device_id) {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQRNAB[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
-    throw error;
-  }
-};
-
-async function loadCoordinatesScanQRNAB2(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQRNAB2[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQRNAB for device: ${error.message}`);
-    throw error;
-  }
-};
-
-async function loadCoordinatesScanQRNAB3(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQRNAB3[deviceModel];
 
     return deviceCoordinates;
   } catch (error) {

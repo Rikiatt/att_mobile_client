@@ -1,20 +1,20 @@
 {
     "SM-G781": {
         "ScanQR": [540, 1760],
-        "Select-Image": [540, 1668],
+        "Image": [540, 1668],
         "Target-Image-1": [150, 588]        
     },
 
     "SM-G973": {
         "ScanQR": [540, 1636],
-        "Select-Image": [540, 1622],
+        "Image": [540, 1622],
         "Target-Image-1": [150, 1100],
         "Target-Image-2": [130, 600] 
     },
 
     "SM-N960": {
-        "ScanQR": [540, 1581],
-        "Select-Image": [350, 1532],
+        "ScanQR": [540, 1966],
+        "Image": [540, 1532],
         "Target-Image-1": [136, 836]        
     }
 }

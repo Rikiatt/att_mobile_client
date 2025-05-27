@@ -21,18 +21,7 @@ const HandleBIDV = ({ item, X, Y, setLoading }) => {
     >
       <AccordionSummary expandIcon={<ExpandMore />}>BIDV</AccordionSummary>
       <AccordionDetails>
-        <Stack spacing={1}>
-          {/* <Tooltip title="Thao tác đăng nhập vào bank app khác để check QR" arrow>
-            <Button
-              size="small"
-              variant="contained"
-              color="inherit"
-              fullWidth
-              onClick={() => anotherBankCheckQR({ device_id: item.id, X, Y }, setLoading)}
-            >
-              Check QR
-            </Button>
-          </Tooltip> */}
+        <Stack spacing={1}>          
           <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
             <Button
               size="small"

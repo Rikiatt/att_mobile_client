@@ -1,3 +1,5 @@
+const { getDatabase } = require('../database/mongoClient');
+
 async function getChatId(telegramToken) {
     const fetch = await import('node-fetch'); 
     const url = `https://api.telegram.org/bot${telegramToken}/getUpdates`;
@@ -29,4 +31,14 @@ async function sendTelegramAlert(telegramToken, chatId, message) {
     }
 }
 
-module.exports = { getChatId, sendTelegramAlert };
+async function saveAlertToDatabase(alert) {
+    const db = await getDatabase();
+    try {
+        const collection = db.collection('alerts');
+        await collection.insertOne(alert);        
+    } catch (error) {
+        console.error('Failed to save alert to database:', error.message);
+    }
+}
+
+module.exports = { getChatId, sendTelegramAlert, saveAlertToDatabase };

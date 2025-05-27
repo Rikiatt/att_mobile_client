@@ -64,7 +64,7 @@ export const bankTransfer = async (data, setLoading) => {
   // await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   // await delay(300); 
 
-  console.log('2. Khởi động app bank tương ứng appId...');
+  console.log('2. Khởi động app bank tương ứng send.bank...');
   await actionBank({ action: 'bankTransfer', device_id: data.device_id });
 
   // await delay(10000);  
@@ -98,31 +98,6 @@ export const bankTransfer = async (data, setLoading) => {
 };
 
 // ============== BIDV ============== //
-
-export const anotherBankCheckQR = async (data, setLoading) => {
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
-
-  if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }
-
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu đăng nhập bank khác bất kỳ');
-  if (!text) return;
-
-  setLoading(true);
-
-  // Start app được chọn
-  await actionADB({ action: 'start', device_id: data.device_id });
-
-  // Nhập mật khẩu để đăng nhập vào app đó
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-
-  // Tab và đăng nhập
-  // Tab vào QR / Click vào ô Scan QR (x, y)
-  // Click vào ô chọn ảnh (x, y) ... chọn mã QR (duy nhất)
-
-  setLoading(false);
-};
 
 export const bidvLogin = async (data, setLoading) => {
   const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
@@ -272,12 +247,9 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
   // Nhập PIN (sau bước quét mặt)
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   setLoading(true);
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
-  // await actionADB({ action: 'clickConfirmScanFaceBIDV', device_id: data.device_id });
+  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });  
   await delay(3000);  
 
-  // Click vào Confirm
-  // await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
   setLoading(false);
 };
 
@@ -300,11 +272,6 @@ export const vcbLogin = async (data, setLoading) => {
   setLoading(true);
   
   try{
-    // Start app (hidden because of taking a lot of time starting app vcb with some kind of devices)
-    // await actionADB({ action: 'stopVCB', device_id: data.device_id });
-    // await actionADB({ action: 'startVCB', device_id: data.device_id });
-    // await delay(8000);
-
     // Tab vào ô mật khẩu
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
