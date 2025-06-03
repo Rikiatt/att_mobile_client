@@ -1,15 +1,1 @@
-{
-  "type": "org",
-  "data": {
-    "child_id": "D1748930980871",
-    "site": "shbet",
-    "device_id": "28c9a170023f7ece",
-    "trans_id": "20250603130909639",
-    "bin": 970436,
-    "account_number": "1013302755",
-    "amount": 40000000,
-    "add_info": "",
-    "vietqr_url": "https://img.vietqr.io/image/970436-1013302755-qr.png?amount=40000000&addInfo="
-  },
-  "timestamp": "2025-06-03T06:09:42.229Z"
-}
+{}
