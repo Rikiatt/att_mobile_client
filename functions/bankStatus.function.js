@@ -1402,7 +1402,7 @@ async function trackingLoop({ device_id }) {
       break; // break loop nếu theo dõi được app hợp lệ
     } else {
       console.log('Đang chờ user mở đúng 1 app ngân hàng...');
-      await delay(3000); // đợi 3s rồi check lại
+      await delay(2000); // đợi 2s rồi check lại
     }
   }
 }
@@ -1788,8 +1788,7 @@ const bankApps = [
 async function getRunningBankApps({ device_id }) {
   const runningBanks = [];  
   
-  try {
-    // const output = await client.shell(device_id, `dumpsys activity activities | grep mResumedActivity`)
+  try {    
     const output = await client.shell(device_id, `dumpsys activity activities`)
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());         
@@ -1807,29 +1806,29 @@ async function getRunningBankApps({ device_id }) {
   return runningBanks;
 }
 
-// async function checkRunningBanks({ device_id }) {
-//   const runningBanks = await getRunningBankApps({ device_id });      
-
-//   if (runningBanks.length > 1) {            
-//     await closeAll({ device_id });
-//     console.log("VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
-//     return null;
-//   }
-
-//   return runningBanks[0] || null;
-// }
-
 async function checkRunningBanks({ device_id }) {
-  const runningBanks = await getRunningBankApps({ device_id });
+  const runningBanks = await getRunningBankApps({ device_id });      
 
-  if (runningBanks.length > 1) {
+  if (runningBanks.length > 1) {            
     await closeAll({ device_id });
-
-    return { status: 400, valid: false, message: "VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)" };
+    console.log("VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
+    return null;
   }
 
   return runningBanks[0] || null;
 }
+
+// async function checkRunningBanks({ device_id }) {
+//   const runningBanks = await getRunningBankApps({ device_id });
+
+//   if (runningBanks.length > 1) {
+//     await closeAll({ device_id });
+
+//     return { status: 400, valid: false, message: "VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)" };
+//   }
+
+//   return runningBanks[0] || null;
+// }
 
 async function closeAll ({ device_id }) {       
   const deviceModel = await deviceHelper.getDeviceModel(device_id);   

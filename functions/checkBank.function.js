@@ -1048,7 +1048,7 @@ async function checkContentSEAB(device_id, localPath) {
 }
 
 async function checkContentSTB(device_id, localPath) {
-    try {
+  try {
         const content = fs.readFileSync(localPath, "utf-8").trim();
 
         const screenKeywords = [{

@@ -1,1 +1,12 @@
-{}
+{
+  "org": {
+    "endpoint": "https://device.attpay.org",
+    "site": "shbet",
+    "connected": false,
+    "message": "Disconnected"
+  },
+  "connect": "",
+  "att": {
+    "connected": false
+  }
+}
