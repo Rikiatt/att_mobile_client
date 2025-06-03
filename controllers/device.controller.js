@@ -77,53 +77,6 @@ const bankBins = {
   wvn: '970457'
 };
 
-// const downloadQrFromVietQR = async (url, device_id) => {
-//   try {
-//     const qrBuffer = await axios.get(url, { responseType: 'arraybuffer' });
-//     const fileName = `${device_id}_vietqr.jpg`;
-//     const localPath = path.join(__dirname, '../database', fileName);
-//     fs.writeFileSync(localPath, qrBuffer.data);
-
-//     // Dùng adb push nhưng đảm bảo adb server đang chạy
-//     const adbPath = path.join(__dirname, '../platform-tools/adb.exe');
-
-//     // Kiểm tra thiết bị đã authorized chưa
-//     const checkCmd = `"${adbPath}" -s ${device_id} get-state`;
-//     await new Promise((resolve, reject) => {
-//       exec(checkCmd, (err, stdout, stderr) => {
-//         if (err || stdout.trim() !== 'device') {
-//           return reject(new Error('Thiết bị chưa authorized hoặc offline'));
-//         }
-//         return resolve();
-//       });
-//     });
-
-//     // adb push
-//     const pushCmd = `"${adbPath}" -s ${device_id} push "${localPath}" /sdcard/DCIM/Camera`;    
-//     const pushResult = await new Promise((resolve, reject) => {
-//       exec(pushCmd, (error, stdout, stderr) => {
-//         if (error) {
-//           console.error('adb push error:', stderr || error.message);
-//           return reject(new Error(stderr || error.message));
-//         }
-//         resolve(stdout.trim());
-//       });
-//     });
-
-//     return {
-//       success: true,
-//       path: `/sdcard/DCIM/Camera/${fileName}`,
-//       localPath,
-//       adbLog: pushResult
-//     };
-//   } catch (e) {
-//     console.error('downloadQrFromVietQR ERROR:', e.message);
-//     return {
-//       success: false,
-//       message: e.message
-//     };
-//   }
-// };
 const downloadQrFromVietQR = async (url, device_id) => {
   try {
     const qrBuffer = await axios.get(url, { responseType: 'arraybuffer' });
@@ -302,6 +255,8 @@ module.exports = {
   download_qr_for_account: async (req, res) => {
     try {
       const { bank_code, bank_account, device_id, amount } = req.query;
+      console.log('log bank_account:',bank_account);
+      console.log('log amount:',amount);
   
       if (!bank_code || !bank_account || !device_id || !amount) {
         return res.status(400).json({

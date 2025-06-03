@@ -986,9 +986,10 @@ module.exports = {
   },
 
   inputICB: async ({ device_id, text }) => {  
-    const coordinatesLoginICB = await loadCoordinatesLoginICB(device_id);
+    const coordinatesLoginICB = await loadCoordinatesLoginICB(device_id);    
         
     for (const char of text) {
+      console.log('log char in text:',char);
       if (isUpperCase(char)) {
         await adbHelper.tapXY(device_id, ...coordinatesLoginICB['CapsLock']);
         await sleep(50); 

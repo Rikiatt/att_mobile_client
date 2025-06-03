@@ -8,13 +8,12 @@ const fs = require('fs');
 const tmpFile = path.join(__dirname, '../scrcpy/current_device.txt');
 
 const { trackingLoop } = require("../functions/bankStatus.function");
-// Đọc file localdata.json
 const localDataPath = path.join(__dirname, '../database/localdata.json');
 const localRaw = fs.readFileSync(localDataPath, 'utf-8');
 const local = JSON.parse(localRaw);
-// Tách site cuối cùng, ví dụ: "ui_manual/connect/new88" => "new88"
-const siteFull = local?.att?.site || '';
-const site = siteFull.split('/').pop();
+const siteOrg = local?.org?.site || '';
+const siteAtt = local?.att?.site?.split('/').pop() || '';
+// const validSites = ['new88', 'shbet', 'jun88cmd', 'jun88k36'];
 
 function killScrcpy() {
   return new Promise((resolve) => {
@@ -36,35 +35,26 @@ function saveCurrentDeviceId(device_id) {
 }
 
 module.exports = {
-  connectScrcpy: async ({ device_id, title }) => {    
+  connectScrcpy: async ({ device_id, title }) => {
     console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
-    await delay(500);    
-    if (site === 'new88' || site === 'shbet' || site === 'jun88k36' || site === 'jun88cmd') {
-      await trackingLoop({ device_id: device_id }); 
-    } 
-    return { status: 200, message: 'Success' };   
+    await delay(500);
+
+    // if (validSites.includes(siteOrg) || validSites.includes(siteAtt)) {
+    //   await trackingLoop({ device_id: device_id });
+    // }
+    const validSites =
+      ['shbet', 'new88'].includes(siteOrg) ||
+      ['shbet', 'new88'].includes(siteAtt) ||
+      (['jun88cmd', 'jun88k36'].includes(siteOrg));
+      
+    if (validSites) {      
+      await trackingLoop({ device_id });
+    }
+
+    return { status: 200, message: 'Success' };
   },
 
-  // connectScrcpy: async ({ device_id, title }) => {
-  //   const lastDevice = getLastDeviceId();
-  //   console.log('log lastDevice:', lastDevice);
-
-  //   // Nếu thiết bị mới khác thiết bị đang chạy thì kill process scrcpy
-  //   if (lastDevice && lastDevice !== device_id) {
-  //     console.log(`Đóng scrcpy của thiết bị cũ: ${lastDevice}`);
-  //     await killScrcpy();
-  //   }
-
-  //   // Lưu thiết bị mới
-  //   saveCurrentDeviceId(device_id);
-
-  //   console.log(`Kết nối thiết bị ${device_id}`);
-  //   nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
-  //   await delay(3000);
-  // },
-
-  // Optional: check xem scrcpy có đang chạy không
   isScrcpyRunning: () => {
     const { data } = nodeCmd.runSync('tasklist /FI "IMAGENAME eq scrcpy.exe"');
     return data.includes('scrcpy.exe');

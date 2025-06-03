@@ -16,6 +16,7 @@
     "cron": "^3.1.7",
     "dotenv": "^16.4.7",
     "express": "^4.19.2",
+    "fast-xml-parser": "^5.2.3",
     "fs": "^0.0.1-security",
     "jitsi": "^1.1.0",
     "md5": "^2.3.0",
@@ -29,6 +30,7 @@
     "qrcode": "^1.5.4",
     "socket.io-client": "^4.7.5",
     "sudo-prompt": "^9.2.1",
+    "tesseract.js": "^6.0.1",
     "vietnam-qr-pay": "^1.4.0",
     "xml2js": "^0.6.2"
   }

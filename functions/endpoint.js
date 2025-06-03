@@ -190,7 +190,7 @@ module.exports = {
 
             // Lưu vietqr_url vào file info-qr.json
             let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
-            data.trans_status = 'in_process';           
+            // data.trans_status = 'in_process';           
             let qrData = { type, data, timestamp: new Date().toISOString() };
             console.log('log qrData:', qrData);
 

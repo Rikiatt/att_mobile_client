@@ -1,8 +1,10 @@
 const responseHelper = require('../helpers/responseHelper');
 const { bankTransfer } = require('../functions/bank.function');
+const { checkRunningBanks } = require('../functions/bankStatus.function');
 
 const mapAction = {  
-    bankTransfer: bankTransfer,    
+    bankTransfer: bankTransfer,
+    checkRunningBanks: checkRunningBanks    
 }
 
 module.exports = {  
