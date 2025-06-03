@@ -1053,20 +1053,20 @@ async function checkContentSTB(device_id, localPath) {
 
         const screenKeywords = [{
             name: "Chuyển tiền",
-            vi: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ"],
-            en: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ"]
+            vi: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ", "Tên ngân hàng", "Số tài khoản nhận", "Số tiền cần chuyển"],
+            en: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ", "Tên ngân hàng", "Số tài khoản nhận", "Số tiền cần chuyển"]
         }];
+        const exceptionKeyword = "Tên người nhận";
 
         for (const screen of screenKeywords) {
-            if (
-                screen.vi.every(kw => content.includes(kw)) ||
-                screen.en.every(kw => content.includes(kw))
-            ) {
+            const viMatch = screen.vi.every(kw => content.includes(kw));
+            const enMatch = screen.en.every(kw => content.includes(kw));
+            const isException = content.includes(exceptionKeyword);
+
+            if ((viMatch || enMatch) && !isException) {
                 console.log(`Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name}`);
                 console.log('Đóng app STB');
-                await stopSTB({
-                    device_id
-                });
+                await stopSTB({ device_id });
                 await sendTelegramAlert(
                     telegramToken,
                     chatId,
@@ -1082,7 +1082,7 @@ async function checkContentSTB(device_id, localPath) {
 
                 return;
             }
-        }        
+        }      
     } catch (error) {
         console.error("Lỗi xử lý XML:", error.message);
     }

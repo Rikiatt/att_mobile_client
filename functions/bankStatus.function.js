@@ -1372,7 +1372,7 @@ const trackFunctions = {
   ACB: trackACB,
   EIB: trackEIB,
   OCB: trackOCB,
-  NCB: trackNCB,
+  // NCB: trackNCB,
   NAB: trackNAB,
   TPB: trackTPB,
   VPB: trackVPB,
@@ -1385,7 +1385,7 @@ const trackFunctions = {
   PVC: trackPVCB,
   LPBANK: trackLPBANK,  
   MSB: trackMSB,
-  // STB: trackSTB
+  STB: trackSTB
 };
 
 async function trackingLoop({ device_id }) {

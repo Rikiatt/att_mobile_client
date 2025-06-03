@@ -1,14 +1,1 @@
-{
-  "att": {
-    "endpoint": "https://device.attapps.net",
-    "site": "ui_manual/connect/jun88k36",
-    "connected": false
-  },
-  "connect": "org",
-  "org": {
-    "endpoint": "https://device.attpay.org",
-    "site": "jun88cmd",
-    "connected": true,
-    "message": "Success"
-  }
-}
+{}

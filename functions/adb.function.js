@@ -296,7 +296,7 @@ module.exports = {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
 
     await client.shell(device_id, 'input keyevent KEYCODE_APP_SWITCH');
-    await delay(1000);
+    await delay(500);
 
     if (deviceModel === "ONEPLUS A5010") {
       // await client.shell(device_id, 'input swipe 540 1414 540 150 100'); // input swipe <x1> <y1> <x2> <y2> <duration>
