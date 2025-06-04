@@ -78,6 +78,30 @@ function App() {
     callAPI();
   }, [mutate]);
 
+  // 👇 Listen to SSE (Server-Sent Events)
+  useEffect(() => {
+    const evtSource = new EventSource('/events');
+
+    evtSource.onmessage = function (event) {
+      try {
+        const data = JSON.parse(event.data);
+        if (data?.message) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Thông báo',
+            text: data.message
+          });
+        }
+      } catch (err) {
+        console.error('Lỗi khi xử lý sự kiện SSE:', err.message);
+      }
+    };
+
+    return () => {
+      evtSource.close();
+    };
+  }, []);
+
   const handleDevice = async (type) => {
     setLoading((prev) => !prev);
     const result = await getActionDevice(type);

@@ -32,6 +32,7 @@ const siteOrg = jsonData?.org?.site || '';
 const siteAtt = jsonData?.att?.site?.split('/').pop() || '';
 
 const validSite = siteOrg || siteAtt; // Ưu tiên org nếu có, nếu không dùng att
+const notifier = require('../events/notifier');
 
 const siteToChatIdMap = {
     'shbet': process.env.CHATID_SHBET,
@@ -111,6 +112,23 @@ async function dumpOCRToLocal(device_id, localPath) {
   }
 }
 
+async function getCurrentForegroundApp({ device_id }) {
+  try {
+    const output = await client.shell(device_id, `dumpsys activity activities | grep mResumedActivity`)
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString().trim());
+
+    const match = output.match(/u0\s+([^\s\/]+)\//);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting current foreground app:", error.message);
+    return null;
+  }
+}
+
 async function trackABB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -125,19 +143,17 @@ async function trackABB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "abb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB.`);
-      await stopABB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "abb" !== qrBank ) ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB.`
+      });
+      await stopABB({ device_id });      
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB. (id: ${device_id})`
       // );
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
@@ -199,25 +215,23 @@ async function trackACB ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( (device_id === qrDevice) && ( "acb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB.`);
-      await stopACB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( (device_id === qrDevice) && ( "acb" !== qrBank ) ) {      
+      await stopACB({ device_id });   
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB.`
+      });   
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB. (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -253,23 +267,6 @@ async function trackACB ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
-async function getCurrentForegroundApp({ device_id }) {
-  try {
-    const output = await client.shell(device_id, `dumpsys activity activities | grep mResumedActivity`)
-      .then(adb.util.readAll)
-      .then(buffer => buffer.toString().trim());
-
-    const match = output.match(/u0\s+([^\s\/]+)\//);
-    if (match && match[1]) {
-      return match[1];
-    }
-    return null;
-  } catch (error) {
-    console.error("Error getting current foreground app:", error.message);
-    return null;
-  }
-}
-
 async function trackEIB ( { device_id } ) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -285,21 +282,22 @@ async function trackEIB ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
-    if ( ( device_id === qrDevice ) && ( "eib" !== qrBank ) ) {
-      console.log(`Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB.`);
-      await stopEIB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "eib" !== qrBank ) ) {      
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB.`
+      });
+      await stopEIB({ device_id });      
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB. (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
-      // return;
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });      
       return await trackingLoop({ device_id });
     } 
     else {
@@ -350,25 +348,22 @@ async function trackOCB ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "ocb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB.`);
-      await stopOCB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "ocb" !== qrBank ) ) {      
+      await stopOCB({ device_id });      
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB.`
+      });
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB. (id: ${device_id})`        
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -419,25 +414,22 @@ async function trackNCB ( { device_id } ) {
   await clearTempFile( { device_id } );
 
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "ncb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`);
+    if ( ( device_id === qrDevice ) && ( "ncb" !== qrBank ) ) {      
       await stopNCB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
+      });
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB. (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -489,25 +481,23 @@ async function trackNCB ( { device_id } ) {
     await clearTempFile( { device_id } );
     
     while (running) {
-      // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-      // if (qrStatus !== 'in_process') {
-      //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-      // } 
-      // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-      if ( ( device_id === qrDevice ) && ( "nab" !== qrBank ) ) {
-        console.log(`Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB.`);
+      if ( ( device_id === qrDevice ) && ( "nab" !== qrBank ) ) {        
         await stopNAB({ device_id });
-        console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+        // Phát thông báo realtime
+        notifier.emit('multiple-banks-detected', {
+          device_id,
+          message: `Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB.`
+        });         
         // await sendTelegramAlert(
         //   telegramToken,
         //   chatId,
-        //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+        //   `Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB. (id: ${device_id})`
         // );
-        // await saveAlertToDatabase({
-        //   timestamp: new Date().toISOString(),
-        //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-        //   filePath: ".xml"
-        // });
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+          filePath: ".xml"
+        });
         return await trackingLoop({ device_id });
       } 
       else {
@@ -558,25 +548,23 @@ async function trackSHBSAHA ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "shb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA.`);
-      await stopSHBSAHA({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "shb" !== qrBank ) ) {      
+      await stopSHBSAHA({ device_id });      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA.`
+      }); 
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA. (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -627,25 +615,23 @@ async function trackTPB ( { device_id } ) {
   await clearTempFile( { device_id } );
   
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "tpb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB.`);
-      await stopTPB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "tpb" !== qrBank ) ) {      
+      await stopTPB({ device_id }); 
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB.`
+      });      
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -696,25 +682,22 @@ async function trackVPB ( { device_id } ) {
   await clearTempFile( { device_id } );
   
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "vpb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB.`);
+    if ( ( device_id === qrDevice ) && ( "vpb" !== qrBank ) ) {      
       await stopVPB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
-      // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB.`
+      });
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB (id: ${device_id})`
+      );
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -765,20 +748,22 @@ async function trackMB({ device_id }) {
   await clearTempFile({ device_id });
 
   while (running) {
-    if ( ( device_id === qrDevice ) && ( "mb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB.`);
-      await stopMB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "mb" !== qrBank ) ) {      
+      await stopMB({ device_id });   
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB.`
+      });   
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -829,25 +814,18 @@ async function trackBIDV({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "bidv" !== qrBank ) ) {
-      console.log(`Bank đang chạy là BIDV nhưng QR yêu cầu bank khác (${qrBank}), stop BIDV.`);
-      await stopBIDV({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "bidv" !== qrBank ) ) {      
+      await stopBIDV({ device_id });      
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là BIDV nhưng QR yêu cầu bank khác (${qrBank}), stop BIDV (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -898,25 +876,22 @@ async function trackVCB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "vcb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB.`);
-      await stopVCB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "vcb" !== qrBank ) ) {      
+      await stopVCB({ device_id });  
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB.`
+      });    
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -967,25 +942,22 @@ async function trackSEAB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "seab" !== qrBank ) ) {
-      console.log(`Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB.`);
-      await stopSEAB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "seab" !== qrBank ) ) {      
+      await stopSEAB({ device_id });  
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB.`
+      });    
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -1036,25 +1008,22 @@ async function trackICB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "icb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB.`);
-      await stopICB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "icb" !== qrBank ) ) {      
+      await stopICB({ device_id }); 
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB.`
+      });     
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -1105,25 +1074,22 @@ async function trackPVCB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "pvcb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB.`);
-      await stopPVCB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "pvcb" !== qrBank ) ) {      
+      await stopPVCB({ device_id });  
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB.`
+      });    
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB (id: ${device_id})`
       // );
-      // await saveAlertToDatabase({
-      //   timestamp: new Date().toISOString(),
-      //   reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
-      //   filePath: ".xml"
-      // });
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
       return await trackingLoop({ device_id });
     } 
     else {
@@ -1174,19 +1140,16 @@ async function trackLPBANK({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) { 
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "lpbank" !== qrBank ) ) {
-      console.log(`Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK.`);
-      await stopLPBANK({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "lpbank" !== qrBank ) ) {      
+      await stopLPBANK({ device_id });  
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK.`
+      });    
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK (id: ${device_id})`
       // );
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
@@ -1242,20 +1205,17 @@ async function trackMSB({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {   
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "msb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là msb nhưng QR yêu cầu bank khác (${qrBank}), stop MSB.`);
-      await stopMSB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+  while (running) {       
+    if ( ( device_id === qrDevice ) && ( "msb" !== qrBank ) ) {      
+      await stopMSB({ device_id }); 
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là MSB nhưng QR yêu cầu bank khác (${qrBank}), stop MSB.`
+      });     
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là MSB nhưng QR yêu cầu bank khác (${qrBank}), stop MSB (id: ${device_id})`
       // );
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
@@ -1312,19 +1272,16 @@ async function trackSTB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
-    // // Nếu không phải trạng thái đang xử lý thì bỏ qua
-    // if (qrStatus !== 'in_process') {
-    //   console.log("Không phải đơn đang xử lý (trans_status !== in_process), bỏ qua.");
-    // } 
-    // Nếu đúng trạng thái in_process thì so sánh device_id và bank
-    if ( ( device_id === qrDevice ) && ( "stb" !== qrBank ) ) {
-      console.log(`Bank đang chạy là sacombank nhưng QR yêu cầu bank khác (${qrBank}), stop sacombank.`);
-      await stopSTB({ device_id });
-      console.log(`Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`);
+    if ( ( device_id === qrDevice ) && ( "stb" !== qrBank ) ) {      
+      await stopSTB({ device_id });    
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là STB nhưng QR yêu cầu bank khác (${qrBank}), stop STB.`
+      });   
       // await sendTelegramAlert(
       //   telegramToken,
       //   chatId,
-      //   `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`
+      //   `Bank đang chạy là STB nhưng QR yêu cầu bank khác (${qrBank}), stop STB (id: ${device_id})`
       // );
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
@@ -1372,7 +1329,7 @@ const trackFunctions = {
   ACB: trackACB,
   EIB: trackEIB,
   OCB: trackOCB,
-  // NCB: trackNCB,
+  NCB: trackNCB,
   NAB: trackNAB,
   TPB: trackTPB,
   VPB: trackVPB,
@@ -1806,29 +1763,35 @@ async function getRunningBankApps({ device_id }) {
   return runningBanks;
 }
 
-async function checkRunningBanks({ device_id }) {
-  const runningBanks = await getRunningBankApps({ device_id });      
+// async function checkRunningBanks({ device_id }) {
+//   const runningBanks = await getRunningBankApps({ device_id });      
 
-  if (runningBanks.length > 1) {            
+//   if (runningBanks.length > 1) {            
+//     await closeAll({ device_id });
+//     console.log("VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
+//     return null;
+//   }
+
+//   return runningBanks[0] || null;
+// }
+
+async function checkRunningBanks({ device_id }) {
+  const runningBanks = await getRunningBankApps({ device_id });
+
+  if (runningBanks.length > 1) {
     await closeAll({ device_id });
-    console.log("VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)");
+
+    // Phát thông báo realtime
+    notifier.emit('multiple-banks-detected', {
+      device_id,
+      message: 'VUI LÒNG THỰC HIỆN LẠI (1 BANK)'
+    });
+
     return null;
   }
 
   return runningBanks[0] || null;
 }
-
-// async function checkRunningBanks({ device_id }) {
-//   const runningBanks = await getRunningBankApps({ device_id });
-
-//   if (runningBanks.length > 1) {
-//     await closeAll({ device_id });
-
-//     return { status: 400, valid: false, message: "VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)" };
-//   }
-
-//   return runningBanks[0] || null;
-// }
 
 async function closeAll ({ device_id }) {       
   const deviceModel = await deviceHelper.getDeviceModel(device_id);   

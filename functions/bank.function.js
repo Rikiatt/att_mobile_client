@@ -314,6 +314,7 @@ async function forceKillApp({ device_id, packageName }) {
   }
 }
 
+// check running bank
 async function isBankAppRunning({ bank, device_id }) {
   const packageName = bankPackages[bank.toLowerCase()];
   if (!packageName) return false;  
@@ -381,7 +382,8 @@ const loginEIB = async ({ device_id, bank }) => {
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
 
-  bank = info?.data?.bank;
+  // bank = info?.data?.bank;
+  bank = info?.data?.bank_temp || info?.data?.bank;
   const password = getBankPass(bank, device_id);        
   await client.shell(device_id, 'input tap 918 305');
   await delay(1000);
@@ -517,7 +519,7 @@ const checkTransactions = async ({ device_id }) => {
     const raw = fs.readFileSync(infoPath, 'utf-8');
     const json = JSON.parse(raw);
     const deviceInFile = json?.data?.device_id;
-    const transStatus = json?.data?.trans_status;
+    // const transStatus = json?.data?.trans_status;
     const transId = json?.data?.trans_id;
 
     if (deviceInFile === device_id && transId) {
@@ -882,10 +884,8 @@ const runBankTransfer = async ({ device_id, bank }) => {
   fs.readdirSync(logDir)
   .filter(file => file.endsWith('.xml'))
   .forEach(file => fs.unlinkSync(path.join(logDir, file)));
-
-  console.log('log in runBankTrasnfer');
-  const startApp = mapStartBank[bank.toLowerCase()];
-  console.log('log startApp runBankTrasnfer:',startApp);
+  
+  const startApp = mapStartBank[bank.toLowerCase()];  
   const loginApp = mapLoginBank[bank.toLowerCase()];
 
   if (!startApp || !loginApp) {
@@ -969,5 +969,6 @@ const bankTransfer = async ({ device_id, bank }) => {
 };
 
 module.exports = {
-  bankTransfer
+  bankTransfer,
+  runBankTransfer
 };

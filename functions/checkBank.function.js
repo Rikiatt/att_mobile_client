@@ -57,11 +57,11 @@ async function checkContentABB(device_id, localPath) {
                     device_id
                 });
 
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                );
+                // await sendTelegramAlert(
+                //     telegramToken,
+                //     chatId,
+                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                // );
 
                 await saveAlertToDatabase({
                     timestamp: new Date().toISOString(),
@@ -110,11 +110,11 @@ async function checkContentACB(device_id, localPath) {
       ) {
         console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
         await stopACB({ device_id });
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
+        // await sendTelegramAlert(
+        //   telegramToken,
+        //   chatId,
+        //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        // );
         console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
@@ -154,11 +154,11 @@ async function checkContentACB(device_id, localPath) {
         const reason = `ACB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
         console.log(`${reason}. Gửi cảnh báo.`);
         await stopACB({ device_id });
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+        // await sendTelegramAlert(
+        //   telegramToken,
+        //   chatId,
+        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        // );
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
@@ -386,7 +386,7 @@ async function checkContentNCB(device_id, localPath) {
       const reason = "Phát hiện màn hình chọn hình thức chuyển tiền (OCR)";
       console.log(`${reason}. Gửi cảnh báo.`);
       await stopNCB({ device_id });
-      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
+      // await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `${reason} (id: ${device_id})`,
@@ -429,7 +429,7 @@ async function checkContentNCB(device_id, localPath) {
       const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";
       console.log(`${reason}. Gửi cảnh báo.`);
       await stopNCB({ device_id });
-      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+      // await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `${reason} (id: ${device_id})`,
@@ -472,11 +472,11 @@ async function checkContentOCB(device_id, localPath) {
             console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
             console.log('Đóng app OCB');
             await stopOCB({ device_id });
-            await sendTelegramAlert(
-              telegramToken,
-              chatId,
-              `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            );            
+            // await sendTelegramAlert(
+            //   telegramToken,
+            //   chatId,
+            //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            // );            
             await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
               reason: `Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
@@ -520,11 +520,11 @@ async function checkContentOCB(device_id, localPath) {
         const reason = `OCB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
         console.log(`${reason}. Gửi cảnh báo.`);
         await stopOCB({ device_id });
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+        // await sendTelegramAlert(
+        //   telegramToken,
+        //   chatId,
+        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        // );
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
@@ -569,11 +569,11 @@ async function checkContentNAB(device_id, localPath) {
             if (screen.name === "Chuyển tiền") {
             console.log(`Phát hiện có thao tác thủ công khi xuất với NAB ở màn hình: ${screen.name}`);
             await stopNAB({ device_id });
-            await sendTelegramAlert(
-                telegramToken,
-                chatId,
-                `Cảnh báo! Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`
-            );
+            // await sendTelegramAlert(
+            //     telegramToken,
+            //     chatId,
+            //     `Cảnh báo! Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`
+            // );
             console.log(`Cảnh báo! Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`);
             await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -602,11 +602,11 @@ async function checkContentNAB(device_id, localPath) {
 
                 if (ocrAccount !== expectedAcc || ocrAmount !== expectedAmt) {
                     await stopNAB({ device_id });
-                    await sendTelegramAlert(
-                      telegramToken,
-                      chatId,
-                      `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
-                    );
+                    // await sendTelegramAlert(
+                    //   telegramToken,
+                    //   chatId,
+                    //   `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
+                    // );
                     console.log(`Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`);
                     await saveAlertToDatabase({
                     timestamp: new Date().toISOString(),
@@ -644,11 +644,11 @@ async function checkContentSHBSAHA (device_id, localPath) {
                 console.log('Đóng app SHB SAHA');
                 await stopSHBSAHA({ device_id });
 
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                );
+                // await sendTelegramAlert(
+                //     telegramToken,
+                //     chatId,
+                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                // );
                 console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
                 await saveAlertToDatabase({
@@ -696,11 +696,11 @@ async function checkContentSHBSAHA (device_id, localPath) {
                 const reason = "XML KHÁC info-qr về số tài khoản hoặc số tiền";
                 console.log(`${reason}. Gửi cảnh báo.`);
                 await stopSHBSAHA({ device_id });
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`
-                );
+                // await sendTelegramAlert(
+                //     telegramToken,
+                //     chatId,
+                //     `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`
+                // );
                 console.log(`Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`);
                 await saveAlertToDatabase({
                     timestamp: new Date().toISOString(),
@@ -758,9 +758,9 @@ async function checkContentTPB(device_id, localPath) {
         console.log(`${reason}. Gửi cảnh báo.`);
 
         await stopTPB({ device_id });
-        await sendTelegramAlert(telegramToken, chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+        // await sendTelegramAlert(telegramToken, chatId,
+        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        // );
         console.log(`Cảnh báo! ${reason} (id thiết bị: ${device_id})`);
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
@@ -797,11 +797,11 @@ async function checkContentTPB(device_id, localPath) {
             console.log(`Phát hiện có thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name}`);
             console.log('Đóng app TPB');
             await stopTPB({ device_id });
-            await sendTelegramAlert(
-              telegramToken,
-              chatId,
-              `Cảnh báo! Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            );
+            // await sendTelegramAlert(
+            //   telegramToken,
+            //   chatId,
+            //   `Cảnh báo! Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            // );
             console.log(`Cảnh báo! Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
             await saveAlertToDatabase({
             timestamp: new Date().toISOString(),
@@ -847,11 +847,11 @@ async function checkContentVPB(device_id, localPath) {
             console.log(`Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name}`);
             console.log('Đóng app VPB');
             await stopVPB({ device_id });
-            await sendTelegramAlert(
-                telegramToken,
-                chatId,
-                `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            );
+            // await sendTelegramAlert(
+            //     telegramToken,
+            //     chatId,
+            //     `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            // );
             console.log(`Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
             await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -890,11 +890,11 @@ async function checkContentVPB(device_id, localPath) {
             console.log(`${reason}. Gửi cảnh báo.`);
 
             await stopVPB({ device_id });
-            await sendTelegramAlert(
-                telegramToken,
-                chatId,
-                `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-            );
+            // await sendTelegramAlert(
+            //     telegramToken,
+            //     chatId,
+            //     `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+            // );
             console.log(`Cảnh báo! ${reason} (id thiết bị: ${device_id})`);
             await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -938,11 +938,11 @@ async function checkContentMB(device_id, localPath) {
                 console.log(`Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`);
                 console.log('Đóng app MB');
                 await stopMB({ device_id });
-                await sendTelegramAlert(
-                telegramToken,
-                chatId,
-                `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                );
+                // await sendTelegramAlert(
+                //   telegramToken,
+                //   chatId,
+                //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                // );
                 console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
                 await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -981,11 +981,11 @@ async function checkContentMB(device_id, localPath) {
                 const reason = `MB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
                 console.log(`${reason}. Gửi cảnh báo.`);
                 await stopMB({ device_id });
-                await sendTelegramAlert(
-                  telegramToken,
-                  chatId,
-                  `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-                );
+                // await sendTelegramAlert(
+                //   telegramToken,
+                //   chatId,
+                //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+                // );
                 console.log(`Cảnh báo! ${reason} (id thiết bị: ${device_id})`);
                 await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -1003,48 +1003,90 @@ async function checkContentMB(device_id, localPath) {
     }
 }
 
-// chưa xong
-// chưa xong
-// chưa xong
 async function checkContentSEAB(device_id, localPath) {
-    try {
-        const content = fs.readFileSync(localPath, "utf-8").trim();
+  try {
+    const content = fs.readFileSync(localPath, "utf-8").trim();
 
-        const screenKeywords = [{
-            name: "Chuyển tiền",
-            vi: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ"],
-            en: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ"]
-        }];
+    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+    const expectedAccount = jsonData.data?.account_number?.replace(/\s/g, "") || "";
+    const expectedAmount = jsonData.data?.amount?.toString().replace(/,/g, "").replace(/\./g, "") || "";
 
-        for (const screen of screenKeywords) {
-            if (
-                screen.vi.every(kw => content.includes(kw)) ||
-                screen.en.every(kw => content.includes(kw))
-            ) {
-                console.log(`Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name}`);
-                console.log('Đóng app SEAB');
-                await stopSEAB({
-                    device_id
-                });
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                );
-                console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
+    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Chuyển tiền", "Tới số tài khoản của tôi", "Tới số tài khoản khác", "Tới số điện thoại", "Tới số thẻ", "Quét mã QR", "Chuyển tiền định kỳ", "Gửi tiền mừng", "Chuyển tiền quốc tế"],
+	      en: ["Transfer", "Transfer to my account", "Transfer to other account", "Transfer to phone number", "Transfer to card number", "Scan QR code", "Periodic money transfer", "Transfer lucky money", "Chuyển tiền quốc tế"]
+      }
+    ];
 
-                await saveAlertToDatabase({
-                    timestamp: new Date().toISOString(),
-                    reason: `Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-                    filePath: localPath
-                });
+    for (const screen of screenKeywords) {
+      if (
+            screen.vi.every(kw => content.includes(kw)) ||
+            screen.en.every(kw => content.includes(kw))
+        ) {
+            console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
+            console.log('Đóng app SEAB');
+            await stopSEAB({ device_id });
+            // await sendTelegramAlert(
+            //   telegramToken,
+            //   chatId,
+            //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            // );            
+            await saveAlertToDatabase({
+              timestamp: new Date().toISOString(),
+              reason: `Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+              filePath: localPath
+            });
 
-                return;
-            }
-        }        
-    } catch (error) {
-        console.error("Lỗi xử lý XML:", error.message);
+            return;
+        }
     }
+
+    // --- TH2: Check QR thông qua edittext ---
+    const regex = /text="([^"]+)"\s+resource-id="vn\.com\.seabank\.mb1:id\/edittext"/g;
+    const detectText = [];
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      detectText.push(match[1]);
+    }
+
+    if (detectText.length >= 2) {
+      const accountNumber = detectText[0].replace(/\s/g, "");
+      const amount = detectText[1].replace(/[.,\s]/g, "");
+
+      console.log("OCR Account Number:", accountNumber);
+      console.log("INFO Account Number:", expectedAccount);
+      console.log("OCR Amount:", amount);
+      console.log("INFO Amount:", expectedAmount);
+
+      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+
+      if (!isMatch) {
+        const reason = `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+        console.log(`${reason}. Gửi cảnh báo.`);
+        await stopSEAB({ device_id });
+        // await sendTelegramAlert(
+        //   telegramToken,
+        //   chatId,
+        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        // );
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `${reason} (id thiết bị: ${device_id})`,
+          filePath: localPath
+        });
+        return;
+      } else {
+        console.log("SEAB: OCR TRÙNG info-qr về account_number và amount.");
+        return;
+      }
+    }
+
+  } catch (error) {
+    console.error("Lỗi xử lý XML:", error.message);
+  }
 }
 
 async function checkContentSTB(device_id, localPath) {
@@ -1067,11 +1109,11 @@ async function checkContentSTB(device_id, localPath) {
                 console.log(`Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name}`);
                 console.log('Đóng app STB');
                 await stopSTB({ device_id });
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                );
+                // await sendTelegramAlert(
+                //     telegramToken,
+                //     chatId,
+                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                // );
                 console.log(`Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`);
 
                 await saveAlertToDatabase({
@@ -1396,6 +1438,6 @@ async function stopSEAB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentSTB,
+module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentSEAB, checkContentSTB,
   stopABB, stopACB, stopBIDV, stopEIB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopVCB, stopTPB, stopVPB
 }

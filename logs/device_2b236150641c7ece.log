@@ -1,0 +1,40 @@
+[[INFO]] From: bank.function.js - Detail: 1. Stop EIB - Timestamp: 2025-06-04T18:11:19.101Z
+[[INFO]] From: bank.function.js - Detail: 2. Start EIB - Timestamp: 2025-06-04T18:11:20.361Z
+[[INFO]] From: bank.function.js - Detail: 3. Login EIB - Timestamp: 2025-06-04T18:11:24.584Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:11:32.676Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:11:34.677Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:11:36.684Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:11:38.687Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:11:40.691Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại hoặc không xác định qua XML sau 5 lần thử - Timestamp: 2025-06-04T18:11:40.692Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:40.731Z
+[[WARN]] From: bank.function.js - Detail: Retry lần 1/30 - Timestamp: 2025-06-04T18:11:41.746Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:41.792Z
+[[WARN]] From: bank.function.js - Detail: Retry lần 2/30 - Timestamp: 2025-06-04T18:11:42.796Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:42.852Z
+[[WARN]] From: bank.function.js - Detail: Retry lần 3/30 - Timestamp: 2025-06-04T18:11:43.863Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:43.917Z
+[[WARN]] From: bank.function.js - Detail: Retry lần 4/30 - Timestamp: 2025-06-04T18:11:44.932Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:44.981Z
+[[WARN]] From: bank.function.js - Detail: Retry lần 5/30 - Timestamp: 2025-06-04T18:11:45.983Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:46.033Z
+[[WARN]] From: bank.function.js - Detail: Retry lần 6/30 - Timestamp: 2025-06-04T18:11:47.049Z
+[[INFO]] From: bank.function.js - Detail: TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset - Timestamp: 2025-06-04T18:11:47.101Z
+[[INFO]] From: bank.function.js - Detail: 1. Stop EIB - Timestamp: 2025-06-04T18:30:11.977Z
+[[INFO]] From: bank.function.js - Detail: 2. Start EIB - Timestamp: 2025-06-04T18:30:13.220Z
+[[INFO]] From: bank.function.js - Detail: 3. Login EIB - Timestamp: 2025-06-04T18:30:17.433Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:30:25.532Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:30:27.535Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:30:29.549Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:30:31.551Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:30:33.561Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại hoặc không xác định qua XML sau 5 lần thử - Timestamp: 2025-06-04T18:30:33.561Z
+[[INFO]] From: bank.function.js - Detail: 1. Stop EIB - Timestamp: 2025-06-04T18:47:36.891Z
+[[INFO]] From: bank.function.js - Detail: 2. Start EIB - Timestamp: 2025-06-04T18:47:38.140Z
+[[INFO]] From: bank.function.js - Detail: 3. Login EIB - Timestamp: 2025-06-04T18:47:42.364Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:47:50.482Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:47:52.495Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:47:54.508Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:47:56.519Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại: không tìm thấy file XML - Timestamp: 2025-06-04T18:47:58.532Z
+[[ERROR]] From: bank.function.js - Detail: EIB login thất bại hoặc không xác định qua XML sau 5 lần thử - Timestamp: 2025-06-04T18:47:58.533Z

@@ -9,6 +9,7 @@ const { port } = require('./config');
 const cronTask = require('./functions/cron.function');
 const { autoRunGnirehtet, stopGnirehtet } = require('./functions/gnirehtet.function');
 const { delay } = require('./helpers/functionHelper');
+const notifier = require('./events/notifier');
 
 const server = require('http').createServer(app);
 const googleRoute = require('./routers/google.route');
@@ -21,6 +22,25 @@ app.use('/database', express.static(path.join(__dirname, 'database')));
 app.use('/google', googleRoute);
 
 Router(app);
+// SSE - Server-Sent Events: Thông báo realtime cho frontend
+app.get('/events', (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+
+  const listener = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  notifier.on('multiple-banks-detected', listener);
+
+  req.on('close', () => {
+    notifier.removeListener('multiple-banks-detected', listener);
+  });
+});
 
 app.get('/test', async (req, res) => {
   res.send('ok');

@@ -220,11 +220,11 @@ const checkContentMSB = async (device_id, localPath) => {
       console.log('Đóng app MSB');
       await stopMSB ( { device_id } );                
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
-      );
+      // await sendTelegramAlert(
+      //   telegramToken,
+      //   chatId,
+      //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
+      // );
 
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
@@ -259,11 +259,11 @@ const checkContentMSB = async (device_id, localPath) => {
         console.log('Dừng luôn app MSB');
         await stopMSB ( { device_id } );          
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `🚨 Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
-        );
+        // await sendTelegramAlert(
+        //   telegramToken,
+        //   chatId,
+        //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
+        // );
 
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
