@@ -150,17 +150,21 @@ async function trackABB({ device_id }) {
         device_id,
         message: `Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB.`
       });
-      await stopABB({ device_id });      
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB. (id: ${device_id})`
-      // );
+
+      await stopABB({ device_id });  
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB. (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -215,22 +219,26 @@ async function trackACB ( { device_id } ) {
     
   while (running) {
     if ( (device_id === qrDevice) && ( "acb" !== qrBank ) ) {      
-      await stopACB({ device_id });   
+      await stopACB({ device_id }); 
+
       // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB.`
       });   
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB. (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB. (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -286,17 +294,21 @@ async function trackEIB ( { device_id } ) {
         device_id,
         message: `Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB.`
       });
-      await stopEIB({ device_id });      
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB. (id: ${device_id})`
-      // );
+
+      await stopEIB({ device_id }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB. (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
-      });      
+      });   
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -348,21 +360,25 @@ async function trackOCB ( { device_id } ) {
     
   while (running) {
     if ( ( device_id === qrDevice ) && ( "ocb" !== qrBank ) ) {      
-      await stopOCB({ device_id });      
+      await stopOCB({ device_id });    
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB.`
       });
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB. (id: ${device_id})`        
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB. (id: ${device_id})`        
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -414,20 +430,24 @@ async function trackNCB ( { device_id } ) {
   while (running) {
     if ( ( device_id === qrDevice ) && ( "ncb" !== qrBank ) ) {      
       await stopNCB({ device_id });
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
       });
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB. (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB. (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -479,26 +499,31 @@ async function trackNCB ( { device_id } ) {
     while (running) {
       if ( ( device_id === qrDevice ) && ( "nab" !== qrBank ) ) {        
         await stopNAB({ device_id });
+
         // Phát thông báo realtime
         notifier.emit('multiple-banks-detected', {
           device_id,
           message: `Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB.`
-        });         
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB. (id: ${device_id})`
-        // );
+        });  
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB. (id: ${device_id})`
+        );
+
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
           filePath: ".xml"
         });
+
         return await trackingLoop({ device_id });
       } 
       else {
         const timestamp = Math.floor(Date.now() / 1000).toString();
         const localPath = path.join(targetDir, `${timestamp}.xml`);
+
         await dumpXmlToLocal(device_id, localPath);
         await checkContentNAB(device_id, localPath);
       }
@@ -544,27 +569,32 @@ async function trackSHBSAHA ( { device_id } ) {
     
   while (running) {
     if ( ( device_id === qrDevice ) && ( "shb" !== qrBank ) ) {      
-      await stopSHBSAHA({ device_id });      
+      await stopSHBSAHA({ device_id }); 
+
       // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA.`
       }); 
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA. (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA. (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentSHBSAHA(device_id, localPath);
     }
@@ -610,26 +640,31 @@ async function trackTPB ( { device_id } ) {
   while (running) {
     if ( ( device_id === qrDevice ) && ( "tpb" !== qrBank ) ) {      
       await stopTPB({ device_id }); 
+
       // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB.`
-      });      
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB (id: ${device_id})`
-      // );
+      });   
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentTPB(device_id, localPath);
     }
@@ -677,15 +712,18 @@ async function trackVPB ( { device_id } ) {
   while (running) {
     if ( ( device_id === qrDevice ) && ( "vpb" !== qrBank ) ) {      
       await stopVPB({ device_id });
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB.`
       });
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
@@ -743,25 +781,30 @@ async function trackMB({ device_id }) {
   while (running) {
     if ( ( device_id === qrDevice ) && ( "mb" !== qrBank ) ) {      
       await stopMB({ device_id });   
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB.`
       });   
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentMB(device_id, localPath);
     }
@@ -808,22 +851,26 @@ async function trackBIDV({ device_id }) {
 
   while (running) {
     if ( ( device_id === qrDevice ) && ( "bidv" !== qrBank ) ) {      
-      await stopBIDV({ device_id });      
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là BIDV nhưng QR yêu cầu bank khác (${qrBank}), stop BIDV (id: ${device_id})`
-      // );
+      await stopBIDV({ device_id }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là BIDV nhưng QR yêu cầu bank khác (${qrBank}), stop BIDV (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentBIDV(device_id, localPath);
     }    
@@ -871,25 +918,30 @@ async function trackVCB({ device_id }) {
   while (running) {
     if ( ( device_id === qrDevice ) && ( "vcb" !== qrBank ) ) {      
       await stopVCB({ device_id });  
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB.`
       });    
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentVCB(device_id, localPath);
     }    
@@ -937,25 +989,30 @@ async function trackVIB({ device_id }) {
   while (running) {
     if ( ( device_id === qrDevice ) && ( "vib" !== qrBank ) ) {      
       await stopVIB({ device_id });  
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là VIB nhưng QR yêu cầu bank khác (${qrBank}), stop VIB.`
-      });    
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là VIB nhưng QR yêu cầu bank khác (${qrBank}), stop VIB (id: ${device_id})`
-      // );
+      });  
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là VIB nhưng QR yêu cầu bank khác (${qrBank}), stop VIB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentVIB(device_id, localPath);
     }    
@@ -1003,20 +1060,24 @@ async function trackSEAB({ device_id }) {
   while (running) {   
     if ( ( device_id === qrDevice ) && ( "seab" !== qrBank ) ) {      
       await stopSEAB({ device_id });  
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB.`
-      });    
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB (id: ${device_id})`
-      // );
+      }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -1069,25 +1130,30 @@ async function trackICB({ device_id }) {
   while (running) {   
     if ( ( device_id === qrDevice ) && ( "icb" !== qrBank ) ) {      
       await stopICB({ device_id }); 
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB.`
-      });     
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB (id: ${device_id})`
-      // );
+      });   
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentICB(device_id, localPath);
     }
@@ -1135,25 +1201,30 @@ async function trackPVCB({ device_id }) {
   while (running) {   
     if ( ( device_id === qrDevice ) && ( "pvcb" !== qrBank ) ) {      
       await stopPVCB({ device_id });  
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB.`
-      });    
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB (id: ${device_id})`
-      // );
+      }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentPVCB(device_id, localPath);
     }
@@ -1201,25 +1272,30 @@ async function trackLPBANK({ device_id }) {
   while (running) { 
     if ( ( device_id === qrDevice ) && ( "lpbank" !== qrBank ) ) {      
       await stopLPBANK({ device_id });  
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK.`
-      });    
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK (id: ${device_id})`
-      // );
+      });  
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentLPBANK(device_id, localPath);
     }
@@ -1267,25 +1343,30 @@ async function trackMSB({ device_id }) {
   while (running) {       
     if ( ( device_id === qrDevice ) && ( "msb" !== qrBank ) ) {      
       await stopMSB({ device_id }); 
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là MSB nhưng QR yêu cầu bank khác (${qrBank}), stop MSB.`
-      });     
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là MSB nhưng QR yêu cầu bank khác (${qrBank}), stop MSB (id: ${device_id})`
-      // );
+      });  
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là MSB nhưng QR yêu cầu bank khác (${qrBank}), stop MSB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentMSB(device_id, localPath);
     }
@@ -1332,26 +1413,31 @@ async function trackSTB({ device_id }) {
 
   while (running) {   
     if ( ( device_id === qrDevice ) && ( "stb" !== qrBank ) ) {      
-      await stopSTB({ device_id });    
+      await stopSTB({ device_id }); 
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là STB nhưng QR yêu cầu bank khác (${qrBank}), stop STB.`
       });   
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là STB nhưng QR yêu cầu bank khác (${qrBank}), stop STB (id: ${device_id})`
-      // );
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là STB nhưng QR yêu cầu bank khác (${qrBank}), stop STB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
+
       await dumpXmlToLocal(device_id, localPath);
       await checkContentSTB(device_id, localPath);
     }
@@ -1398,21 +1484,25 @@ async function trackTCB({ device_id }) {
 
   while (running) {   
     if ( ( device_id === qrDevice ) && ( "tcb" !== qrBank ) ) {      
-      await stopTCB({ device_id });    
+      await stopTCB({ device_id });
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là TCB nhưng QR yêu cầu bank khác (${qrBank}), stop TCB.`
-      });   
-      // await sendTelegramAlert(
-      //   telegramToken,
-      //   chatId,
-      //   `Bank đang chạy là TCB nhưng QR yêu cầu bank khác (${qrBank}), stop TCB (id: ${device_id})`
-      // );
+      });  
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là TCB nhưng QR yêu cầu bank khác (${qrBank}), stop TCB (id: ${device_id})`
+      );
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
         filePath: ".xml"
       });
+
       return await trackingLoop({ device_id });
     } 
     else {
@@ -1461,7 +1551,7 @@ const trackFunctions = {
   NAB: trackNAB,
   NCB: trackNCB,
   OCB: trackOCB,
-  PVC: trackPVCB,
+  PVCB: trackPVCB,
   SEAB: trackSEAB,
   SHB: trackSHBSAHA,
   STB: trackSTB,
@@ -1752,7 +1842,7 @@ async function isPVCBRunning( { device_id } ) {
   //     .then(buffer => buffer.toString().trim());                
   //   if (output !== '') return true;        
   // } catch (error) {
-  //   console.error("Error checking PVC app status:", error.message);
+  //   console.error("Error checking PVCB app status:", error.message);
   //   return false;
   // }
   try {
@@ -1764,7 +1854,7 @@ async function isPVCBRunning( { device_id } ) {
 
     return isInTopStack;
   } catch (error) {
-    console.error("Error checking PVC app status via activity stack:", error.message);
+    console.error("Error checking PVCB app status via activity stack:", error.message);
     return false;
   }
 }

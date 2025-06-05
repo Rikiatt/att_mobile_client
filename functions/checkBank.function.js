@@ -59,11 +59,11 @@ async function checkContentABB(device_id, localPath) {
                     device_id
                 });
 
-                // await sendTelegramAlert(
-                //     telegramToken,
-                //     chatId,
-                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                // );
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ABB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
 
                 await saveAlertToDatabase({
                     timestamp: new Date().toISOString(),
@@ -201,7 +201,7 @@ async function checkContentEIB(device_id, localPath) {
             });
 
             await stopEIB({ device_id });
-            // await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`);
+            await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`);
             Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`, __filename);
             await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -264,7 +264,7 @@ async function checkContentEIB(device_id, localPath) {
                 });
 
                 await stopEIB({ device_id });
-                // await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+                await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
                 Logger.log(1, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`, __filename);
                 await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
@@ -319,11 +319,11 @@ async function checkContentACB(device_id, localPath) {
           message: `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
         });
 
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        // );        
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        );        
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `Phát hiện có thao tác thủ công khi xuất với ACB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
@@ -368,16 +368,18 @@ async function checkContentACB(device_id, localPath) {
           message: `ACB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
         });
 
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        // );
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
+
         return;
       } else {
         Logger.log(0, 'ACB: OCR TRÙNG info-qr về account_number và amount.', __filename);
@@ -401,17 +403,22 @@ async function checkContentNCB(device_id, localPath) {
 
     if ( lowerText.includes("chuyen tien") && (lowerText.includes("toi tai khoan") || lowerText.includes("toi the"))) {
       const reason = "Phát hiện màn hình chọn hình thức chuyển tiền (OCR)";
+
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Phát hiện màn hình chọn hình thức chuyển tiền thủ công`
       });
+
       await stopNCB({ device_id });
-      // await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
+
+      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `${reason} (id: ${device_id})`,
         filePath: localPath
       });
+
       return;
     }
 
@@ -448,13 +455,17 @@ async function checkContentNCB(device_id, localPath) {
     if (!(ocrHasAccount && ocrHasAmount)) {
       const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";      
       Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+
       await stopNCB({ device_id });
-      // await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+
+      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+
       await saveAlertToDatabase({
         timestamp: new Date().toISOString(),
         reason: `${reason} (id: ${device_id})`,
         filePath: localPath
       });
+
       return;
     } else {
       ocrMatchedByDevice[device_id] = true;
@@ -498,12 +509,14 @@ async function checkContentOCB(device_id, localPath) {
 
           Logger.log(0, 'Đóng app OCB', __filename);
           await stopOCB({ device_id });
-            // await sendTelegramAlert(
-            //   telegramToken,
-            //   chatId,
-            //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            // );            
-            await saveAlertToDatabase({
+
+          await sendTelegramAlert(
+              telegramToken,
+              chatId,
+              `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+          );          
+
+          await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
               reason: `Phát hiện có thao tác thủ công khi xuất với OCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
               filePath: localPath
@@ -550,16 +563,19 @@ async function checkContentOCB(device_id, localPath) {
         });
 
         await stopOCB({ device_id });
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        // );
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
+
         return;
       } else {        
         Logger.log(0, 'OCB: OCR TRÙNG info-qr về account_number và amount.', __filename);
@@ -602,17 +618,21 @@ async function checkContentNAB(device_id, localPath) {
               });
 
               await stopNAB({ device_id });
-              // await sendTelegramAlert(
-              //     telegramToken,
-              //     chatId,
-              //     `Cảnh báo! Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`
-              // );
+
+              await sendTelegramAlert(
+                  telegramToken,
+                  chatId,
+                  `Cảnh báo! Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`
+              );
+
               Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`, __filename);
+
               await saveAlertToDatabase({
                   timestamp: new Date().toISOString(),
                   reason: `Phát hiện thao tác thủ công NAB ở: ${screen.name} (${device_id})`,
                   filePath: localPath
               });
+
               return;
             }
 
@@ -635,11 +655,12 @@ async function checkContentNAB(device_id, localPath) {
 
                 if (ocrAccount !== expectedAcc || ocrAmount !== expectedAmt) {
                     await stopNAB({ device_id });
-                    // await sendTelegramAlert(
-                    //   telegramToken,
-                    //   chatId,
-                    //   `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
-                    // );
+
+                    await sendTelegramAlert(
+                      telegramToken,
+                      chatId,
+                      `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
+                    );
                     
                     Logger.log(1, `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`, __filename);
 
@@ -691,20 +712,20 @@ async function checkContentSHBSAHA (device_id, localPath) {
 
               Logger.log(1, `Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name}`, __filename);              
 
-                // await sendTelegramAlert(
-                //     telegramToken,
-                //     chatId,
-                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                // );
+              await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+              );
               Logger.log(1, `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
 
               await saveAlertToDatabase({
                     timestamp: new Date().toISOString(),
                     reason: `Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
                     filePath: localPath
-                });
+              });
 
-                return;
+              return;
             }
         }
 
@@ -750,11 +771,11 @@ async function checkContentSHBSAHA (device_id, localPath) {
                   message: `XML KHÁC info-qr về số tài khoản hoặc số tiền`
                 });
 
-                // await sendTelegramAlert(
-                //     telegramToken,
-                //     chatId,
-                //     `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`
-                // );
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`
+                );
                 Logger.log(1, `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`, __filename);
                 await saveAlertToDatabase({
                     timestamp: new Date().toISOString(),
@@ -817,9 +838,11 @@ async function checkContentTPB(device_id, localPath) {
           device_id,
           message: `TPB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
         });
-        // await sendTelegramAlert(telegramToken, chatId,
-        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        // );
+
+        await sendTelegramAlert(telegramToken, chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
         Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
@@ -862,17 +885,21 @@ async function checkContentTPB(device_id, localPath) {
             });
 
             await stopTPB({ device_id });
-            // await sendTelegramAlert(
-            //   telegramToken,
-            //   chatId,
-            //   `Cảnh báo! Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            // );            
+
+            await sendTelegramAlert(
+              telegramToken,
+              chatId,
+              `Cảnh báo! Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            ); 
+
             Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
+
             await saveAlertToDatabase({
-            timestamp: new Date().toISOString(),
-            reason: `Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-            filePath: localPath
+              timestamp: new Date().toISOString(),
+              reason: `Phát hiện thao tác thủ công khi xuất với TPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+              filePath: localPath
             });
+
             return;
         }
     }
@@ -915,21 +942,24 @@ async function checkContentVPB(device_id, localPath) {
             await stopVPB({ device_id });
 
             notifier.emit('multiple-banks-detected', {
-              device_id,
-              message: `Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name}`
+                device_id,
+                message: `Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name}`
             });
 
-            // await sendTelegramAlert(
-            //     telegramToken,
-            //     chatId,
-            //     `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            // );            
+            await sendTelegramAlert(
+                  telegramToken,
+                  chatId,
+                  `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            );     
+
             Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
+
             await saveAlertToDatabase({
-                timestamp: new Date().toISOString(),
-                reason: `Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-                filePath: localPath
+                  timestamp: new Date().toISOString(),
+                  reason: `Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+                  filePath: localPath
             });
+
             return;
         }
     }
@@ -968,12 +998,14 @@ async function checkContentVPB(device_id, localPath) {
               message: `VPB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
             });
 
-            // await sendTelegramAlert(
-            //     telegramToken,
-            //     chatId,
-            //     `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-            // );            
+            await sendTelegramAlert(
+                telegramToken,
+                chatId,
+                `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+            );    
+
             Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
+
             await saveAlertToDatabase({
                 timestamp: new Date().toISOString(),
                 reason: `${reason} (id thiết bị: ${device_id})`,
@@ -1023,16 +1055,18 @@ async function checkContentMB(device_id, localPath) {
                   message: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`
                 });
 
-                // await sendTelegramAlert(
-                //   telegramToken,
-                //   chatId,
-                //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                // );
+                await sendTelegramAlert(
+                  telegramToken,
+                  chatId,
+                  `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
+
                 Logger.log(1, `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);                
+
                 await saveAlertToDatabase({
-                timestamp: new Date().toISOString(),
-                reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-                filePath: localPath
+                  timestamp: new Date().toISOString(),
+                  reason: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+                  filePath: localPath
                 });
                 return;
             }
@@ -1073,17 +1107,20 @@ async function checkContentMB(device_id, localPath) {
                   message: `MB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
                 });
 
-                // await sendTelegramAlert(
-                //   telegramToken,
-                //   chatId,
-                //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-                // );
+                await sendTelegramAlert(
+                  telegramToken,
+                  chatId,
+                  `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+                );
+
                 Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
+
                 await saveAlertToDatabase({
-                timestamp: new Date().toISOString(),
-                reason: `${reason} (id thiết bị: ${device_id})`,
-                filePath: localPath
+                  timestamp: new Date().toISOString(),
+                  reason: `${reason} (id thiết bị: ${device_id})`,
+                  filePath: localPath
                 });
+
                 return;
             } else {
                 Logger.log(0, 'MB: OCR TRÙNG info-qr về account_number và amount.', __filename);
@@ -1128,11 +1165,12 @@ async function checkContentSEAB(device_id, localPath) {
               message: `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
             });
 
-            // await sendTelegramAlert(
-            //   telegramToken,
-            //   chatId,
-            //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            // );            
+            await sendTelegramAlert(
+              telegramToken,
+              chatId,
+              `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            );   
+
             await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
               reason: `Phát hiện có thao tác thủ công khi xuất với SEAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
@@ -1172,11 +1210,13 @@ async function checkContentSEAB(device_id, localPath) {
           device_id,
           message: `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
         });
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        // );
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
@@ -1221,11 +1261,11 @@ async function checkContentSTB(device_id, localPath) {
                   message: `Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name}`
                 });
 
-                // await sendTelegramAlert(
-                //     telegramToken,
-                //     chatId,
-                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                // );
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
                 Logger.log(1, `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với STB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
 
                 await saveAlertToDatabase({
@@ -1269,11 +1309,11 @@ async function checkContentTCB(device_id, localPath) {
                   message: `Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name}`
                 });
 
-                // await sendTelegramAlert(
-                //     telegramToken,
-                //     chatId,
-                //     `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                // );
+                await sendTelegramAlert(
+                    telegramToken,
+                    chatId,
+                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+                );
                 Logger.log(1, `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
 
                 await saveAlertToDatabase({
@@ -1323,11 +1363,11 @@ async function checkContentVCB(device_id, localPath) { // chua lam
               message: `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
             });
 
-            // await sendTelegramAlert(
-            //   telegramToken,
-            //   chatId,
-            //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            // );            
+            await sendTelegramAlert(
+              telegramToken,
+              chatId,
+              `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            );            
             await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
               reason: `Phát hiện có thao tác thủ công khi xuất với VCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
@@ -1367,16 +1407,19 @@ async function checkContentVCB(device_id, localPath) { // chua lam
           device_id,
           message: `VCB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
         });
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        // );
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
+
         return;
       } else {
         Logger.log(0, 'VIB: OCR TRÙNG info-qr về account_number và amount.', __filename);
@@ -1421,11 +1464,13 @@ async function checkContentVIB(device_id, localPath) { // chua lam
             });
 
             await stopSEAB({ device_id });
-            // await sendTelegramAlert(
-            //   telegramToken,
-            //   chatId,
-            //   `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            // );            
+
+            await sendTelegramAlert(
+              telegramToken,
+              chatId,
+              `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+            );         
+
             await saveAlertToDatabase({
               timestamp: new Date().toISOString(),
               reason: `Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
@@ -1466,16 +1511,18 @@ async function checkContentVIB(device_id, localPath) { // chua lam
           message: `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
         });
 
-        // await sendTelegramAlert(
-        //   telegramToken,
-        //   chatId,
-        //   `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        // );
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
         await saveAlertToDatabase({
           timestamp: new Date().toISOString(),
           reason: `${reason} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
+        
         return;
       } else {
         Logger.log(0, 'VIB: OCR TRÙNG info-qr về account_number và amount.', __filename);
