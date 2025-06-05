@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { shbsahaScanQR, shbsahaLogin } from '../../services/handle.service';
+import { shbsahaLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -22,7 +22,7 @@ const HandleSHBSAHA = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>SHB SAHA</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Thao tác quét QR" arrow>
+          {/* <Tooltip title="Thao tác quét QR" arrow>
             <Button
               size="small"
               variant="contained"
@@ -32,7 +32,7 @@ const HandleSHBSAHA = ({ item, X, Y, setLoading }) => {
             >
               Quét QR
             </Button>
-            </Tooltip>
+          </Tooltip> */}
           <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
             <Button
               size="small"

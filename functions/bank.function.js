@@ -9,16 +9,14 @@ const { Logger } = require("../config/require.config");
 const coordinatesLoginABB = require('../config/coordinatesLoginABB.json');
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
-const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, 
-  isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning
-} = require('../functions/bankStatus.function');
+const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning } = require('../functions/bankStatus.function');
 
 async function clearTempFile( { device_id } ) {
   try {                
     await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
     await delay(1000);    
   } catch (error) {
-    console.error("Cannot delete file temp_dump.xml:", error.message);
+    Logger.log(2, `Cannot delete file temp_dump.xml: ${error.message}`, __filename);
   }
 }
 
@@ -126,7 +124,7 @@ const waitLoginApp = {
 const stopABB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop vn.abbank.retail');
-  console.log('Đã dừng app ABBBank');
+  Logger.log(2, `Đã dừng ABB`, __filename);
   await delay(200);
   return { status: 200, message: 'Success' };
 };
@@ -134,7 +132,7 @@ const stopABB = async ({ device_id }) => {
 const stopEIB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.vnpay.EximBankOmni');
-  console.log('Đã dừng app EximBank EDigi');
+  Logger.log(2, `Đã dừng EIB`, __filename);
   await delay(200);
   return { status: 200, message: 'Success' };
 };
@@ -142,7 +140,7 @@ const stopEIB = async ({ device_id }) => {
 const stopOCB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
-  console.log('Đã dừng app OCB');
+  Logger.log(2, `Đã dừng OCB`, __filename);
   await delay(200);
   return { status: 200, message: 'Success' };
 };
@@ -150,7 +148,7 @@ const stopOCB = async ({ device_id }) => {
 const stopNAB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
-  console.log('Đã dừng app NAB');
+  Logger.log(2, `Đã dừng NAB`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -158,7 +156,7 @@ const stopNAB = async ({ device_id }) => {
 const stopTPB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
-  console.log('Đã dừng app TPB');
+  Logger.log(2, `Đã dừng TPB`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -166,7 +164,7 @@ const stopTPB = async ({ device_id }) => {
 const stopVPB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
-  console.log('Đã dừng app VPB');
+  Logger.log(2, `Đã dừng VPB`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };   
@@ -174,7 +172,7 @@ const stopVPB = async ({ device_id }) => {
 const stopMB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.mbmobile');
-  console.log('Đã dừng app MB');
+  Logger.log(2, `Đã dừng MB`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -182,7 +180,7 @@ const stopMB = async ({ device_id }) => {
 const stopSHBSAHA = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop vn.shb.saha.mbanking');
-  console.log('Đã dừng app SHB SAHA');
+  Logger.log(2, `Đã dừng SHB SAHA`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -190,77 +188,76 @@ const stopSHBSAHA = async ({ device_id }) => {
 const stopSTB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.sacombank.ewallet');
-  console.log('Đã dừng app Sacombank');
+  Logger.log(2, `Đã dừng Sacombank`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
 
 const startABB = async ({ device_id }) => {    
-  await client.shell(device_id, 'monkey -p vn.abbank.retail -c android.intent.category.LAUNCHER 1');
-  console.log('Đang khởi động app ABB');
+  Logger.log(0, `Đang khởi động ABB...`, __filename);
+  await client.shell(device_id, 'monkey -p vn.abbank.retail -c android.intent.category.LAUNCHER 1');  
   await delay(200);
   return { status: 200, message: 'Success' };
 };
 
 const startACB = async ({ device_id }) => {    
-  await client.shell(device_id, 'monkey -p mobile.acb.com.vn -c android.intent.category.LAUNCHER 1');
-  console.log('Đang khởi động app ACB');
+  Logger.log(0, `Đang khởi động ACB...`, __filename);
+  await client.shell(device_id, 'monkey -p mobile.acb.com.vn -c android.intent.category.LAUNCHER 1');  
   await delay(200);
   return { status: 200, message: 'Success' };
 };
 
-const startEIB = async ({ device_id }) => {    
-  // await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'monkey -p com.vnpay.EximBankOmni -c android.intent.category.LAUNCHER 1');
-  console.log('Đang khởi động app Eximbank EDigi');
+const startEIB = async ({ device_id }) => {      
+  Logger.log(0, `Đang khởi động EIB...`, __filename);
+  await client.shell(device_id, 'monkey -p com.vnpay.EximBankOmni -c android.intent.category.LAUNCHER 1');  
   await delay(200);
   return { status: 200, message: 'Success' };
 };
 
 const startOCB = async ({ device_id }) => {    
-  await client.shell(device_id, 'monkey -p vn.com.ocb.awe -c android.intent.category.LAUNCHER 1');
-  console.log('Đang khởi động app OCB');
+  Logger.log(0, `Đang khởi động OCB...`, __filename);
+  await client.shell(device_id, 'monkey -p vn.com.ocb.awe -c android.intent.category.LAUNCHER 1');  
   await delay(200);
   return { status: 200, message: 'Success' };
 };
 
-const startNAB = async ({ device_id }) => {
-  console.log('Đang khởi động app NAB...');
-  await client.shell(device_id, 'monkey -p ops.namabank.com.vn -c android.intent.category.LAUNCHER 1');
+const startNAB = async ({ device_id }) => {  
+  Logger.log(0, `Đang khởi động NAB...`, __filename);
+  await client.shell(device_id, 'monkey -p ops.namabank.com.vn -c android.intent.category.LAUNCHER 1');    
   await delay(500);
   return { status: 200, message: 'Success' };
 };
 
-const startTPB = async ({ device_id }) => {
-  console.log('Đang khởi động app TPB...');
-  await client.shell(device_id, 'monkey -p com.tpb.mb.gprsandroid -c android.intent.category.LAUNCHER 1');
+const startTPB = async ({ device_id }) => {  
+  Logger.log(0, `Đang khởi động TPB...`, __filename);
+  await client.shell(device_id, 'monkey -p com.tpb.mb.gprsandroid -c android.intent.category.LAUNCHER 1');  
   await delay(500);
   return { status: 200, message: 'Success' };
 };
 
-const startVPB = async ({ device_id }) => {
-  console.log('Đang khởi động app VPB...');
+startVPB = async ({ device_id }) => {
+  Logger.log(0, `Đang khởi động VPB...`, __filename);
   await client.shell(device_id, 'monkey -p com.vnpay.vpbankonline -c android.intent.category.LAUNCHER 1');
   await delay(500);
   return { status: 200, message: 'Success' };
 };
 
 const startMB = async ({ device_id }) => {
-  console.log('Đang khởi động app MB...');
+  Logger.log(0, `Đang khởi động MB...`, __filename);
   await client.shell(device_id, 'monkey -p com.mbmobile -c android.intent.category.LAUNCHER 1');
   await delay(500);
   return { status: 200, message: 'Success' };
 };
 
 const startSHBSAHA = async ({ device_id }) => {
-  console.log('Đang khởi động app SHB SAHA...');
+  Logger.log(0, `Đang khởi động SHB SAHA...`, __filename);
   await client.shell(device_id, 'monkey -p vn.shb.saha.mbanking -c android.intent.category.LAUNCHER 1');
   await delay(500);
   return { status: 200, message: 'Success' };
 };
 
 const startSTB = async ({ device_id }) => {
-  console.log('Đang khởi động app Sacom...');
+  Logger.log(0, `Đang khởi động Sacom...`, __filename);
   await client.shell(device_id, 'monkey -p com.sacombank.ewallet -c android.intent.category.LAUNCHER 1');
   await delay(500);
   return { status: 200, message: 'Success' };
@@ -323,8 +320,7 @@ async function isBankAppRunning({ bank, device_id }) {
     const output = await client.shell(device_id, `dumpsys activity activities | grep -i ${packageName}`)
       .then(adb.util.readAll)
       .then(buffer => buffer.toString().trim());
-
-    // console.log('log output in isBankAppRunning:',output);
+    
     return output.includes(packageName);
   } catch (error) {
     Logger.log(2, `Lỗi khi kiểm tra app đang chạy: ${error.message}`, __filename);
@@ -339,8 +335,6 @@ function getBankPass(bank, device_id) {
 
   const normalizedAppId = bank?.toUpperCase().trim();
   const normalizedDeviceId = device_id?.trim();
-  console.log('log normalizedAppId:',normalizedAppId);
-  console.log('log normalizedDeviceId:',normalizedDeviceId);
 
   const matched = list.find(e => {
     const bankName = e["NGÂN HÀNG"]?.toUpperCase().trim();
@@ -348,16 +342,16 @@ function getBankPass(bank, device_id) {
     return bankName === normalizedAppId && deviceField.includes(normalizedDeviceId);
   });
 
-  if (!matched || !matched["MẬT KHẨU"]) {
-    console.log(`[ERROR] Không tìm thấy dòng phù hợp với bank=${normalizedAppId}, device_id=${normalizedDeviceId}`);
+  if (!matched || !matched["MẬT KHẨU"]) {    
+    Logger.log(2, `[ERROR] Không tìm thấy dòng phù hợp với bank=${normalizedAppId}, device_id=${normalizedDeviceId}`, __filename);
     throw new Error("Không tìm thấy mật khẩu từ Google Sheets");
   }
 
   return matched["MẬT KHẨU"].toString().trim();
 }
 
-const loginABB = async ({ device_id }) => {    
-  console.log('Login ABB...');
+const loginABB = async ({ device_id }) => {      
+  Logger.log(0, `3. Login ABB...`, __filename);
   const coordinatesLoginABB = await loadCoordinatesLoginABB(device_id);
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -376,7 +370,7 @@ const loginABB = async ({ device_id }) => {
 };
 
 const loginEIB = async ({ device_id, bank }) => {    
-  console.log('Login EIB...');
+  Logger.log(0, `3. Login EIB...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -397,7 +391,7 @@ const loginEIB = async ({ device_id, bank }) => {
 };
 
 const loginTPB = async ({ device_id, bank }) => {    
-  console.log('Login TPB...');
+  Logger.log(0, `3. Login TPB...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -413,7 +407,7 @@ const loginTPB = async ({ device_id, bank }) => {
 };
 
 const loginNAB = async ({ device_id, bank }) => {    
-  console.log('Login NAB...');
+  Logger.log(0, `3. Login NAB...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -432,7 +426,7 @@ const loginNAB = async ({ device_id, bank }) => {
 
 // chưa xong
 const loginMB = async ({ device_id }) => {
-  console.log('Login MB...');
+  Logger.log(0, `3. Login MB...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -447,7 +441,7 @@ const loginMB = async ({ device_id }) => {
 };
 
 const loginSHBSAHA = async ({ device_id }) => {    
-  console.log('Login SHB SAHA...');
+  Logger.log(0, `3. Login SHB SAHA...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -463,7 +457,7 @@ const loginSHBSAHA = async ({ device_id }) => {
 };
 
 const loginSTB = async ({ device_id }) => {    
-  console.log('Login Sacom...');
+  Logger.log(0, `3. Login Sacom...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
@@ -511,8 +505,7 @@ const reset = async (timer, device_id, bank) => {
 };
 
 const checkTransactions = async ({ device_id }) => {
-  const infoPath = path.join(__dirname, '../database/info-qr.json');
-  console.log('log infoPath:',infoPath);
+  const infoPath = path.join(__dirname, '../database/info-qr.json');  
   if (!fs.existsSync(infoPath)) return null;
 
   try {
@@ -588,8 +581,7 @@ const scanQRNAB = async ({ device_id, transId }) => {
     .sort((a, b) => b.time - a.time);      
 
   const latestFile = path.join(logDir, files[0].name);
-  const content = fs.readFileSync(latestFile, 'utf-8');
-  console.log('log latestFile:',latestFile);
+  const content = fs.readFileSync(latestFile, 'utf-8');  
 
   if (content.includes("Galaxy Note9")) {
     useGalaxy = true;
@@ -686,13 +678,13 @@ const scanQRMB = async ({ device_id, localPath }) => {
     };
   
     if (containsAllKeywords(['recent', 'images', 'downloads', 'galaxyNote9', 'bugReports', 'gallery'])) {
-      console.log("🔄 Sử dụng coordinatesScanQRMB3 (Galaxy Note9 detected)");
+      console.log("Sử dụng coordinatesScanQRMB3 (Galaxy Note9 detected)");
       selectedCoords = coordinatesScanQRMB3;
       break;
     }
   
     if (containsAllKeywords(['recent', 'images', 'downloads', 'bugReports', 'gallery'])) {
-      console.log("🔄 Sử dụng coordinatesScanQRMB2 (màn hình chứa Bộ sưu tập)");
+      console.log("Sử dụng coordinatesScanQRMB2 (màn hình chứa Bộ sưu tập)");
       selectedCoords = coordinatesScanQRMB2;
       break;
     }
@@ -933,8 +925,7 @@ const bankTransfer = async ({ device_id, bank }) => {
 
   while (retries < 30) {
     const transStatus = await checkTransactions({ device_id });
-    const started = await isBankAppRunning({ bank, device_id });  
-    console.log('log transStatus:',transStatus);  
+    const started = await isBankAppRunning({ bank, device_id });      
 
     if (transStatus === 'in_process' && started) {
       Logger.log(0, `TH1 - Đã login app + có đơn -> ScanQR`, __filename);

@@ -59,40 +59,9 @@ export const bankTransfer = async (data, setLoading) => {
   }  
 
   setLoading(true);    
-  
-  // console.log('1. Đang đóng các app đang mở...');
-  // await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-  // await delay(300); 
 
   console.log('2. Khởi động app bank tương ứng send.bank...');
-  await actionBank({ action: 'bankTransfer', device_id: data.device_id });
-
-  // await delay(10000);  
-
-  // console.log('3. Login');  
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  // await delay(1000);
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
-  // await delay(4000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track
-
-  // // Track MB App while it is in process  
-  // console.log('4. Đang theo dõi MB Bank...');
-  // const trackMBPromise = actionADB({ action: 'trackMB', device_id: data.device_id });
-
-  // console.log('5. Scan QR');
-  // await actionADB({ action: 'scanQRMB', device_id: data.device_id });  
-  // await delay(3000); 
-
-  // // Đợi trackMB hoàn thành (nếu app MB Bank bị thoát)
-  // const trackResult = await trackMBPromise;
-  // if (!trackResult) {
-  //   console.log('Theo dõi MB Bank đã kết thúc.');
-  // }
-
-  // // console.log('6. Delete all of imgs in /sdcard');
-  // // await actionADB({ action: 'delImg', device_id: data.device_id }); 
+  await actionBank({ action: 'bankTransfer', device_id: data.device_id }); 
 
   setLoading(false);
 };
@@ -510,52 +479,6 @@ export const ncbLogin = async (data, setLoading) => {
 };
 
 // ============== SHB SAHA ============== //
-
-export const shbsahaScanQR = async (data, setLoading) => {
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceSHBSAHA', device_id: data.device_id }); 
-
-  if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ SHB SAHA", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }  
-
-  // setLoading(true);    
-
-  // const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu SHB SAHA cần truyền vào thiết bị');
-  // if (!text) return;
-
-  // console.log('1. Đang đóng các app đang mở...');
-  // await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-  // await delay(1000); 
-
-  // console.log('2. Khởi động app SHB SAHA...');
-  // await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
-  // await delay(5000);
-
-  // console.log('3. Login');
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });    
-  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  // await delay(500);
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  // await delay(4000); // trong lúc loading vào trong thì cho chờ thêm để giảm số file track
-
-  // // Track SHB SAHA while it is in process  
-  // console.log('4. Đang theo dõi SHB SAHA...');
-  // const trackSHBSAHAPromise = actionADB({ action: 'trackSHBSAHA', device_id: data.device_id });                
-
-  // console.log('5. Scan QR');
-  // await actionADB({ action: 'scanQRSHBSAHA', device_id: data.device_id });
-
-  // // Đợi trackSHBSAHA hoàn thành (nếu app SHB SAHA bị thoát)
-  // const trackResult = await trackSHBSAHAPromise;
-  // if (!trackResult) {
-  //   console.log('📢 Theo dõi SHB SAHA đã kết thúc.');
-  // }
-
-  return swalNotification("error", "Chức năng đang được bảo trì!", "Vui lòng quay lại sau.");
-};
 
 export const shbsahaLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');

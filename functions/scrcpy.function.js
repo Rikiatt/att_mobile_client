@@ -56,32 +56,11 @@ function getLastDeviceId() {
 }
 
 module.exports = {
-  // connectScrcpy: async ({ device_id, title }) => {
-  //   console.log(`Kết nối thiết bị -s ${device_id}`);
-  //   nodeCmd.run(`${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}`);
-  //   await delay(500);
-
-  //   const validSites =
-  //     ['shbet', 'new88'].includes(siteOrg) ||
-  //     ['shbet', 'new88'].includes(siteAtt) ||
-  //     (['jun88cmd', 'jun88k36'].includes(siteOrg));
-
-  //   console.log('log in validSites connectScrcpy:',validSites);      
-      
-  //   if (validSites) {      
-  //     await trackingLoop({ device_id });
-  //   }
-
-  //   return { status: 200, message: 'Success' };
-  // },
   connectScrcpy: async ({ device_id, title }) => {
     console.log(`Kết nối thiết bị -s ${device_id}`);
     nodeCmd.run(`"${scrcpyFolder}" -s ${device_id} --no-audio --window-title="${title ? title : device_id}"`);
     await delay(500);
 
-    // if (validSites.includes(siteOrg) || validSites.includes(siteAtt)) {
-    //   await trackingLoop({ device_id: device_id });
-    // }
     const validSites =
       ['shbet', 'new88'].includes(siteOrg) ||
       ['shbet', 'new88'].includes(siteAtt) ||

@@ -4,7 +4,7 @@ const { listDevice, delADBImg, clickConfirmICB, inputPINVPB, inputPINMSB, inputP
   stopICB, startICB,  
   tapADB, inputADB, inputICB, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDevice, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceICB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  stopBIDV, startBIDV, closeAll, clickLoginACB, clickPasswordFieldEIB, trackMSB, trackSHBSAHA } = require('../functions/adb.function');
+  stopBIDV, startBIDV, closeAll, clickLoginACB, clickPasswordFieldEIB } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 const { trackingLoop } = require('../functions/bankStatus.function');
@@ -15,9 +15,7 @@ const mapAction = {
   clickLoginACB: clickLoginACB,  
   scanQRBAB: scanQRBAB,
   clickScanQRNCB: clickScanQRNCB,   
-  clickPasswordFieldEIB: clickPasswordFieldEIB,
-  trackMSB: trackMSB,
-  trackSHBSAHA: trackSHBSAHA,                
+  clickPasswordFieldEIB: clickPasswordFieldEIB,             
   delImg: delADBImg,
   clickConfirmICB: clickConfirmICB,
   inputPINVPB: inputPINVPB,

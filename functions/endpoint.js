@@ -186,31 +186,27 @@ module.exports = {
             const devices = await listDevice();
 
             const findId = data.device_id.split('$')[0];
-            const findIp = data.device_id.split('$')[1];
-
-            // Lưu vietqr_url vào file info-qr.json
-            let qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
-            // data.trans_status = 'in_process';           
-            let qrData = { type, data, timestamp: new Date().toISOString() };
-            console.log('log qrData:', qrData);
-
-            try {
-              fs.writeFileSync(qrInfoPath, JSON.stringify(qrData, null, 2));
-              console.log('Saved vietqr_url to info-qr.json');
-            } catch (error) {
-              console.error('Got an error when saving vietqr_url:', error);
-            }
-
+            const findIp = data.device_id.split('$')[1];            
+              
             const findDevice = devices.find((item) => (!findIp || findIp == ipPublic) && item.id == findId);
             if (!findDevice) {
               return;
-            }
+            }                        
 
+            // Chống spam
             // Đúng thiết bị
             if (lastReceived[findId] && now - lastReceived[findId] < 5000) {
               return;
             }
             lastReceived[findId] = now;
+
+            const qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
+            // data.trans_status = 'in_process';           
+            let qrData = { type, data, timestamp: new Date().toISOString() };
+            console.log('log qrData (device matched):', qrData);
+
+            fs.writeFileSync(qrInfoPath, JSON.stringify(qrData, null, 2));
+            console.log('Saved vietqr_url to info-qr.json');
 
             const { vietqr_url, trans_id, bin, account_number, amount, trans_mess, PIN, bank_pass } = data;
 

@@ -254,7 +254,7 @@ const checkContentMSB = async (device_id, localPath) => {
 
       const differences = compareData(extractedData, jsonData);
       if (differences.length > 0) {
-        console.log(`⚠ Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
+        console.log(`Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
 
         console.log('Dừng luôn app MSB');
         await stopMSB ( { device_id } );          
@@ -273,12 +273,12 @@ const checkContentMSB = async (device_id, localPath) => {
 
         return true;
       } else {
-        console.log("✅ Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
+        console.log("Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
         return false;
       }
     }    
   } catch (error) {    
-      console.error("❌ Lỗi xử lý XML:", error.message);
+      console.error("Lỗi xử lý XML:", error.message);
   }
 }
 
@@ -323,64 +323,7 @@ module.exports = {
     }
 
     return { status: 200, message: 'Success'};
-  },
-
-  trackMSB : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('Đang theo dõi MSB...');
-    
-    const chatId = '-4725254373';    
-
-    if (!chatId) {
-      console.error("Cannot continue cause of invalid chat ID.");
-      return;
-    } 
-
-    let running = await isMSBRunning( { device_id } );
-
-    if (!running) {
-      return;
-    }
-        
-    await clearTempFile( { device_id } );
-    
-    while (running) {
-      console.log('MSB app is in process');
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-    
-      await dumpXmlToLocal( device_id, localPath );
-      await checkContentMSB( device_id, localPath );                       
-    
-      running = await isMSBRunning( { device_id } );
-    
-      if (!running) {            
-        console.log('🚫 MSB đã tắt. Dừng theo dõi.');
-        await clearTempFile( { device_id } );      
-        return false;          
-      }
-    }
-    return { status: 200, message: 'Success' };
-  },
-
-  trackSHBSAHA : async ( { device_id } ) => {
-    const targetDir = path.join('C:\\att_mobile_client\\logs\\');
-    ensureDirectoryExists(targetDir);
-
-    console.log('Đang theo dõi SHB SAHA...');
-
-    let running = await isSHBSAHARunning({ device_id });
-    
-      if (!running) {
-        return await trackingLoop({ device_id });
-      }
-    
-      await clearTempFile({ device_id });
-
-    return { status: 200, message: 'Success' };
-  },
+  }, 
 
   listDevice: async () => {
     try {
@@ -453,33 +396,6 @@ module.exports = {
     return { status: 200, message: 'Success' };
   },
 
-  // copyQRImages: async ({ device_id }) => {        
-  //   try {
-  //     const jsonPath = path.join(__dirname, '../database/info-qr.json');
-  //     const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-  //     const timestamp = jsonData.timestamp;
-  //     const date = new Date(timestamp);
-  //     const pad = (n) => n.toString().padStart(2, '0');
-  //     const filename = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
-
-  //     const sourcePath = `/sdcard/DCIM/Camera/${filename}.jpg`;
-  //     const destinationDir = `/sdcard/DCIM/Camera/`;
-
-  //     for (let i = 1; i <= 2; i++) {
-  //       const destinationPath = `${destinationDir}${filename}_copy_${i}.jpg`;
-  //       try {
-  //         await client.shell(device_id, `cp ${sourcePath} ${destinationPath}`);
-  //         console.log(`Copied to: ${destinationPath}`);
-  //       } catch (err) {
-  //         console.error(`Failed to copy to ${destinationPath}: ${err.message}`);
-  //       }
-  //     }
-  //     return { status: 200, message: 'Success' };
-  //   } catch (error) {
-  //     console.log('copyQRImages got an error: ', error);
-  //     return { status: 500, message: 'Failed to copy QR images' };
-  //   }    
-  // }, 
   copyQRImages: async ({ device_id }) => {
     try {
       // 1. Lấy danh sách ảnh .jpg trong thư mục Camera
@@ -699,12 +615,6 @@ module.exports = {
     const formatText = removeVietnameseStr(text);
     const charRegex = escapeSpecialChars(formatText);
     await client.shell(device_id, `input text ${charRegex}`);
-    // for (const char of text) {
-    //   const charRegex = escapeSpecialChars(char);
-    //   console.log(`Nhập::[${char}]`);
-    //   await client.shell(device_id, `input text ${charRegex}`);
-    //   await delay(100);
-    // }
     await delay(1000);
     return { status: 200, message: 'Success' };
   },
@@ -1251,19 +1161,6 @@ async function loadCoordinatesScanQRMB3(device_id) {
   }
 };
 
-async function loadCoordinatesScanQRSHBSAHA(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQRSHBSAHA[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQRSHBSAHA for device: ${error.message}`);
-    throw error;
-  }
-};
-
 async function loadCoordinatesLoginACB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);    
@@ -1277,37 +1174,11 @@ async function loadCoordinatesLoginACB(device_id) {
   }
 };
 
-async function loadCoordinatesScanQRACB(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQRACB[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQRACB for device: ${error.message}`);
-    throw error;
-  }
-}
-
 async function loadCoordinatesScanQREIB(device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);    
 
     const deviceCoordinates = coordinatesScanQREIB[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQREIB for device: ${error.message}`);
-    throw error;
-  }
-}
-
-async function loadCoordinatesScanQREIB2(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQREIB2[deviceModel];
 
     return deviceCoordinates;
   } catch (error) {
