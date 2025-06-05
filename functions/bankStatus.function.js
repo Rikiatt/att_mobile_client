@@ -16,11 +16,8 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 };
 
-const infoPath = "C:/att_mobile_client/database/info-qr.json";
-const infoQR = JSON.parse(fs.readFileSync(infoPath, 'utf-8'));
-const qrStatus = infoQR?.data?.trans_status || '';
-const qrDevice = infoQR?.data?.device_id || '';
-const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+// const infoPath = "C:/att_mobile_client/database/info-qr.json";
+// const qrStatus = infoQR?.data?.trans_status || '';
 const { sendTelegramAlert, saveAlertToDatabase } = require('../functions/alert.function');
 let chatId = process.env.CHATID; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
 const telegramToken = process.env.TELEGRAM_TOKEN;
@@ -143,7 +140,10 @@ async function trackABB({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {   
+  while (running) {  
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "abb" !== qrBank ) ) {      
       // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
@@ -218,6 +218,9 @@ async function trackACB ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( (device_id === qrDevice) && ( "acb" !== qrBank ) ) {      
       await stopACB({ device_id }); 
 
@@ -289,6 +292,9 @@ async function trackEIB ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "eib" !== qrBank ) ) {      
       notifier.emit('multiple-banks-detected', {
         device_id,
@@ -359,6 +365,9 @@ async function trackOCB ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "ocb" !== qrBank ) ) {      
       await stopOCB({ device_id });    
 
@@ -417,69 +426,76 @@ async function trackOCB ( { device_id } ) {
 async function trackNCB ( { device_id } ) {                      
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);  
-  Logger.log(0, 'Đang theo dõi NCB...', __filename);
+  Logger.log(0, 'Đang theo dõi NCB...NCB không hỗ trợ!', __filename);
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Đang theo dõi NCB...NCB không hỗ trợ!`
+      });
 
   let running = await isNCBRunning( { device_id } );
 
-  if (!running) {      
-    return await trackingLoop({ device_id });
-  }
+  // if (!running) {      
+  //   return await trackingLoop({ device_id });
+  // }
 
-  await clearTempFile( { device_id } );
+  // await clearTempFile( { device_id } );
 
-  while (running) {
-    if ( ( device_id === qrDevice ) && ( "ncb" !== qrBank ) ) {      
-      await stopNCB({ device_id });
+  // while (running) {
+  //   const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+  //   const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+  //   const qrDevice = infoQR?.data?.device_id || '';
+  //   if ( ( device_id === qrDevice ) && ( "ncb" !== qrBank ) ) {      
+  //     await stopNCB({ device_id });
 
-      notifier.emit('multiple-banks-detected', {
-        device_id,
-        message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
-      });
+  //     notifier.emit('multiple-banks-detected', {
+  //       device_id,
+  //       message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
+  //     });
 
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB. (id: ${device_id})`
-      );
+  //     await sendTelegramAlert(
+  //       telegramToken,
+  //       chatId,
+  //       `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB. (id: ${device_id})`
+  //     );
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`,
-        filePath: ".xml"
-      });
+  //     await saveAlertToDatabase({
+  //       timestamp: new Date().toISOString(),
+  //       reason: `Cảnh báo! Dùng sai app để chuyển tiền. Vui lòng thực hiện lại (id: ${device_id})`,
+  //       filePath: ".xml"
+  //     });
 
-      return await trackingLoop({ device_id });
-    } 
-    else {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const localPath = path.join(targetDir, `${timestamp}.xml`);
-      await dumpXmlToLocal(device_id, localPath);
-      await checkContentNCB(device_id, localPath);
-    }    
+  //     return await trackingLoop({ device_id });
+  //   } 
+  //   else {
+  //     const timestamp = Math.floor(Date.now() / 1000).toString();
+  //     const localPath = path.join(targetDir, `${timestamp}.xml`);
+  //     await dumpXmlToLocal(device_id, localPath);
+  //     await checkContentNCB(device_id, localPath);
+  //   }    
 
-    running = await isNCBRunning({ device_id });
+  //   running = await isNCBRunning({ device_id });
 
-    const currentApp = await getCurrentForegroundApp({ device_id });
-    if (currentApp === null) {      
-      // Nếu isNCBRunning vẫn true, tiếp tục theo dõi
-      if (!running) {
-        Logger.log(0, 'NCB process đã tắt. Dừng theo dõi.', __filename);
-        await clearTempFile({ device_id });
-        return await trackingLoop({ device_id });
-      }
-      // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'com.ncb.bank') {
-      Logger.log(0, `NCB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
-      await clearTempFile({ device_id });
-      return await trackingLoop({ device_id });
-    }
+  //   const currentApp = await getCurrentForegroundApp({ device_id });
+  //   if (currentApp === null) {      
+  //     // Nếu isNCBRunning vẫn true, tiếp tục theo dõi
+  //     if (!running) {
+  //       Logger.log(0, 'NCB process đã tắt. Dừng theo dõi.', __filename);
+  //       await clearTempFile({ device_id });
+  //       return await trackingLoop({ device_id });
+  //     }
+  //     // Nếu vẫn chạy, tiếp tục bình thường
+  //   } else if (currentApp !== 'com.ncb.bank') {
+  //     Logger.log(0, `NCB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
+  //     await clearTempFile({ device_id });
+  //     return await trackingLoop({ device_id });
+  //   }
 
-    if (!running) {
-      Logger.log(0, 'NCB đã tắt. Dừng theo dõi.', __filename);
-      await clearTempFile({ device_id });
-      return await trackingLoop({ device_id });
-    }
-  }
+  //   if (!running) {
+  //     Logger.log(0, 'NCB đã tắt. Dừng theo dõi.', __filename);
+  //     await clearTempFile({ device_id });
+  //     return await trackingLoop({ device_id });
+  //   }
+  // }
 
   return { status: 200, message: 'Success' };
 }
@@ -497,6 +513,9 @@ async function trackNCB ( { device_id } ) {
     await clearTempFile( { device_id } );
     
     while (running) {
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+      const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+      const qrDevice = infoQR?.data?.device_id || '';
       if ( ( device_id === qrDevice ) && ( "nab" !== qrBank ) ) {        
         await stopNAB({ device_id });
 
@@ -568,6 +587,9 @@ async function trackSHBSAHA ( { device_id } ) {
   await clearTempFile( { device_id } );
     
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "shb" !== qrBank ) ) {      
       await stopSHBSAHA({ device_id }); 
 
@@ -638,6 +660,9 @@ async function trackTPB ( { device_id } ) {
   await clearTempFile( { device_id } );
   
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "tpb" !== qrBank ) ) {      
       await stopTPB({ device_id }); 
 
@@ -710,6 +735,9 @@ async function trackVPB ( { device_id } ) {
   await clearTempFile( { device_id } );
   
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "vpb" !== qrBank ) ) {      
       await stopVPB({ device_id });
 
@@ -779,6 +807,9 @@ async function trackMB({ device_id }) {
   await clearTempFile({ device_id });
 
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || ''; 
     if ( ( device_id === qrDevice ) && ( "mb" !== qrBank ) ) {      
       await stopMB({ device_id });   
 
@@ -850,6 +881,9 @@ async function trackBIDV({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "bidv" !== qrBank ) ) {      
       await stopBIDV({ device_id }); 
 
@@ -916,6 +950,9 @@ async function trackVCB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "vcb" !== qrBank ) ) {      
       await stopVCB({ device_id });  
 
@@ -987,6 +1024,9 @@ async function trackVIB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "vib" !== qrBank ) ) {      
       await stopVIB({ device_id });  
 
@@ -1057,7 +1097,10 @@ async function trackSEAB({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {   
+  while (running) { 
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "seab" !== qrBank ) ) {      
       await stopSEAB({ device_id });  
 
@@ -1127,7 +1170,10 @@ async function trackICB({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {   
+  while (running) { 
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';  
     if ( ( device_id === qrDevice ) && ( "icb" !== qrBank ) ) {      
       await stopICB({ device_id }); 
 
@@ -1199,6 +1245,9 @@ async function trackPVCB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "pvcb" !== qrBank ) ) {      
       await stopPVCB({ device_id });  
 
@@ -1270,6 +1319,9 @@ async function trackLPBANK({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) { 
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "lpbank" !== qrBank ) ) {      
       await stopLPBANK({ device_id });  
 
@@ -1341,6 +1393,9 @@ async function trackMSB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {       
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "msb" !== qrBank ) ) {      
       await stopMSB({ device_id }); 
 
@@ -1411,7 +1466,10 @@ async function trackSTB({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {   
+  while (running) { 
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "stb" !== qrBank ) ) {      
       await stopSTB({ device_id }); 
 
@@ -1483,6 +1541,9 @@ async function trackTCB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {   
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
     if ( ( device_id === qrDevice ) && ( "tcb" !== qrBank ) ) {      
       await stopTCB({ device_id });
 
@@ -2068,6 +2129,15 @@ async function closeAll ({ device_id }) {
   }        
         
   return { status: 200, message: 'Success' };
+}
+
+async function getDataJson  (filePath) {
+    if (fs.existsSync(filePath)) {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const jsonData = JSON.parse(fileContent);      
+      return jsonData;
+    }
+    return null;
 }
 
 module.exports = { checkDeviceSemiAuto, checkRunningBanks, trackingLoop, isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning };

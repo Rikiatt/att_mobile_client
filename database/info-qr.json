@@ -1,1 +1,16 @@
-{}
+{
+  "type": "org",
+  "data": {
+    "child_id": "D1749138921435",
+    "site": "jun88cmd",
+    "device_id": "2b236150641c7ece",
+    "bank": "ncb",
+    "trans_id": "20250605235512853",
+    "bin": 970416,
+    "account_number": "44071847",
+    "amount": 8888,
+    "add_info": "",
+    "vietqr_url": "https://img.vietqr.io/image/970416-44071847-qr.png?amount=8888&addInfo="
+  },
+  "timestamp": "2025-06-05T15:55:23.521Z"
+}

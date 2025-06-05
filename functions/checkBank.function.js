@@ -395,86 +395,87 @@ async function checkContentACB(device_id, localPath) {
 }
 // chua lam duoc, OCR chan lam
 async function checkContentNCB(device_id, localPath) {
-  try {
-    const { data: { text } } = await Tesseract.recognize(localPath, 'vie+eng');
-    Logger.log(0, `log text from OCR:\n${text}`, __filename);
+  console.log("Khong ho tro NCB");
+  // try {
+  //   const { data: { text } } = await Tesseract.recognize(localPath, 'vie+eng');
+  //   Logger.log(0, `log text from OCR:\n${text}`, __filename);
 
-    const lowerText = normalizeText(text);
+  //   const lowerText = normalizeText(text);
 
-    if ( lowerText.includes("chuyen tien") && (lowerText.includes("toi tai khoan") || lowerText.includes("toi the"))) {
-      const reason = "Phát hiện màn hình chọn hình thức chuyển tiền (OCR)";
+  //   if ( lowerText.includes("chuyen tien") && (lowerText.includes("toi tai khoan") || lowerText.includes("toi the"))) {
+  //     const reason = "Phát hiện màn hình chọn hình thức chuyển tiền (OCR)";
 
-      notifier.emit('multiple-banks-detected', {
-        device_id,
-        message: `Phát hiện màn hình chọn hình thức chuyển tiền thủ công`
-      });
+  //     notifier.emit('multiple-banks-detected', {
+  //       device_id,
+  //       message: `Phát hiện màn hình chọn hình thức chuyển tiền thủ công`
+  //     });
 
-      await stopNCB({ device_id });
+  //     await stopNCB({ device_id });
 
-      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
+  //     await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `${reason} (id: ${device_id})`,
-        filePath: localPath
-      });
+  //     await saveAlertToDatabase({
+  //       timestamp: new Date().toISOString(),
+  //       reason: `${reason} (id: ${device_id})`,
+  //       filePath: localPath
+  //     });
 
-      return;
-    }
+  //     return;
+  //   }
 
-    if (!(lowerText.includes("so tien chuyen") || lowerText.includes("han muc"))) {
-      Logger.log(0, 'Chưa tới màn hình xác nhận chuyển khoản, bỏ qua check ocr.', __filename);
-      return;
-    }
+  //   if (!(lowerText.includes("so tien chuyen") || lowerText.includes("han muc"))) {
+  //     Logger.log(0, 'Chưa tới màn hình xác nhận chuyển khoản, bỏ qua check ocr.', __filename);
+  //     return;
+  //   }
 
-    Logger.log(0, 'Phát hiện màn hình sau khi quét QR, chuyển tiếp sang màn hình xác nhận.', __filename);
-    await client.shell(device_id, 'input keyevent 61');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    await delay(10000);
-    await dumpOCRToLocal(device_id, localPath);
+  //   Logger.log(0, 'Phát hiện màn hình sau khi quét QR, chuyển tiếp sang màn hình xác nhận.', __filename);
+  //   await client.shell(device_id, 'input keyevent 61');
+  //   await new Promise(resolve => setTimeout(resolve, 1500));
+  //   await delay(10000);
+  //   await dumpOCRToLocal(device_id, localPath);
     
-    const { data: { text: secondText } } = await Tesseract.recognize(localPath, 'vie+eng');
-    const { ocrAccount, ocrAmount } = extractOCRFieldsFromLinesNCB(secondText);
+  //   const { data: { text: secondText } } = await Tesseract.recognize(localPath, 'vie+eng');
+  //   const { ocrAccount, ocrAmount } = extractOCRFieldsFromLinesNCB(secondText);
 
-    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
-    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-    const expectedAccount = normalizeText(jsonData.data?.account_number?.toString() || "");
-    const expectedAmount = normalizeText(jsonData.data?.amount?.toString() || "");
+  //   const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+  //   const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+  //   const expectedAccount = normalizeText(jsonData.data?.account_number?.toString() || "");
+  //   const expectedAmount = normalizeText(jsonData.data?.amount?.toString() || "");
 
-    Logger.log(0, `OCR Account Number: ${ocrAccount} | length: ${ocrAccount.length}`, __filename);
-    Logger.log(0, `INFO Account Number: ${expectedAccount} | length: ${expectedAccount.length}`, __filename);
-    Logger.log(0, `OCR Amount: ${ocrAmount} | length: ${ocrAmount.length}`, __filename);
-    Logger.log(0, `INFO Amount: ${expectedAmount} | length: ${expectedAmount.length}`, __filename);
+  //   Logger.log(0, `OCR Account Number: ${ocrAccount} | length: ${ocrAccount.length}`, __filename);
+  //   Logger.log(0, `INFO Account Number: ${expectedAccount} | length: ${expectedAccount.length}`, __filename);
+  //   Logger.log(0, `OCR Amount: ${ocrAmount} | length: ${ocrAmount.length}`, __filename);
+  //   Logger.log(0, `INFO Amount: ${expectedAmount} | length: ${expectedAmount.length}`, __filename);
 
-    const ocrHasAccount =
-      ocrAccount === expectedAccount ||
-      (ocrAccount.length === expectedAccount.length + 1 && ocrAccount.startsWith(expectedAccount));
+  //   const ocrHasAccount =
+  //     ocrAccount === expectedAccount ||
+  //     (ocrAccount.length === expectedAccount.length + 1 && ocrAccount.startsWith(expectedAccount));
 
-    const ocrHasAmount = ocrAmount === expectedAmount;
+  //   const ocrHasAmount = ocrAmount === expectedAmount;
 
-    if (!(ocrHasAccount && ocrHasAmount)) {
-      const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";      
-      Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+  //   if (!(ocrHasAccount && ocrHasAmount)) {
+  //     const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";      
+  //     Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-      await stopNCB({ device_id });
+  //     await stopNCB({ device_id });
 
-      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+  //     await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
 
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `${reason} (id: ${device_id})`,
-        filePath: localPath
-      });
+  //     await saveAlertToDatabase({
+  //       timestamp: new Date().toISOString(),
+  //       reason: `${reason} (id: ${device_id})`,
+  //       filePath: localPath
+  //     });
 
-      return;
-    } else {
-      ocrMatchedByDevice[device_id] = true;
-      Logger.log(0, 'OCR TRÙNG info-qr về account_number và amount. OCR ảnh .', __filename);
-    }
+  //     return;
+  //   } else {
+  //     ocrMatchedByDevice[device_id] = true;
+  //     Logger.log(0, 'OCR TRÙNG info-qr về account_number và amount. OCR ảnh .', __filename);
+  //   }
 
-  } catch (error) {
-    console.error("checkContentNCB got an error:", error.message);
-  }
+  // } catch (error) {
+  //   console.error("checkContentNCB got an error:", error.message);
+  // }
 }
 // ok
 async function checkContentOCB(device_id, localPath) {
@@ -1522,7 +1523,7 @@ async function checkContentVIB(device_id, localPath) { // chua lam
           reason: `${reason} (id thiết bị: ${device_id})`,
           filePath: localPath
         });
-        
+
         return;
       } else {
         Logger.log(0, 'VIB: OCR TRÙNG info-qr về account_number và amount.', __filename);

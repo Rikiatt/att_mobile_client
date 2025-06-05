@@ -198,6 +198,7 @@ module.exports = {
             if (lastReceived[findId] && now - lastReceived[findId] < 5000) {
               return;
             }
+            
             lastReceived[findId] = now;
 
             const qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
