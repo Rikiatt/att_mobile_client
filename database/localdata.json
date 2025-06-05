@@ -1,12 +1,1 @@
-{
-  "org": {
-    "endpoint": "https://device.attpay.org",
-    "site": "jun88cmd",
-    "connected": true,
-    "message": "Success"
-  },
-  "connect": "org",
-  "att": {
-    "connected": false
-  }
-}
+{}
