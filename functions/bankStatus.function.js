@@ -16,8 +16,6 @@ const ensureDirectoryExists = ( dirPath ) => {
   }
 };
 
-// const infoPath = "C:/att_mobile_client/database/info-qr.json";
-// const qrStatus = infoQR?.data?.trans_status || '';
 const { sendTelegramAlert, saveAlertToDatabase } = require('../functions/alert.function');
 let chatId = process.env.CHATID; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
 const telegramToken = process.env.TELEGRAM_TOKEN;
@@ -28,18 +26,18 @@ const jsonData = JSON.parse(fileContent);
 const siteOrg = jsonData?.org?.site || '';
 const siteAtt = jsonData?.att?.site?.split('/').pop() || '';
 
-const validSite = siteOrg || siteAtt; // Ưu tiên org nếu có, nếu không dùng att
+const validSite = siteOrg || siteAtt;
 const notifier = require('../events/notifier');
 
 const siteToChatIdMap = {
-    'shbet': process.env.CHATID_SHBET,
-    'new88': process.env.CHATID_NEW88,
-    'jun88cmd': process.env.CHATID_JUN88CMD,
-    'jun88k36': process.env.CHATID_JUN88K36        
+  'shbet': process.env.CHATID_SHBET,
+  'new88': process.env.CHATID_NEW88,
+  'jun88cmd': process.env.CHATID_JUN88CMD,
+  'jun88k36': process.env.CHATID_JUN88K36        
 };
 
 if (siteToChatIdMap[validSite]) {
-    chatId = siteToChatIdMap[validSite];
+  chatId = siteToChatIdMap[validSite];
 }
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
@@ -67,7 +65,7 @@ async function waitForXmlReady(device_id, remotePath = '/sdcard/temp_dump.xml', 
         .then(buf => buf.toString().trim());
 
       if (output === remotePath) return true;
-    } catch (_) {
+    } catch (_) { // ignore spam log
       // file chưa tồn tại, tiếp tục vòng lặp
     }
     await delay(200); // không nên để thấp hơn 200ms để tránh spam shell

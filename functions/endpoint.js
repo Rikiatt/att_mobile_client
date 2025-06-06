@@ -198,7 +198,7 @@ module.exports = {
             if (lastReceived[findId] && now - lastReceived[findId] < 5000) {
               return;
             }
-            
+
             lastReceived[findId] = now;
 
             const qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
@@ -229,8 +229,10 @@ module.exports = {
             // let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');
             // let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
             const filename = `${trans_id}`;
-            let qrLocalPath = path.join(__dirname, '..', 'images', `${trans_id}.jpg`);
-            let qrDevicePath = `/sdcard/DCIM/Camera/${trans_id}.jpg`;
+            // let qrLocalPath = path.join(__dirname, '..', 'images', `${trans_id}.jpg`);
+            // let qrDevicePath = `/sdcard/DCIM/Camera/${trans_id}.jpg`;
+            let qrLocalPath = path.join(__dirname, '..', 'images', `${trans_id}.png`);
+            let qrDevicePath = `/sdcard/DCIM/Camera/${trans_id}.png`;
 
             if (vietqr_url) {
               await delImg(findId, '/sdcard/DCIM/Camera/');
