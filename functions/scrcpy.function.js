@@ -17,37 +17,6 @@ const local = JSON.parse(localRaw);
 const siteOrg = local?.org?.site || '';
 const siteAtt = local?.att?.site?.split('/').pop() || '';
 
-// const infoQRPath = path.join(__dirname, '../database/info-qr.json');
-// const { runBankTransfer } = require("../functions/bank.function");
-// const validBankTriggers = ["bidv", "icb", "ncb", "tcb", "vcb"];
-// sắp xếp lại cái này sau theo thứ tự start nhanh của app
-// const preferredApps = ["eib", "ocb", "nab", "tpb", "vpb", "mb", "shb", "abb", "acb"]; 
-
-// const bankPackages = {
-//   abb: 'vn.abbank.retail',
-//   acb: 'mobile.acb.com.vn',
-//   eib: 'com.vnpay.EximBankOmni',
-//   ocb: 'vn.com.ocb.awe',
-//   nab: 'ops.namabank.com.vn',
-//   tpb: 'com.tpb.mb.gprsandroid',
-//   vpb: 'com.vnpay.vpbankonline',
-//   mb: 'com.mbmobile',
-//   shb: 'vn.shb.saha.mbanking',
-//   stb: 'com.sacombank.ewallet'
-// };
-
-// async function isAppInstalled(device_id, packageName) {
-//   try {
-//     const output = await client.shell(device_id, `pm list packages ${packageName}`)
-//       .then(adb.util.readAll)
-//       .then(buffer => buffer.toString());
-//     return output.includes(packageName);
-//   } catch (err) {
-//     console.error(`Lỗi kiểm tra app ${packageName}:`, err.message);
-//     return false;
-//   }
-// }
-
 function getLastDeviceId() {
   if (fs.existsSync(tmpFile)) {
     return fs.readFileSync(tmpFile, 'utf8').trim();

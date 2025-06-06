@@ -9,25 +9,21 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const adb = require('adbkit');
 const client = adb.createClient({ bin: adbPath });
 
+const ensureDirectoryExistence = (filePath) => {
+  const dirname = path.dirname(filePath);
+  if (!fs.existsSync(dirname)) {
+    fs.mkdirSync(dirname, { recursive: true });
+  }
+};
+
 const getScreenSize = async (device_id) => {
   try {
-    // Thực thi lệnh `wm size` trên thiết bị
     const output = await client.shell(device_id, 'wm size');
     const resultBuffer = await adb.util.readAll(output);
     const result = resultBuffer.toString();
-
-    // Sử dụng regex để tìm kiếm Override size và Physical size
     const overrideSizeMatch = result.match(/Override size: (\d+x\d+)/);
     const physicalSizeMatch = result.match(/Physical size: (\d+x\d+)/);
-
-    // Nếu có Override size, trả về nó, nếu không trả về Physical size
-    if (overrideSizeMatch) {
-      return overrideSizeMatch[1];
-    } else if (physicalSizeMatch) {
-      return physicalSizeMatch[1];
-    } else {
-      return '';
-    }
+    return overrideSizeMatch ? overrideSizeMatch[1] : (physicalSizeMatch ? physicalSizeMatch[1] : '');
   } catch (error) {
     console.error('Error getting screen size:', error);
     return '';
@@ -40,8 +36,7 @@ const getNameDevice = async (device_id) => {
     const resultBuffer = await adb.util.readAll(output);
     const result = resultBuffer.toString();
     const match = result.match(/name:\s*(.*)\r?\n/);
-    const name = match ? match[1].trim() : '';
-    return name;
+    return match ? match[1].trim() : '';
   } catch (error) {
     console.error('Error getting Bluetooth device name:', error);
     return '';
@@ -52,8 +47,7 @@ const getAndroidVersion = async (device_id) => {
   try {
     const output = await client.shell(device_id, 'getprop ro.build.version.release');
     const resultBuffer = await adb.util.readAll(output);
-    const result = parseInt(resultBuffer.toString().trim());
-    return result;
+    return parseInt(resultBuffer.toString().trim());
   } catch (error) {
     console.error('Error getting Android version:', error);
     return '';
@@ -64,8 +58,7 @@ const getModel = async (device_id) => {
   try {
     const output = await client.shell(device_id, 'getprop ro.product.model');
     const resultBuffer = await adb.util.readAll(output);
-    const result = resultBuffer.toString().trim();
-    return result;
+    return resultBuffer.toString().trim();
   } catch (error) {
     console.error('Error getting model:', error);
     return '';
@@ -82,7 +75,6 @@ async function listDevice() {
         getAndroidVersion(device.id),
         getModel(device.id)
       ]);
-
       device.screenSize = screenSize;
       device.nameDevice = nameDevice;
       device.androidVersion = androidVersion;
@@ -106,8 +98,7 @@ async function sendFile(device_id, localPath, devicePath) {
 
 async function delImg(device_id, devicePath, filename = '') {
   const listCommand = `ls ${devicePath} | grep -E '${filename}\\.(png|jpg)$'`;
-  client
-    .shell(device_id, listCommand)
+  client.shell(device_id, listCommand)
     .then(adb.util.readAll)
     .then((files) => {
       const fileList = files.toString().trim().split('\n');
@@ -131,36 +122,30 @@ module.exports = {
       if (currentSocket) {
         console.log('Closing existing socket connection...');
         currentSocket.disconnect();
-        currentSocket = null; // Đặt lại biến
+        currentSocket = null;
       }
-      // Khởi tạo file json
+
       let localPath = path.join(__dirname, '..', 'database', 'localdata.json');
       const localData = await getDataJson(localPath);
       console.log('---> Listening on server <---', type, localData, localData[type]?.endpoint, localData[type]?.site);
+
       if (localData && localData[type]?.endpoint && localData[type]?.site) {
-        // reset
         await setDataJson(localPath, {
           ...localData,
           connect: '',
           att: { ...localData.att, connected: false },
           org: { ...localData.org, connected: false }
         });
-        //
+
         if (!disconnect) {
           const { site, endpoint } = localData[type];
+          let handPath = site.includes('ui_manual') ? '/ui_manual/connect/socket.io' : '/socket.io';
 
-          console.log('---> Listening on server <---');
-          // Cấu hình kết nối socket tới attpays+ và attpay.org
-          let handPath = '/socket.io';
-          if (site.includes('ui_manual')) {
-            handPath = '/ui_manual/connect/socket.io';
-          }
           currentSocket = io(endpoint + '/' + site, {
             path: handPath,
             transports: ['websocket']
           });
 
-          // Khi kết nối thành công
           currentSocket.on('connect', async () => {
             console.log('Connected to server:', currentSocket.id);
             await setDataJson(localPath, {
@@ -179,60 +164,35 @@ module.exports = {
             });
           });
 
-          // Nhận phản hồi từ server
           currentSocket.on('broadcast', async (data) => {
             const now = Date.now();
             console.log('log data ' + type, data);
             const devices = await listDevice();
-
             const findId = data.device_id.split('$')[0];
-            const findIp = data.device_id.split('$')[1];            
-              
+            const findIp = data.device_id.split('$')[1];
             const findDevice = devices.find((item) => (!findIp || findIp == ipPublic) && item.id == findId);
-            if (!findDevice) {
-              return;
-            }                        
-
-            // Chống spam
-            // Đúng thiết bị
-            if (lastReceived[findId] && now - lastReceived[findId] < 5000) {
-              return;
-            }
-
+            if (!findDevice) return;
+            if (lastReceived[findId] && now - lastReceived[findId] < 5000) return;
             lastReceived[findId] = now;
 
-            const qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json'); 
-            // data.trans_status = 'in_process';           
+            const qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');
             let qrData = { type, data, timestamp: new Date().toISOString() };
             console.log('log qrData (device matched):', qrData);
-
             fs.writeFileSync(qrInfoPath, JSON.stringify(qrData, null, 2));
             console.log('Saved vietqr_url to info-qr.json');
 
             const { vietqr_url, trans_id, bin, account_number, amount, trans_mess, PIN, bank_pass } = data;
-
             if (!vietqr_url && (!bin || !account_number || !amount || !trans_mess || PIN || bank_pass)) {
               console.log('Mix Data');
               currentSocket.emit('callback', { ...data, success: false });
               return;
             }
 
-            // const date = new Date();
-            // const year = date.getFullYear();
-            // const month = String(date.getMonth() + 1).padStart(2, '0');
-            // const day = String(date.getDate()).padStart(2, '0');
-            // const hours = String(date.getHours()).padStart(2, '0');
-            // const minutes = String(date.getMinutes()).padStart(2, '0');
-            // const seconds = String(date.getSeconds()).padStart(2, '0');
-
-            // const filename = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-            // let qrLocalPath = path.join(__dirname, '..', 'images', findId.split(':')[0] + '_qr.jpg');
-            // let qrDevicePath = '/sdcard/DCIM/Camera/' + filename + '.jpg';
             const filename = `${trans_id}`;
-            // let qrLocalPath = path.join(__dirname, '..', 'images', `${trans_id}.jpg`);
-            // let qrDevicePath = `/sdcard/DCIM/Camera/${trans_id}.jpg`;
             let qrLocalPath = path.join(__dirname, '..', 'images', `${trans_id}.png`);
             let qrDevicePath = `/sdcard/DCIM/Camera/${trans_id}.png`;
+
+            ensureDirectoryExistence(qrLocalPath);
 
             if (vietqr_url) {
               await delImg(findId, '/sdcard/DCIM/Camera/');
@@ -242,14 +202,13 @@ module.exports = {
               if (!downloaded) {
                 console.log('Download Failed -> create QR by library:', qrLocalPath);
                 await transToQr(data, qrLocalPath);
-              }              
+              }
             } else {
               await transToQr(data, qrLocalPath);
             }
+
             let jsonPath = path.join(__dirname, '..', 'database', findId.split(':')[0] + '_url.json');
-
             await setDataJson(jsonPath, { vietqr_url: vietqr_url, last_time: Date.now() });
-
             await sendFile(findId, qrLocalPath, qrDevicePath);
 
             setTimeout(async () => {
@@ -257,12 +216,10 @@ module.exports = {
               console.log('Deleted old QR - ' + filename);
             }, 300000);
 
-            // Thành công !!!
             console.log('Success!');
             currentSocket.emit('callback', { ...data, success: true });
           });
 
-          // Khi bị ngắt kết nối
           currentSocket.on('disconnect', async () => {
             console.log('Disconnected from server');
             await setDataJson(localPath, {

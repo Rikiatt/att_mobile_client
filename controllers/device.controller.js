@@ -80,8 +80,7 @@ const bankBins = {
 
 const downloadQrFromVietQR = async (url, device_id) => {
   try {
-    const qrBuffer = await axios.get(url, { responseType: 'arraybuffer' });
-    // const fileName = `${device_id}_vietqr.jpg`;
+    const qrBuffer = await axios.get(url, { responseType: 'arraybuffer' });    
     const fileName = `${device_id}_vietqr.png`;
     const localPath = path.join(__dirname, '../database', fileName);
     fs.writeFileSync(localPath, qrBuffer.data);
@@ -275,8 +274,7 @@ module.exports = {
           message: 'Không hỗ trợ ngân hàng này trong danh sách BIN'
         });
       }
-        
-      // const qrUrl = `https://img.vietqr.io/image/${bin}-${bank_account}-qr.jpg?amount=${amount}&addInfo=`;      
+                    
       const qrUrl = `https://img.vietqr.io/image/${bin}-${bank_account}-qr.png?amount=${amount}&addInfo=`;   
       const result = await downloadQrFromVietQR(qrUrl, device_id);
   
@@ -323,3 +321,4 @@ module.exports = {
  * 
  * 
  */
+

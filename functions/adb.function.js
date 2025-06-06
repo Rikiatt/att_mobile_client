@@ -398,25 +398,23 @@ module.exports = {
 
   copyQRImages: async ({ device_id }) => {
     try {
-      // 1. Lấy danh sách ảnh .jpg trong thư mục Camera
+      // 1. Lấy danh sách ảnh .png trong thư mục Camera
       const lsOutput = await client.shell(device_id, `ls /sdcard/DCIM/Camera/`);
-      const lsBuffer = await adb.util.readAll(lsOutput);
-      // const fileList = lsBuffer.toString().split('\n').map(f => f.trim()).filter(f => f.endsWith('.jpg'));
+      const lsBuffer = await adb.util.readAll(lsOutput);      
       const fileList = lsBuffer.toString().split('\n').map(f => f.trim()).filter(f => f.endsWith('.png'));
   
-      if (!fileList.length) throw new Error('Không tìm thấy ảnh .jpg / .png nào.');
+      if (!fileList.length) throw new Error('Không tìm thấy ảnh .png nào.');
   
       // 2. Lấy ảnh mới nhất theo tên (thường dạng timestamp)
       fileList.sort();
       const latestFile = fileList[fileList.length - 1];
-      const sourcePath = `/sdcard/DCIM/Camera/${latestFile}`;
-      // const baseName = latestFile.replace(/\.jpg$/, '');
+      const sourcePath = `/sdcard/DCIM/Camera/${latestFile}`;      
       const baseName = latestFile.replace(/\.png$/, '');
       const destinationDir = `/sdcard/DCIM/Camera/`;
   
       // 3. Tạo 2 bản copy
       for (let i = 1; i <= 2; i++) {
-        const destinationPath = `${destinationDir}${baseName}_copy_${i}.jpg`;
+        const destinationPath = `${destinationDir}${baseName}_copy_${i}.png`;
         try {
           await client.shell(device_id, `cp "${sourcePath}" "${destinationPath}"`);
           console.log(`Copied to: ${destinationPath}`);
