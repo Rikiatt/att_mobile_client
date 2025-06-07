@@ -138,6 +138,22 @@ const stopEIB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const stopHDB = async ({ device_id }) => {    
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.vnpay.hdbank');
+  Logger.log(2, `Đã dừng HDB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopICB = async ({ device_id }) => {    
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
+  Logger.log(2, `Đã dừng ICB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const stopOCB = async ({ device_id }) => {    
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
@@ -215,6 +231,13 @@ const startEIB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const startHDB = async ({ device_id }) => {      
+  Logger.log(0, `Đang khởi động HDB...`, __filename);
+  await client.shell(device_id, 'monkey -p com.vnpay.hdbank -c android.intent.category.LAUNCHER 1');  
+  await delay(200);
+  return { status: 200, message: 'Success' };
+};
+
 const startOCB = async ({ device_id }) => {    
   Logger.log(0, `Đang khởi động OCB...`, __filename);
   await client.shell(device_id, 'monkey -p vn.com.ocb.awe -c android.intent.category.LAUNCHER 1');  
@@ -267,6 +290,8 @@ const startSTB = async ({ device_id }) => {
 const mapStopBank = {
   abb: stopABB,
   eib: stopEIB,
+  hdb: stopHDB,
+  icb: stopICB,
   ocb: stopOCB,
   nab: stopNAB,
   tpb: stopTPB,
@@ -280,6 +305,7 @@ const mapStartBank = {
   abb: startABB,
   acb: startACB,
   eib: startEIB,
+  hdb: startHDB,
   ocb: startOCB,
   nab: startNAB,
   tpb: startTPB,
@@ -293,6 +319,8 @@ const bankPackages = {
   abb: 'vn.abbank.retail',
   acb: 'mobile.acb.com.vn',
   eib: 'com.vnpay.EximBankOmni',
+  hdb: 'com.vnpay.hdbank',
+  icb: 'com.vietinbank.ipay',
   ocb: 'vn.com.ocb.awe',
   nab: 'ops.namabank.com.vn',
   tpb: 'com.tpb.mb.gprsandroid',

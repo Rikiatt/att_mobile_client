@@ -41,8 +41,8 @@ if (siteToChatIdMap[validSite]) {
 }
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
-  stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
+const { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
+  stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
 } 
 = require('../functions/checkBank.function');
 const { Logger } = require('../config/require.config');
@@ -1617,8 +1617,9 @@ const trackFunctions = {
   TCB: trackTCB,
   TPB: trackTPB,
   VCB: trackVCB,
-  VIB: trackVIB,
-  VPB: trackVPB
+  VIB: trackVIB
+  // ,
+  // VPB: trackVPB
 };
 
 async function trackingLoop({ device_id }) {

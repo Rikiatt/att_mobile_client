@@ -1201,6 +1201,121 @@ async function checkContentMB(device_id, localPath) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
+async function checkContentMSB(device_id, localPath) {
+  try {
+    const xml = fs.readFileSync(localPath, "utf-8").trim();
+    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+
+    let expectedAccount = "";
+    let expectedAmount = "";
+    const vietqrUrl = jsonData.data?.vietqr_url || "";
+    const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
+    if (match) {
+      expectedAccount = match[1].replace(/\s/g, "");
+      expectedAmount = match[2].replace(/[^\d]/g, "");
+    }
+
+    /* Trường hợp 1: Màn hình thao tác thủ công cần cảnh báo */
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Số tài&#10;khoản", "Số&#10;điện thoại", "&#10;Số thẻ", "Truy vấn giao dịch giá trị lớn", "Chuyển tiền"],
+        en: ["Account", "Phone number", "Card", "Large-value transaction inquiry", "Transfer"]
+      }
+    ];
+
+    for (const screen of screenKeywords) {
+      if (
+        screen.vi.every(kw => xml.includes(kw)) ||
+        screen.en.every(kw => xml.includes(kw))
+      ) {
+        Logger.log(1, `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`, __filename);
+        Logger.log(0, 'Đóng app MB', __filename);
+
+        await stopMB({ device_id });
+
+        notifier.emit('multiple-banks-detected', {
+          device_id,
+          message: `Phát hiện có thao tác thủ công khi xuất với MB ở màn hình: ${screen.name}`
+        });
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! Phát hiện thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        );
+
+        Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
+
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `Phát hiện thao tác thủ công khi xuất với MB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
+          filePath: localPath
+        });
+        return;
+      }
+    }
+
+    /* Trường hợp 2: Check QR */
+    const isTransferToScreen = xml.includes('resource-id="MInput_0a67f0a6-0cc5-483a-8e23-9300e20ab1ac"') &&
+                               xml.includes('resource-id="MInput_c3a8b456-f94f-471b-bca1-dc2cb3662035"');
+
+    if (isTransferToScreen) {
+      let accountNumber = "";
+      const accMatch = xml.match(/text="([\d\s]+)"\s+resource-id="MInput_c3a8b456-f94f-471b-bca1-dc2cb3662035"/);
+      if (accMatch) {
+        accountNumber = accMatch[1].replace(/\s/g, "");
+      }
+
+      let amount = "";
+      const amtMatch = xml.match(/text="([\d\s,.]+)"\s+resource-id="MInput_0a67f0a6-0cc5-483a-8e23-9300e20ab1ac"/);
+      if (amtMatch) {
+        amount = amtMatch[1].replace(/[^\d]/g, "").trim();
+      }
+
+      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+      Logger.log(0, `OCR Amount: ${amount}`, __filename);
+      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+
+      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+
+      if (!isMatch) {
+        const reason = `MB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+
+        await stopMB({ device_id });
+
+        notifier.emit('multiple-banks-detected', {
+          device_id,
+          message: reason
+        });
+
+        await sendTelegramAlert(
+          telegramToken,
+          chatId,
+          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+        );
+
+        Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
+
+        await saveAlertToDatabase({
+          timestamp: new Date().toISOString(),
+          reason: `${reason} (id thiết bị: ${device_id})`,
+          filePath: localPath
+        });
+
+        return;
+      } else {
+        Logger.log(0, 'MB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+        return;
+      }
+    }
+  } catch (error) {
+    console.error("Lỗi xử lý XML:", error.message);
+  }
+}
 //ok -ok2
 async function checkContentSEAB(device_id, localPath) {
   try {
@@ -1692,6 +1807,13 @@ async function stopEIB ({ device_id }) {
     return { status: 200, message: 'Success' };
 }
 
+async function stopHDB ({ device_id }) {    
+    await client.shell(device_id, 'am force-stop com.vnpay.hdbank');
+    Logger.log(0, 'Đã dừng HDB', __filename);
+    await delay(500);
+    return { status: 200, message: 'Success' };
+}
+
 async function stopICB ({ device_id }) {    
     await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
     Logger.log(0, 'Đã dừng ICB', __filename);
@@ -1807,6 +1929,6 @@ async function stopTCB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
-  stopABB, stopACB, stopBIDV, stopEIB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
+module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
+  stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
 }

@@ -201,87 +201,6 @@ function extractNodesMSB(obj) {
   return { bin, account_number, amount };
 }
 
-// chưa xong
-const checkContentMSB = async (device_id, localPath) => {
-  try {
-    const chatId = '-4725254373';
-    const telegramToken = '7884594856:AAEKZXIBH2IaROGR_k6Q49IP2kSt8uJ4wE0';
-
-    const content = fs.readFileSync(localPath, "utf-8").trim();
-
-    const keywordsVI = [
-      // chưa xong
-    ];
-    const keywordsEN = [      
-      // chưa xong
-    ];
-
-    if (keywordsVI.every(kw => content.includes(kw)) || keywordsEN.every(kw => content.includes(kw))) {      
-      console.log('Đóng app MSB');
-      await stopMSB ( { device_id } );                
-
-      await sendTelegramAlert(
-        telegramToken,
-        chatId,
-        `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
-      );
-
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`,
-        filePath: localPath 
-      });
-
-      return;
-    }
-
-    const parsed = await xml2js.parseStringPromise(content, { explicitArray: false, mergeAttrs: true });
-    const extractedData = extractNodesMSB(parsed);    
-
-    if (extractedData.bin && extractedData.account_number && extractedData.amount) {
-      console.log("⚠ XML có chứa dữ liệu giao dịch: bin (bank name) account_number, amount. Đang so sánh trong info-qr.json.");      
-
-      let jsonData = {};
-      if (fs.existsSync(jsonFilePath)) {
-        try {        
-          const rawData = fs.readFileSync(jsonFilePath, "utf8");
-          jsonData = JSON.parse(rawData).data || {};        
-        } catch (error) {          
-          console.warn("⚠ Không thể đọc dữ liệu cũ, đặt về object rỗng.");
-          jsonData = {};          
-        }
-      }
-
-      const differences = compareData(extractedData, jsonData);
-      if (differences.length > 0) {
-        console.log(`Dữ liệu giao dịch thay đổi!\n${differences.join("\n")}`);
-
-        console.log('Dừng luôn app MSB');
-        await stopMSB ( { device_id } );          
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`
-        );
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện có thao tác thủ công khi xuất với MSB (id thiết bị: ${device_id})`,
-          filePath: localPath 
-        });
-
-        return true;
-      } else {
-        console.log("Dữ liệu giao dịch KHÔNG thay đổi, bỏ qua.");
-        return false;
-      }
-    }    
-  } catch (error) {    
-      console.error("Lỗi xử lý XML:", error.message);
-  }
-}
-
 async function stopMSB ({ device_id }) {    
   await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
   console.log('Đã dừng app MSB');
@@ -852,6 +771,58 @@ module.exports = {
       }
     } catch (error) {
       console.error(`Error checking device FHD+: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkFontScale: async ({ device_id }) => {
+    try {      
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+      // Kiểm tra nếu model là 'SM-N960' thì mới check
+      if (deviceModel === 'SM-N960') {
+        console.log('Model is SM-N960, checking font_scale...');
+        const isMinFontScale = await deviceHelper.checkFontScale(device_id);
+
+        if (!isMinFontScale) {
+          console.log('Thiết bị chưa cài đặt cỡ font và kiểu font nhỏ nhất như yêu cầu');
+          return { status: 500, valid: false, message: 'Thiết bị chưa cài đặt cỡ font và kiểu font nhỏ nhất như yêu cầu' };
+        }
+
+        console.log('Thiết bị đang cài đặt cỡ font và kiểu font nhỏ nhất như yêu cầu');
+        return { status: 200, valid: true, message: 'Thiết bị đang cài đặt cỡ font và kiểu font nhỏ nhất như yêu cầu' };
+      } else {
+        console.log(`Model ${deviceModel} không cần kiểm tra font_scale.`);
+        return { status: 200, valid: true, message: 'Thiết bị không yêu cầu kiểm tra font_scale' };
+      }
+    } catch (error) {
+      console.error(`Error checking font_scale: ${error.message}`);
+      throw error;
+    }
+  },
+
+  checkWMDensity: async ({ device_id }) => {
+    try {      
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+      // Kiểm tra nếu model là 'SM-N960' thì mới check
+      if (deviceModel === 'SM-N960') {
+        console.log('Model is SM-N960, checking font_scale...');
+        const isMinWMDensity = await deviceHelper.checkWMDensity(device_id);
+
+        if (!isMinWMDensity) {
+          console.log('Thiết bị chưa cài đặt cỡ Thu/Phóng màn hình nhỏ nhất như yêu cầu');
+          return { status: 500, valid: false, message: 'Thiết bị chưa cài đặt cỡ Thu/Phóng màn hình nhỏ nhất như yêu cầu' };
+        }
+
+        console.log('Thiết bị đang cài đặt cỡ Thu/Phóng màn hình nhỏ nhất như yêu cầu');
+        return { status: 200, valid: true, message: 'Thiết bị đang cài đặt cỡ Thu/Phóng màn hình nhỏ nhất như yêu cầu' };
+      } else {
+        console.log(`Model ${deviceModel} không cần kiểm tra Thu/Phóng màn hình.`);
+        return { status: 200, valid: true, message: 'Thiết bị không yêu cầu kiểm tra Thu/Phóng màn hình' };
+      }
+    } catch (error) {
+      console.error(`Error checking wm density: ${error.message}`);
       throw error;
     }
   },

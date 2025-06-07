@@ -112,8 +112,32 @@ const checkDeviceFHD = async (device_id) => {
 
         return deviceFHD.includes('1080x2220');
     } catch (error) {
-        throw new Error(`Error checking device FHD+ or not: ${error.message}`);
+        throw new Error(`Error checking device FHD+: ${error.message}`);
     }
 };
 
-module.exports = { getDeviceModel, checkDeviceFHD };
+const checkFontScale = async (device_id) => {
+    try {
+        const output = await client.shell(device_id, 'settings get system font_scale');
+        const buffer = await adb.util.readAll(output);
+        const fontScale = buffer.toString().trim();
+
+        return fontScale.includes('0.8');
+    } catch (error) {
+        throw new Error(`Error checking font scale: ${error.message}`);
+    }
+};
+
+const checkWMDensity = async (device_id) => {
+    try {
+        const output = await client.shell(device_id, 'wm density');
+        const buffer = await adb.util.readAll(output);
+        const wmDensity = buffer.toString().trim();
+
+        return wmDensity.includes('420');
+    } catch (error) {
+        throw new Error(`Error checking wm density: ${error.message}`);
+    }
+};
+
+module.exports = { getDeviceModel, checkDeviceFHD, checkFontScale, checkWMDensity };
