@@ -10,6 +10,7 @@ const coordinatesLoginABB = require('../config/coordinatesLoginABB.json');
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning } = require('../functions/bankStatus.function');
+const notifier = require('../events/notifier');
 
 async function clearTempFile( { device_id } ) {
   try {                
@@ -344,6 +345,12 @@ function getBankPass(bank, device_id) {
 
   if (!matched || !matched["MẬT KHẨU"]) {    
     Logger.log(2, `[ERROR] Không tìm thấy dòng phù hợp với bank=${normalizedAppId}, device_id=${normalizedDeviceId}`, __filename);
+    // Phát thông báo realtime
+    notifier.emit('multiple-banks-detected', {
+      device_id,
+      message: `[ERROR] Không tìm thấy dòng phù hợp với bank=${normalizedAppId}, device_id=${normalizedDeviceId}`
+    });
+
     throw new Error("Không tìm thấy mật khẩu từ Google Sheets");
   }
 

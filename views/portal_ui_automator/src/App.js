@@ -58,25 +58,54 @@ function App() {
   const [seting, setSeting] = useState({});
   const [ipPublic, setIpPublic] = useState(' - ');
 
+  // useEffect(() => {
+  //   const callAPI = async () => {
+  //     setLoading((prev) => !prev);
+  //     const result = await getListDevice();
+  //     const resultVer = await getVersion();
+  //     const resultSet = await getSetting();
+  //     const resultIp = await getIpPublic()
+  //     setLoading((prev) => !prev);
+  //     if (result.status && result.status === false) {
+  //       return swalToast('error', result.msg);
+  //     }
+  //     setNewVersion(resultVer.version || '');
+  //     setDevices(result);
+  //     setQr(resultSet?.valid);
+  //     setSeting(resultSet?.result || {});
+  //     setIpPublic(resultIp);
+  //   };
+  //   callAPI();
+  // }, [mutate]);
   useEffect(() => {
     const callAPI = async () => {
       setLoading((prev) => !prev);
       const result = await getListDevice();
       const resultVer = await getVersion();
       const resultSet = await getSetting();
-      const resultIp = await getIpPublic()
+      const resultIp = await getIpPublic();
       setLoading((prev) => !prev);
+
       if (result.status && result.status === false) {
         return swalToast('error', result.msg);
       }
+
+      // Sắp xếp theo tên thiết bị alphabet từ localStorage
+      const sortedDevices = result.sort((a, b) => {
+        const nameA = (localStorage.getItem(a.id) || 'Thiết bị mới').toLowerCase();
+        const nameB = (localStorage.getItem(b.id) || 'Thiết bị mới').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+
       setNewVersion(resultVer.version || '');
-      setDevices(result);
+      setDevices(sortedDevices);
       setQr(resultSet?.valid);
       setSeting(resultSet?.result || {});
       setIpPublic(resultIp);
     };
     callAPI();
   }, [mutate]);
+
 
   // 👇 Listen to SSE (Server-Sent Events)
   useEffect(() => {
