@@ -176,6 +176,7 @@ module.exports = {
             lastReceived[findId] = now;
 
             const qrInfoPath = path.join(__dirname, '..', 'database', 'info-qr.json');
+            data.trans_status = 'in_process';
             let qrData = { type, data, timestamp: new Date().toISOString() };
             console.log('log qrData (device matched):', qrData);
             fs.writeFileSync(qrInfoPath, JSON.stringify(qrData, null, 2));

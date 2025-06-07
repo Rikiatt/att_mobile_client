@@ -22,7 +22,7 @@ const HandleTransfer = ({ item, X, Y, setLoading }) => {
       <AccordionSummary expandIcon={<ExpandMore />}>CHUYỂN TIỀN</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
-          <Tooltip title="Bật tự động" arrow>
+          <Tooltip title="Áp dụng cho: EIB, SHB, TPB, NAB, VPB, MB, OCB, SEAB, STB" arrow>
             <Button
               size="small"
               variant="contained"

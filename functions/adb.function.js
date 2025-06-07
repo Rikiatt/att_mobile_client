@@ -317,6 +317,11 @@ module.exports = {
       await client.shell(device_id, 'input tap 540 1868');
       console.log('Đã đóng tất cả các app đang mở');
     }
+    else if (deviceModel === "SM-A055") {
+      // await client.shell(device_id, 'input tap 540 1826');
+      await client.shell(device_id, 'input tap 360 1250');
+      console.log('Đã đóng tất cả các app đang mở');
+    }
     else {
       await client.shell(device_id, 'input tap 540 1750'); // Click "Close all", for example: Note9
       console.log('Đã đóng tất cả các app đang mở');
