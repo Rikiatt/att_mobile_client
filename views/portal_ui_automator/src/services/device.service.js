@@ -1,9 +1,9 @@
-import { postActionADB } from '../api/adb';
+import { postActionDevice } from '../api/device';
 import { swalToast } from '../utils/swal';
 
-export async function actionADB(data) {
+export async function actionDevice(data) {
   try {
-    const result = await postActionADB(data);    
+    const result = await postActionDevice(data);    
 
     if (result.status && result.status === false) {
       return swalToast('error', result.msg);

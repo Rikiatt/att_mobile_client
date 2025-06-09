@@ -1,7 +1,9 @@
 import axios from '../utils/axios';
+import { swalNotification } from '../utils/swal';
 
 export const endpoints = {
   key: 'device',
+  actionDevice: '/action-device',
   restart: '/restart',
   stopShare: '/stop-share',
   startShare: '/start-share',
@@ -10,6 +12,25 @@ export const endpoints = {
   stopTcpIp: 'stop-tcpip',
   downloadQr: '/download_qr_for_account'
 };
+
+export async function postActionDevice(data) {
+  try {
+    const url = endpoints.key + endpoints.actionDevice;
+    const response = await axios.post(url, data);
+
+    if (!response.data.valid) {
+      swalNotification('warning', 'Thông báo', response.data.message);
+    }
+
+    return response.data;
+  } catch (error) {
+    swalNotification('error', 'Lỗi', error.message);
+    return {
+      status: false,
+      msg: error.message
+    };
+  }
+}
 
 export async function getActionDevice(type) {
   try {

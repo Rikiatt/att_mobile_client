@@ -142,8 +142,8 @@ async function trackABB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "abb" !== qrBank ) ) {      
-      // Phát thông báo realtime
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'abb' ) {      
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là ABB nhưng QR yêu cầu bank khác (${qrBank}), stop ABB.`
@@ -219,10 +219,8 @@ async function trackACB ( { device_id } ) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( (device_id === qrDevice) && ( "acb" !== qrBank ) ) {      
-      await stopACB({ device_id }); 
-
-      // Phát thông báo realtime
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'acb' ) {      
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB.`
@@ -293,7 +291,8 @@ async function trackEIB ( { device_id } ) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "eib" !== qrBank ) ) {      
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'eib' ) {      
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là EIB nhưng QR yêu cầu bank khác (${qrBank}), stop EIB.`
@@ -366,13 +365,13 @@ async function trackOCB ( { device_id } ) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "ocb" !== qrBank ) ) {      
-      await stopOCB({ device_id });    
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'ocb' ) {      
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB.`
-      });
+      });      
+      await stopOCB({ device_id });          
 
       await sendTelegramAlert(
         telegramToken,
@@ -441,14 +440,13 @@ async function trackNCB ( { device_id } ) {
   // while (running) {
   //   const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
   //   const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
-  //   const qrDevice = infoQR?.data?.device_id || '';
-  //   if ( ( device_id === qrDevice ) && ( "ncb" !== qrBank ) ) {      
+    // const qrType = infoQR?.type || '';
+    // if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'ncb' ) {      
+    //   notifier.emit('multiple-banks-detected', {
+    //     device_id,
+    //     message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
+    //   });      
   //     await stopNCB({ device_id });
-
-  //     notifier.emit('multiple-banks-detected', {
-  //       device_id,
-  //       message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
-  //     });
 
   //     await sendTelegramAlert(
   //       telegramToken,
@@ -514,14 +512,15 @@ async function trackNCB ( { device_id } ) {
       const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
       const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
       const qrDevice = infoQR?.data?.device_id || '';
-      if ( ( device_id === qrDevice ) && ( "nab" !== qrBank ) ) {        
-        await stopNAB({ device_id });
-
+      const qrType = infoQR?.type || '';
+      if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'nab' ) {      
         // Phát thông báo realtime
         notifier.emit('multiple-banks-detected', {
           device_id,
           message: `Bank đang chạy là NAB nhưng QR yêu cầu bank khác (${qrBank}), stop NAB.`
-        });  
+        });
+                
+        await stopNAB({ device_id });                 
 
         await sendTelegramAlert(
           telegramToken,
@@ -588,14 +587,15 @@ async function trackSHBSAHA ( { device_id } ) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "shb" !== qrBank ) ) {      
-      await stopSHBSAHA({ device_id }); 
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'shb' ) {      
       // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
-        message: `Bank đang chạy là SHB SAHA nhưng QR yêu cầu bank khác (${qrBank}), stop SHB SAHA.`
-      }); 
+        message: `Bank đang chạy là SHB nhưng QR yêu cầu bank khác (${qrBank}), stop SHB.`
+      });
+
+      await stopSHBSAHA({ device_id });  
 
       await sendTelegramAlert(
         telegramToken,
@@ -661,14 +661,14 @@ async function trackTPB ( { device_id } ) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "tpb" !== qrBank ) ) {      
-      await stopTPB({ device_id }); 
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'tpb' ) {      
       // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB.`
-      });   
+      });      
+      await stopTPB({ device_id }); 
 
       await sendTelegramAlert(
         telegramToken,
@@ -736,7 +736,14 @@ async function trackVPB ( { device_id } ) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "vpb" !== qrBank ) ) {      
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'vpb' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là VPB nhưng QR yêu cầu bank khác (${qrBank}), stop VPB.`
+      }); 
+
       await stopVPB({ device_id });
 
       notifier.emit('multiple-banks-detected', {
@@ -808,13 +815,14 @@ async function trackMB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || ''; 
-    if ( ( device_id === qrDevice ) && ( "mb" !== qrBank ) ) {      
-      await stopMB({ device_id });   
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'mb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB.`
-      });   
+      });      
+      await stopMB({ device_id });   
 
       await sendTelegramAlert(
         telegramToken,
@@ -882,7 +890,14 @@ async function trackBIDV({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "bidv" !== qrBank ) ) {      
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'bidv' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là BIDV nhưng QR yêu cầu bank khác (${qrBank}), stop BIDV.`
+      });      
+
       await stopBIDV({ device_id }); 
 
       await sendTelegramAlert(
@@ -951,13 +966,14 @@ async function trackVCB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "vcb" !== qrBank ) ) {      
-      await stopVCB({ device_id });  
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'vcb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là VCB nhưng QR yêu cầu bank khác (${qrBank}), stop VCB.`
-      });    
+      });      
+      await stopVCB({ device_id });      
 
       await sendTelegramAlert(
         telegramToken,
@@ -1025,13 +1041,15 @@ async function trackVIB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "vib" !== qrBank ) ) {      
-      await stopVIB({ device_id });  
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'vib' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là VIB nhưng QR yêu cầu bank khác (${qrBank}), stop VIB.`
-      });  
+      });
+
+      await stopVIB({ device_id });   
 
       await sendTelegramAlert(
         telegramToken,
@@ -1099,13 +1117,15 @@ async function trackSEAB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "seab" !== qrBank ) ) {      
-      await stopSEAB({ device_id });  
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'seab' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là SEAB nhưng QR yêu cầu bank khác (${qrBank}), stop SEAB.`
-      }); 
+      });
+
+      await stopSEAB({ device_id });  
 
       await sendTelegramAlert(
         telegramToken,
@@ -1172,13 +1192,15 @@ async function trackICB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';  
-    if ( ( device_id === qrDevice ) && ( "icb" !== qrBank ) ) {      
-      await stopICB({ device_id }); 
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'icb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là ICB nhưng QR yêu cầu bank khác (${qrBank}), stop ICB.`
-      });   
+      });
+
+      await stopICB({ device_id });    
 
       await sendTelegramAlert(
         telegramToken,
@@ -1246,13 +1268,15 @@ async function trackPVCB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "pvcb" !== qrBank ) ) {      
-      await stopPVCB({ device_id });  
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'pvcb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là PVCB nhưng QR yêu cầu bank khác (${qrBank}), stop PVCB.`
-      }); 
+      });
+
+      await stopPVCB({ device_id });  
 
       await sendTelegramAlert(
         telegramToken,
@@ -1320,13 +1344,15 @@ async function trackLPBANK({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "lpbank" !== qrBank ) ) {      
-      await stopLPBANK({ device_id });  
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'lpbank' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là LPBANK nhưng QR yêu cầu bank khác (${qrBank}), stop LPBANK.`
-      });  
+      });
+
+      await stopLPBANK({ device_id });   
 
       await sendTelegramAlert(
         telegramToken,
@@ -1394,13 +1420,15 @@ async function trackMSB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "msb" !== qrBank ) ) {      
-      await stopMSB({ device_id }); 
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'msb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là MSB nhưng QR yêu cầu bank khác (${qrBank}), stop MSB.`
-      });  
+      });
+
+      await stopMSB({ device_id });  
 
       await sendTelegramAlert(
         telegramToken,
@@ -1468,13 +1496,15 @@ async function trackSTB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "stb" !== qrBank ) ) {      
-      await stopSTB({ device_id }); 
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'stb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là STB nhưng QR yêu cầu bank khác (${qrBank}), stop STB.`
-      });   
+      });
+
+      await stopSTB({ device_id });  
 
       await sendTelegramAlert(
         telegramToken,
@@ -1542,13 +1572,15 @@ async function trackTCB({ device_id }) {
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
-    if ( ( device_id === qrDevice ) && ( "tcb" !== qrBank ) ) {      
-      await stopTCB({ device_id });
-
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'tcb' ) {      
+      // Phát thông báo realtime
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là TCB nhưng QR yêu cầu bank khác (${qrBank}), stop TCB.`
-      });  
+      });
+
+      await stopTCB({ device_id }); 
 
       await sendTelegramAlert(
         telegramToken,

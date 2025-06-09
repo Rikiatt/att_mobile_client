@@ -1,6 +1,7 @@
 import { swalInputPass, swalNotification, swalToast } from '../utils/swal';
 import { actionADB } from './adb.service';
 import { actionBank } from './bank.service';
+import { actionDevice } from './device.service';
 
 export const typeText = async (data, setLoading) => {
   const text = await swalInputPass('Nhập ký tự', '', 'Nhập ký tự cần truyền vào thiết bị');
@@ -54,7 +55,7 @@ export const disconnectTcpIp = async (data) => {
 export const bankTransfer = async (data, setLoading) => {  
   const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id }); 
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ xuất bán tự động", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
@@ -69,11 +70,26 @@ export const bankTransfer = async (data, setLoading) => {
 // ============== BIDV ============== //
 
 export const bidvLogin = async (data, setLoading) => {
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const deviceCoordinates = await actionDevice({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }
+  }  
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");      
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+	  return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+  } 
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
@@ -118,11 +134,26 @@ export const bidvLogin = async (data, setLoading) => {
 };
 
 export const bidvScanQR = async (data, setLoading) => {
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const deviceCoordinates = await actionDevice({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }
+  }  
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");    
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");     
+  } 
 
   setLoading(true);
 
@@ -144,10 +175,25 @@ export const bidvScanQR = async (data, setLoading) => {
 };
 
 export const bidvConfirm = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const deviceCoordinates = await actionDevice({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }   
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");      
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
   }
 
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
@@ -169,11 +215,26 @@ export const bidvConfirm = async (data, setLoading) => {
 };
 
 export const bidvConfirmBeforeFace = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const deviceCoordinates = await actionDevice({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }    
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
   } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+  }
 
   // Click vào Next
   await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
@@ -181,10 +242,25 @@ export const bidvConfirmBeforeFace = async (data, setLoading) => {
 };
 
 export const bidvConfirmAfterFace = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const deviceCoordinates = await actionDevice({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }   
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+  }  
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
   }
 
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
@@ -204,10 +280,25 @@ export const bidvConfirmAfterFace = async (data, setLoading) => {
 };
 
 export const bidvScanFaceConfirm = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const deviceCoordinates = await actionDevice({ action: 'checkDeviceBIDV', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
-  if (deviceCoordinates.status === 500) {
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
     return swalNotification("error", "Thiết bị chưa hỗ trợ BIDV", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }   
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+  }  
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
   }
 
   const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
@@ -302,16 +393,26 @@ export const vcbNewGetOTP = async (data, setLoading) => {
 
 export const icbScanQR = async (data, setLoading) => {  
   try {       
-    const deviceCoordinates = await actionADB({ action: 'checkDeviceICB', device_id: data.device_id });    
-    const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const deviceCoordinates = await actionDevice({ action: 'checkDeviceICB', device_id: data.device_id });    
+    const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+    const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
             
-    if (deviceCoordinates.status === 500) {
+    if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
       return swalNotification("error", "Thiết bị chưa hỗ trợ ICB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-    }    
+    }         
 
-    if (checkDeviceFHDOrNot.status === 500) {
-      return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
+    if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
     } 
+
+    if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+    }  
+
+    if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+    }
 
     // Nhập mật khẩu đăng nhập và mã PIN để xác nhận giao dịch
     const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
@@ -370,17 +471,27 @@ export const icbLogin = async (data, setLoading) => {
   setLoading(true);
 
   try {       
-    const deviceCoordinates = await actionADB({ action: 'checkDeviceICB', device_id: data.device_id });    
-    const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const deviceCoordinates = await actionDevice({ action: 'checkDeviceICB', device_id: data.device_id });    
+    const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+    const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
             
-    if (deviceCoordinates.status === 500) {
+    if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
       return swalNotification("error", "Thiết bị chưa hỗ trợ ICB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-    }    
+    }         
 
-    if (checkDeviceFHDOrNot.status === 500) {
-      return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
+    if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
     } 
+
+    if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+    }        
     
+    if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+    }
+
     // Start app
     await actionADB({ action: 'stopICB', device_id: data.device_id });
     await actionADB({ action: 'startICB', device_id: data.device_id });
@@ -414,16 +525,26 @@ export const icbLogin = async (data, setLoading) => {
 
 export const icbConfirmAfterFace = async (data, setLoading) => {  
   try {       
-    const deviceCoordinates = await actionADB({ action: 'checkDeviceICB', device_id: data.device_id });    
-    const checkDeviceFHDOrNot = await actionADB({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const deviceCoordinates = await actionDevice({ action: 'checkDeviceICB', device_id: data.device_id });    
+    const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+    const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
             
-    if (deviceCoordinates.status === 500) {
+    if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
       return swalNotification("error", "Thiết bị chưa hỗ trợ ICB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-    }    
+    }        
 
-    if (checkDeviceFHDOrNot.status === 500) {
-      return swalNotification("error", "Vui lòng cài đặt kích thước màn hình về FHD+");      
-    }    
+    if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+    } 
+
+    if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+    } 
+    
+    if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+    } 
 
     const text = await swalInputPass('Nhập mã PIN', '', 'Nhập mã PIN cần truyền vào thiết bị');
     if (!text) return;
@@ -464,7 +585,7 @@ export const ncbLogin = async (data, setLoading) => {
   await delay(1000);  
 
   console.log('2. Khởi động NCB...');
-  await actionADB({ action: 'startNCB', device_id: data.device_id });
+  await actionBank({ action: 'startNCB', device_id: data.device_id });
   await delay(6000);
 
   console.log('3. Login...');  
@@ -479,7 +600,7 @@ export const ncbLogin = async (data, setLoading) => {
 };
 
 // ============== SHB SAHA ============== //
-
+// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok
 export const shbsahaLogin = async (data, setLoading) => {
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
   if (!text) return;
@@ -488,130 +609,25 @@ export const shbsahaLogin = async (data, setLoading) => {
   try {
     console.log('1. Đang đóng các app đang mở...');
     await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-    await delay(1000); 
+    await delay(500); 
 
     console.log('2. Khởi động app SHB SAHA...');
-    await actionADB({ action: 'startSHBSAHA', device_id: data.device_id });
-    await delay(5000);
+    await actionBank({ action: 'loginSHBSAHA', device_id: data.device_id });
+    // await delay(5000);
 
-    console.log('3. Login');  
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-    await delay(1000);
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    // console.log('3. Login');  
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+    // await delay(1000);
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   } catch (error) {
     swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
     console.error(error);
   } finally {
     setLoading(false);
   }
-};
-
-// ============== BAB ============== //
-export const babScanQR = async (data, setLoading) => {  
-  const deviceCoordinates = await actionADB({ action: 'checkDeviceBAB', device_id: data.device_id }); 
-
-  if (deviceCoordinates.status === 500) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ BAB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-  }  
-
-  setLoading(true);    
-
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu BAB cần truyền vào thiết bị');  
-  if (!text) return;
-
-  console.log('1. Đang đóng các app đang mở...');
-  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-  await delay(1000); 
-
-  console.log('2. Khởi động app BAB...');
-  await actionADB({ action: 'startBAB', device_id: data.device_id });
-  await delay(6000);
-
-  // // Track BAB while it is in process  
-  // const trackBABAppPromise = actionADB({ action: 'trackBABApp', device_id: data.device_id });
-
-  console.log('3. Scan QR');  
-  await actionADB({ action: 'scanQRBAB', device_id: data.device_id });
-  await delay(500);
-
-  // console.log('4. Login');  
-  // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() }); 
-  // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
-  
-  // // Đợi trackBABApp hoàn thành (nếu app BAB bị thoát)
-  // const trackResult = await trackBABAppPromise;
-  // if (!trackResult) {
-  //   console.log('📢 Theo dõi BAB đã kết thúc.');
-  // }
-
-  setLoading(false);
-};
-
-// ============== ABB ============== //
-
-export const abbClickLogin = async (data, setLoading) => {
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-  if (!text) return;
-  setLoading(true);
-
-  await actionADB({
-    action: 'tap',
-    device_id: data.device_id,
-    percent: {
-      X: percentage(310 * 1, data.X),
-      Y: percentage(840 * 1, data.Y)
-    },
-    screenSize: { X: data.X, Y: data.Y }
-  });
-  await delay(1000);
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(2000);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 4 });
-  await delay(2000);
-  await actionADB({
-    action: 'tap',
-    device_id: data.device_id,
-    percent: {
-      X: percentage(290 * 1, data.X),
-      Y: percentage(1048 * 1, data.Y)
-    },
-    screenSize: { X: data.X, Y: data.Y }
-  });
-
-  await delay(1000);
-  setLoading(false);
-};
-
-// ============== SHINHAN BANK ============== //
-
-export const shinhanClickLogin = async (data, setLoading) => {
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
-  if (!text) return;
-  setLoading(true);
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await enter({ device_id: data.device_id });
-
-  await delay(5000);
-
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await enter({ device_id: data.device_id });
-
-  await delay(5000);
-
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-
-  setLoading(false);
 };
 
 export const runMacro = async (macro, device) => {

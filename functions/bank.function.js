@@ -273,6 +273,13 @@ const startMB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const startNCB = async ({ device_id }) => {
+  Logger.log(0, `Đang khởi động NCB...`, __filename);
+  await client.shell(device_id, 'monkey -p com.ncb.bank -c android.intent.category.LAUNCHER 1');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const startSHBSAHA = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động SHB SAHA...`, __filename);
   await client.shell(device_id, 'monkey -p vn.shb.saha.mbanking -c android.intent.category.LAUNCHER 1');
@@ -311,6 +318,7 @@ const mapStartBank = {
   tpb: startTPB,
   vpb: startVPB,     
   mb: startMB,
+  ncb: startNCB,
   shb: startSHBSAHA,
   stb: startSTB
 };
@@ -323,6 +331,7 @@ const bankPackages = {
   icb: 'com.vietinbank.ipay',
   ocb: 'vn.com.ocb.awe',
   nab: 'ops.namabank.com.vn',
+  ncb: 'com.ncb.bank',
   tpb: 'com.tpb.mb.gprsandroid',
   vpb: 'com.vnpay.vpbankonline',
   mb: 'com.mbmobile',
@@ -475,7 +484,8 @@ const loginMB = async ({ device_id }) => {
   await client.shell(device_id, `input text ${password}`);
 };
 
-const loginSHBSAHA = async ({ device_id }) => {    
+const loginSHBSAHASpecial = async ({ device_id }) => {    
+  const deviceModel = await deviceHelper.getDeviceModel(device_id); 
   Logger.log(0, `3. Login SHB SAHA...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
@@ -483,9 +493,34 @@ const loginSHBSAHA = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);        
-  await client.shell(device_id, 'input tap 118 1040');
-  await delay(500);   
+  const password = getBankPass(bank, device_id);   
+  if (deviceModel === 'SM-N960') {
+    await client.shell(device_id, 'input tap 118 1040');
+    await delay(500);
+  }  
+  else if (deviceModel === "SM-A155") {
+    await client.shell(device_id, 'input tap 118 1147');
+    await delay(500);
+  }        
+  await client.shell(device_id, `input text ${password}`);
+  await delay(1000);
+  await client.shell(device_id, 'input tap 540 1220');
+};
+
+const loginSHBSAHA = async ({ device_id }) => {    
+  const deviceModel = await deviceHelper.getDeviceModel(device_id); 
+  Logger.log(0, `3. Login SHB SAHA...`, __filename);
+  
+  await startSHBSAHA({ device_id }); 
+  await delay(5000);
+  if (deviceModel === 'SM-N960') {
+    await client.shell(device_id, 'input tap 118 1040');
+    await delay(500);
+  }  
+  else if (deviceModel === "SM-A155") {
+    await client.shell(device_id, 'input tap 118 1147');
+    await delay(500);
+  }        
   await client.shell(device_id, `input text ${password}`);
   await delay(1000);
   await client.shell(device_id, 'input tap 540 1220');
@@ -996,5 +1031,8 @@ const bankTransfer = async ({ device_id, bank }) => {
 
 module.exports = {
   bankTransfer,
-  runBankTransfer
+  runBankTransfer,
+  startSHBSAHA,
+  loginSHBSAHA,
+  startNCB
 };

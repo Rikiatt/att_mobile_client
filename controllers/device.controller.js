@@ -1,7 +1,7 @@
 const path = require('path');
 const { delay } = require('../helpers/functionHelper');
 const responseHelper = require('../helpers/responseHelper');
-const { updateSource, getDataJson } = require('../functions/function');
+const { getDataJson } = require('../functions/function');
 const { stopGnirehtet, autoRunGnirehtet } = require('../functions/gnirehtet.function');
 const fs = require('fs');
 const axios = require('axios');
@@ -12,6 +12,7 @@ const client = adb.createClient({ bin: adbPath });
 const crypto = require('crypto');
 require('dotenv').config();
 const { getDatabase } = require('../database/mongoClient');
+const { checkDeviceFHD, checkFontScale, checkWMDensity, checkDeviceICB, checkDeviceBIDV } = require('../functions/device.function');
 
 const bankBins = {
   vcb: '970436',
@@ -76,7 +77,6 @@ const bankBins = {
   vtlmoney: '971005',
   wvn: '970457'
 };
-
 
 const downloadQrFromVietQR = async (url, device_id) => {
   try {
@@ -224,6 +224,14 @@ const sync_banks_to_mongodb = async (req, res) => {
   }
 };
 
+const mapAction = {  
+  checkDeviceFHD: checkDeviceFHD,
+  checkFontScale: checkFontScale,   
+  checkWMDensity: checkWMDensity,
+  checkDeviceICB: checkDeviceICB, 
+  checkDeviceBIDV: checkDeviceBIDV
+}
+
 module.exports = {
   restart: async (req, res) => {
     // updateSource();
@@ -255,33 +263,104 @@ module.exports = {
 
   download_qr_for_account: async (req, res) => {
     try {
-      const { bank_code, bank_account, device_id, amount } = req.query;
-      console.log('log bank_account:',bank_account);
-      console.log('log amount:',amount);
-  
+      const { bank_code, bank_account, device_id, amount, trans_id } = req.query;
+      console.log('log bank_account:', bank_account);
+      console.log('log amount:', amount);
+      console.log('log bank_code:', bank_code);
+      console.log('log device_id:', device_id);
+      console.log('log trans_id:', trans_id);
+
       if (!bank_code || !bank_account || !device_id || !amount) {
         return res.status(400).json({
           status: false,
           message: 'Thiếu tham số bank_code, bank_account, device_id hoặc amount'
         });
       }
-  
+
       const bin = bankBins[bank_code.toLowerCase()];
-  
       if (!bin) {
         return res.status(400).json({
           status: false,
           message: 'Không hỗ trợ ngân hàng này trong danh sách BIN'
         });
       }
-                    
-      const qrUrl = `https://img.vietqr.io/image/${bin}-${bank_account}-qr.png?amount=${amount}&addInfo=`;   
-      const result = await downloadQrFromVietQR(qrUrl, device_id);
-  
+
+      const qrUrl = bank_account
+        ? `https://img.vietqr.io/image/${bin}-${bank_account}-qr.png?amount=${amount}&addInfo=`
+        : '';
+
+      const result = bank_account
+        ? await downloadQrFromVietQR(qrUrl, device_id)
+        : { success: true, path: '' };
+
+      const infoQrPath = path.join(__dirname, '../database/info-qr.json');
+      const now = new Date().toISOString();
+
+      const isTestMode = !trans_id; // Xác định TEST THẺ dựa vào không có trans_id
+
+      if (isTestMode) {
+        // Ghi đè toàn bộ kiểu test
+        const testInfo = {
+          type: 'test',
+          data: {
+            device_id,
+            bank: bank_code.toLowerCase(),
+            amount: Number(amount),
+            trans_status: 'in_process'
+          }
+        };
+
+        try {
+          fs.writeFileSync(infoQrPath, JSON.stringify(testInfo, null, 2), 'utf8');
+          console.log('Đã ghi info-qr.json theo type: test');
+        } catch (err) {
+          console.error('Lỗi ghi info-qr.json:', err.message);
+        }
+
+      } else {
+        // Không phải test → xử lý cập nhật theo org hoặc att
+        let currentInfo = {};
+        try {
+          const fileContent = fs.readFileSync(infoQrPath, 'utf8');
+          currentInfo = JSON.parse(fileContent || '{}');
+        } catch (err) {
+          console.error('Lỗi đọc info-qr.json:', err.message);
+        }
+
+        if (currentInfo.type === 'org') {
+          currentInfo.data.bank = bank_code.toLowerCase();
+          currentInfo.data.amount = Number(amount);
+          currentInfo.data.trans_status = 'in_process';
+          currentInfo.timestamp = now;
+
+          try {
+            fs.writeFileSync(infoQrPath, JSON.stringify(currentInfo, null, 2), 'utf8');
+            console.log('Đã cập nhật info-qr.json cho type: org');
+          } catch (err) {
+            console.error('Lỗi ghi info-qr.json:', err.message);
+          }
+
+        } else if (currentInfo.type === 'att') {
+          currentInfo.data.bank = bank_code.toLowerCase();
+          currentInfo.data.trans_status = 'in_process';
+          currentInfo.timestamp = now;
+
+          try {
+            fs.writeFileSync(infoQrPath, JSON.stringify(currentInfo, null, 2), 'utf8');
+            console.log('Đã cập nhật info-qr.json cho type: att');
+          } catch (err) {
+            console.error('Lỗi ghi info-qr.json:', err.message);
+          }
+
+        } else {
+          console.log('Loại dữ liệu hiện tại không xác định, không cập nhật.');
+        }
+      }
+
       if (!result.success) {
         return res.status(500).json({ status: false, message: result.message });
       }
-  
+
       res.json({
         status: true,
         message: 'Tải QR thành công',
@@ -298,7 +377,23 @@ module.exports = {
 
   get_google_sheet,
 
-  sync_banks_to_mongodb
+  sync_banks_to_mongodb,
+
+  actionDeivce: async (req, res) => {
+    try {                              
+      const result = await mapAction[req.body.action](req.body);
+
+      if (result?.valid === false) {
+        return responseHelper(res, 200, { valid: false, message: result.message });
+      }
+
+      return responseHelper(res, 200, { status: 200, valid: true, message: 'Thành công' });
+            
+    } catch (error) {
+      console.log('error:', error);
+      responseHelper(res, 500, { message: error.message });
+    }
+  }
 };
 
 /**
@@ -321,4 +416,3 @@ module.exports = {
  * 
  * 
  */
-

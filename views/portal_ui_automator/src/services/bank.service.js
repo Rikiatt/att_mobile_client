@@ -8,6 +8,7 @@ export async function actionBank(data) {
     if (result.status && result.status === false) {
       return swalToast('error', result.msg);
     }
+    
     swalToast('success', 'Thành công');
     
     return result

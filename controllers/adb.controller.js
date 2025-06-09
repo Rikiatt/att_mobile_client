@@ -2,7 +2,7 @@ const { listDevice, delADBImg, clickConfirmICB, inputPINVPB, inputPINMSB, inputP
   copyQRImages, scanQRICB, clickScanQRICB, 
   clickConfirmScanFaceBIDV, clickScanQRMSB, clickScanQRNCB, clickLoginNAB, scanQRBAB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
   stopICB, startICB,  
-  tapADB, inputADB, inputICB, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDevice, checkDeviceNCB, checkDeviceMSB, checkDeviceBAB, checkDeviceOCB, checkDeviceBIDV, checkDeviceICB, checkDeviceFHD, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
+  tapADB, inputADB, inputICB, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDevice, checkDeviceNCB, checkDeviceMSB, checkDeviceOCB, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
   stopBIDV, startBIDV, closeAll, clickLoginACB, clickPasswordFieldEIB } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
@@ -47,12 +47,8 @@ const mapAction = {
   checkDeviceTPB: checkDeviceTPB,
   checkDeviceVPB: checkDeviceVPB,
   checkDevice: checkDevice,  
-  checkDeviceMSB: checkDeviceMSB,
-  checkDeviceBAB: checkDeviceBAB,
-  checkDeviceOCB: checkDeviceOCB,
-  checkDeviceBIDV: checkDeviceBIDV,
-  checkDeviceICB: checkDeviceICB,
-  checkDeviceFHD: checkDeviceFHD,
+  checkDeviceMSB: checkDeviceMSB,  
+  checkDeviceOCB: checkDeviceOCB,  
   enter: enterADB,
   tab: tabADB,
   newline: newlineADB,
