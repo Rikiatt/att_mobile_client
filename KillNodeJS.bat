@@ -1,3 +1,3 @@
 @echo off
-taskkill /f /im node.exe && taskkill /F /IM scrcpy.exe
+taskkill /F /IM scrcpy.exe & taskkill /f /im node.exe
 exit
