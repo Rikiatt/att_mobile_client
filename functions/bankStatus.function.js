@@ -2077,10 +2077,12 @@ async function getRunningBankApps({ device_id }) {
   const runningBanks = [];  
   
   try {    
-    const output = await client.shell(device_id, `dumpsys activity activities`)
+    // const output = await client.shell(device_id, `dumpsys activity activities`)
+    const output = await client.shell(device_id, `dumpsys window windows`)
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());         
   
+    console.log('log output in getRunningBankApps:', getRunningBankApps);
     for (const app of bankApps) {
       if (output.includes(app.package)) {
         Logger.log(0, `\n ${app.name} đang mở trong activity stack.`, __filename);
@@ -2108,7 +2110,7 @@ async function getRunningBankApps({ device_id }) {
 
 async function checkRunningBanks({ device_id }) {
   const runningBanks = await getRunningBankApps({ device_id });
-
+  console.log('log runningBanks:', runningBanks);  
   if (runningBanks.length > 1) {
     await closeAll({ device_id });
     Logger.log(1, 'VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)', __filename);

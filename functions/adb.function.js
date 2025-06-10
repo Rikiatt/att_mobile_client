@@ -229,7 +229,7 @@ module.exports = {
     } 
     else if (deviceModel === "SM-A155") {
       // await client.shell(device_id, 'input tap 540 1826');
-      await client.shell(device_id, 'input tap 540 1868');
+      await client.shell(device_id, 'input tap 540 1855');
       console.log('Đã đóng tất cả các app đang mở');
     }
     else if (deviceModel === "SM-A055") {
