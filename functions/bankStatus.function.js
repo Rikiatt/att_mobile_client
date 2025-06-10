@@ -226,6 +226,8 @@ async function trackACB ( { device_id } ) {
         message: `Bank đang chạy là ACB nhưng QR yêu cầu bank khác (${qrBank}), stop ACB.`
       });   
 
+      await stopACB({ device_id }); 
+
       await sendTelegramAlert(
         telegramToken,
         chatId,
@@ -370,7 +372,8 @@ async function trackOCB ( { device_id } ) {
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là OCB nhưng QR yêu cầu bank khác (${qrBank}), stop OCB.`
-      });      
+      });   
+
       await stopOCB({ device_id });          
 
       await sendTelegramAlert(
@@ -445,7 +448,8 @@ async function trackNCB ( { device_id } ) {
     //   notifier.emit('multiple-banks-detected', {
     //     device_id,
     //     message: `Bank đang chạy là NCB nhưng QR yêu cầu bank khác (${qrBank}), stop NCB.`
-    //   });      
+    //   });  
+
   //     await stopNCB({ device_id });
 
   //     await sendTelegramAlert(
@@ -667,7 +671,8 @@ async function trackTPB ( { device_id } ) {
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là TPB nhưng QR yêu cầu bank khác (${qrBank}), stop TPB.`
-      });      
+      }); 
+
       await stopTPB({ device_id }); 
 
       await sendTelegramAlert(
@@ -821,7 +826,8 @@ async function trackMB({ device_id }) {
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Bank đang chạy là MB nhưng QR yêu cầu bank khác (${qrBank}), stop MB.`
-      });      
+      });  
+          
       await stopMB({ device_id });   
 
       await sendTelegramAlert(
