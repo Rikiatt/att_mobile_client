@@ -100,7 +100,7 @@ export const bidvLogin = async (data, setLoading) => {
     // Start app
     console.log('1. Đang đóng các app đang mở...');
     await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-    await delay(1000);
+    await delay(500);
 
     console.log('2. Đang khởi động BIDV...');
     await actionADB({ action: 'startBIDV', device_id: data.device_id });
@@ -425,7 +425,7 @@ export const icbScanQR = async (data, setLoading) => {
     // Start app
     console.log('1. Đang đóng các app đang mở...');
     await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-    await delay(1000);
+    await delay(500);
 
     console.log('2. Khởi động app ICB...');
     await actionADB({ action: 'startICB', device_id: data.device_id });
@@ -550,8 +550,7 @@ export const icbConfirmAfterFace = async (data, setLoading) => {
     if (!text) return;
     
     setLoading(true);
-
-    // Click Tiếp tục (= Xác nhận)
+    
     await actionADB({ action: 'clickConfirmICB', device_id: data.device_id });
     await delay(10000); // chờ quét mặt hoặc video loading...
     
@@ -582,7 +581,7 @@ export const ncbLogin = async (data, setLoading) => {
 
   console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-  await delay(1000);  
+  await delay(500);  
 
   console.log('2. Khởi động NCB...');
   await actionBank({ action: 'startNCB', device_id: data.device_id });
@@ -599,35 +598,52 @@ export const ncbLogin = async (data, setLoading) => {
   setLoading(false);
 };
 
-// ============== SHB SAHA ============== //
-// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok// chưa ok
-export const shbsahaLogin = async (data, setLoading) => {
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+// ============== VAB ============== //
+
+export const vabLogin = async (data, setLoading) => {  
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NCB cần truyền vào thiết bị');
   if (!text) return;
-  setLoading(true);
 
-  try {
-    console.log('1. Đang đóng các app đang mở...');
-    await actionADB({ action: 'closeAll', device_id: data.device_id }); 
-    await delay(500); 
+  console.log('1. Đang đóng các app đang mở...');
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
+  await delay(500);  
 
-    console.log('2. Khởi động app SHB SAHA...');
-    await actionBank({ action: 'loginSHBSAHA', device_id: data.device_id });
-    // await delay(5000);
+  console.log('2. Khởi động VAB...');
+  await actionBank({ action: 'startVAB', device_id: data.device_id });
+  await delay(8000);
 
-    // console.log('3. Login');  
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    // await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-    // await delay(1000);
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
-  } catch (error) {
-    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
+  console.log('3. Login...');  
+  /*
+  196, 1526
+  await 500ms
+  540, 881
+  input text $password
+  await 500ms
+  540, 1207
+  */  
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await delay(500);
+
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+  setLoading(false);
 };
 
 export const runMacro = async (macro, device) => {

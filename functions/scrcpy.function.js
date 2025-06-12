@@ -35,6 +35,8 @@ module.exports = {
       ['shbet', 'new88'].includes(siteAtt) ||
       (['jun88cmd', 'jun88k36'].includes(siteOrg));
       
+    console.log('log validSites:', validSites);
+
     if (validSites) {      
       await trackingLoop({ device_id });
     }

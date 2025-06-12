@@ -1,13 +1,12 @@
 const responseHelper = require('../helpers/responseHelper');
-const { bankTransfer, startSHBSAHA, loginSHBSAHA, startNCB } = require('../functions/bank.function');
+const { bankTransfer, startNCB, startVAB } = require('../functions/bank.function');
 const { checkRunningBanks } = require('../functions/bankStatus.function');
 
 const mapAction = {  
     bankTransfer: bankTransfer,
-    checkRunningBanks: checkRunningBanks,
-    startSHBSAHA: startSHBSAHA,
-    loginSHBSAHA: loginSHBSAHA,
+    checkRunningBanks: checkRunningBanks,    
     startNCB: startNCB,   
+    startVAB: startVAB
 }
 
 module.exports = {  

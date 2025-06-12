@@ -280,6 +280,13 @@ const startNCB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const startVAB = async ({ device_id }) => {
+  Logger.log(0, `Đang khởi động VAB...`, __filename);
+  await client.shell(device_id, 'monkey -p com.vnpay.vietbank -c android.intent.category.LAUNCHER 1');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const startSHBSAHA = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động SHB SAHA...`, __filename);
   await client.shell(device_id, 'monkey -p vn.shb.saha.mbanking -c android.intent.category.LAUNCHER 1');
@@ -484,7 +491,7 @@ const loginMB = async ({ device_id }) => {
   await client.shell(device_id, `input text ${password}`);
 };
 
-const loginSHBSAHASpecial = async ({ device_id }) => {    
+const loginSHBSAHA = async ({ device_id }) => {    
   const deviceModel = await deviceHelper.getDeviceModel(device_id); 
   Logger.log(0, `3. Login SHB SAHA...`, __filename);
 
@@ -494,25 +501,6 @@ const loginSHBSAHASpecial = async ({ device_id }) => {
 
   const bank = info?.data?.bank;
   const password = getBankPass(bank, device_id);   
-  if (deviceModel === 'SM-N960') {
-    await client.shell(device_id, 'input tap 118 1040');
-    await delay(500);
-  }  
-  else if (deviceModel === "SM-A155") {
-    await client.shell(device_id, 'input tap 118 1147');
-    await delay(500);
-  }        
-  await client.shell(device_id, `input text ${password}`);
-  await delay(1000);
-  await client.shell(device_id, 'input tap 540 1220');
-};
-
-const loginSHBSAHA = async ({ device_id }) => {    
-  const deviceModel = await deviceHelper.getDeviceModel(device_id); 
-  Logger.log(0, `3. Login SHB SAHA...`, __filename);
-  
-  await startSHBSAHA({ device_id }); 
-  await delay(5000);
   if (deviceModel === 'SM-N960') {
     await client.shell(device_id, 'input tap 118 1040');
     await delay(500);
@@ -543,6 +531,27 @@ const loginSTB = async ({ device_id }) => {
   await delay(300);
   await client.shell(device_id, 'input tap 540 911');
 };
+
+// const loginVAB = async ({ device_id, bank }) => {    
+//   Logger.log(0, `3. Login VAB...`, __filename);
+
+//   const infoPath = path.join(__dirname, '../database/info-qr.json');
+//   const raw = fs.readFileSync(infoPath, 'utf-8');
+//   const info = JSON.parse(raw);
+
+//   // bank = info?.data?.bank;
+//   bank = info?.data?.bank_temp || info?.data?.bank;
+//   const password = getBankPass(bank, device_id);        
+//   await client.shell(device_id, 'input tap 918 305');
+//   await delay(1000);
+//   await client.shell(device_id, 'input tap 118 820');
+//   await delay(400);
+//   await client.shell(device_id, 'input tap 118 820');
+//   await delay(400);
+//   await client.shell(device_id, `input text ${password}`);
+//   await delay(1200);  
+//   await client.shell(device_id, 'input tap 540 1020');
+// };
 
 const mapLoginBank = {
   abb: loginABB,
@@ -1031,8 +1040,7 @@ const bankTransfer = async ({ device_id, bank }) => {
 
 module.exports = {
   bankTransfer,
-  runBankTransfer,
-  startSHBSAHA,
-  loginSHBSAHA,
-  startNCB
+  runBankTransfer,  
+  startNCB,
+  startVAB
 };

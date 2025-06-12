@@ -293,6 +293,128 @@ async function checkContentEIB(device_id, localPath) {
         console.error("checkContentEIB got an error:", error.message);
     }
 }
+
+//khong lam duoc do ICB khong dump xml nua
+async function checkContentICB(device_id, localPath) {
+    try {
+        const content = fs.readFileSync(localPath, "utf-8").trim();
+
+        const currentActivity = content.match(/package=\"(.*?)\"/);
+        const currentPackage = currentActivity ? currentActivity[1] : "";
+        const lastActivity = lastActivityByDevice[device_id] || "";
+
+        if (ocrMatchedByDevice[device_id] && currentPackage !== lastActivity && currentPackage.includes("com.vnpay.EximBankOmni")) {
+            Logger.log(0, 'Đã chuyển màn hình sau khi OCR trùng. Reset ocrMatchedByDevice.', __filename);
+            ocrMatchedByDevice[device_id] = false;
+        }
+
+        lastActivityByDevice[device_id] = currentPackage;
+
+        const hasCollapsingToolbarMenuTransfer = content.includes('resource-id="com.vnpay.EximBankOmni:id/collapsingToolbarMenuTransfer"');
+        const hasBtnMenuTransferAddForm = content.includes('resource-id="com.vnpay.EximBankOmni:id/btnMenuTransferAddForm"');
+
+        if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
+            const screenName = "Chuyển tiền (XML)";
+
+            notifier.emit('multiple-banks-detected', {
+              device_id,
+              message: `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`
+            });
+
+            await stopEIB({ device_id });
+            await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`);
+            Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`, __filename);
+            await saveAlertToDatabase({
+                timestamp: new Date().toISOString(),
+                reason: `Thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`,
+                filePath: localPath
+            });
+            return;
+        }
+
+        const hasConfirmScreenHint =
+            content.includes('resource-id="com.vnpay.EximBankOmni:id/swSaveBene"') &&
+            content.includes('class="android.widget.Switch"')
+
+        if (hasConfirmScreenHint && !ocrMatchedByDevice[device_id]) {
+            Logger.log(0, 'Quét xong QR. Tiến hành OCR...', __filename);
+
+            const remoteScreenshot = '/sdcard/screenshot.png';
+            const screenshotDir = 'C:/att_mobile_client/resource/screenshot';
+            const localScreenshot = path.join(screenshotDir, `${device_id}_screen.png`);
+
+            await client.shell(device_id, 'input swipe 540 1777 540 1444 300').then(adb.util.readAll);
+            await client.shell(device_id, `screencap -p ${remoteScreenshot}`).then(adb.util.readAll);
+
+            const transferStream = await client.pull(device_id, remoteScreenshot);
+            const writeStream = fs.createWriteStream(localScreenshot);
+            await new Promise((resolve, reject) => {
+                transferStream.pipe(writeStream);
+                transferStream.on('end', resolve);
+                transferStream.on('error', reject);
+            });
+
+            const { data: { text } } = await Tesseract.recognize(localScreenshot, 'vie+eng');
+            Logger.log(0, `log text from OCR:\n${text}`, __filename);
+
+            const { ocrAccount, ocrAmount } = extractOCRFieldsFromLinesEIB(text);
+
+            const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+            const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+
+            let expectedAccount = "";
+            let expectedAmount = "";
+            const vietqrUrl = jsonData.data?.vietqr_url || "";
+            const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
+            if (match) {
+                expectedAccount = normalizeText(match[1]);
+                expectedAmount = normalizeText(match[2]);
+            }
+
+            Logger.log(0, `OCR Account Number: ${ocrAccount} | length: ${ocrAccount.length}`, __filename);
+            Logger.log(0, `INFO Account Number: ${expectedAccount} | length: ${expectedAccount.length}`, __filename);
+            Logger.log(0, `OCR Amount: ${ocrAmount} | length: ${ocrAmount.length}`, __filename);
+            Logger.log(0, `INFO Amount: ${expectedAmount} | length: ${expectedAmount.length}`, __filename);
+
+            const ocrHasAccount =
+                ocrAccount === expectedAccount ||
+                (ocrAccount.length === expectedAccount.length + 1 && ocrAccount.startsWith(expectedAccount));
+
+            const ocrHasAmount = ocrAmount === expectedAmount;
+
+            if (!(ocrHasAccount && ocrHasAmount)) {
+                const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";
+                Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+
+                notifier.emit('multiple-banks-detected', {
+                  device_id,
+                  message: `OCR KHÁC info-qr về số tài khoản hoặc số tiền`
+                });
+
+                await stopEIB({ device_id });
+                await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+                Logger.log(1, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`, __filename);
+                await saveAlertToDatabase({
+                    timestamp: new Date().toISOString(),
+                    reason: `${reason} (id: ${device_id})`,
+                    filePath: localScreenshot
+                });
+                return;
+            } else {
+                ocrMatchedByDevice[device_id] = true;
+                Logger.log(0, 'OCR TRÙNG info-qr về account_number và amount. OCR ảnh .', __filename);
+            }
+        }
+
+        if (!content.includes("com.vnpay.EximBankOmni")) {
+            ocrMatchedByDevice[device_id] = false;
+        }
+
+    } catch (error) {
+        console.error("checkContentEIB got an error:", error.message);
+    }
+}
+
 // check QR dang sai - check QR dang sai2
 async function checkContentACB(device_id, localPath) {
   try {
@@ -1929,6 +2051,6 @@ async function stopTCB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
+module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
   stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
 }
