@@ -294,7 +294,7 @@ async function checkContentEIB(device_id, localPath) {
     }
 }
 
-//khong lam duoc do ICB khong dump xml nua
+//khong lam duoc do ICB khong dump
 async function checkContentICB(device_id, localPath) {
     try {
         const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -526,95 +526,14 @@ async function checkContentACB(device_id, localPath) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
+
+async function checkContentBIDV(device_id, localPath) {
+  Logger.log(0, 'BIDV không hỗ trợ dump.', __filename);
+}
+
 // chua lam duoc, OCR chan lam - chua lam duoc, OCR chan lam 2
 async function checkContentNCB(device_id, localPath) {
-  try {
-    const { data: { text } } = await Tesseract.recognize(localPath, 'vie+eng');
-    Logger.log(0, `log text from OCR:\n${text}`, __filename);
-
-    const lowerText = normalizeText(text);
-
-    if (lowerText.includes("chuyen tien") && (lowerText.includes("toi tai khoan") || lowerText.includes("toi the"))) {
-      const reason = "Phát hiện màn hình chọn hình thức chuyển tiền (OCR)";
-
-      notifier.emit('multiple-banks-detected', {
-        device_id,
-        message: `Phát hiện màn hình chọn hình thức chuyển tiền thủ công`
-      });
-
-      await stopNCB({ device_id });
-
-      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} (id: ${device_id})`);
-
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `${reason} (id: ${device_id})`,
-        filePath: localPath
-      });
-
-      return;
-    }
-
-    if (!(lowerText.includes("so tien chuyen") || lowerText.includes("han muc"))) {
-      Logger.log(0, 'Chưa tới màn hình xác nhận chuyển khoản, bỏ qua check ocr.', __filename);
-      return;
-    }
-
-    Logger.log(0, 'Phát hiện màn hình sau khi quét QR, chuyển tiếp sang màn hình xác nhận.', __filename);
-    await client.shell(device_id, 'input keyevent 61');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    await delay(10000);
-    await dumpOCRToLocal(device_id, localPath);
-
-    const { data: { text: secondText } } = await Tesseract.recognize(localPath, 'vie+eng');
-    const { ocrAccount, ocrAmount } = extractOCRFieldsFromLinesNCB(secondText);
-
-    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
-    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-
-    let expectedAccount = "";
-    let expectedAmount = "";
-    const vietqrUrl = jsonData.data?.vietqr_url || "";
-    const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
-    if (match) {
-      expectedAccount = normalizeText(match[1]);
-      expectedAmount = normalizeText(match[2]);
-    }
-
-    Logger.log(0, `OCR Account Number: ${ocrAccount} | length: ${ocrAccount.length}`, __filename);
-    Logger.log(0, `INFO Account Number: ${expectedAccount} | length: ${expectedAccount.length}`, __filename);
-    Logger.log(0, `OCR Amount: ${ocrAmount} | length: ${ocrAmount.length}`, __filename);
-    Logger.log(0, `INFO Amount: ${expectedAmount} | length: ${expectedAmount.length}`, __filename);
-
-    const ocrHasAccount =
-      ocrAccount === expectedAccount ||
-      (ocrAccount.length === expectedAccount.length + 1 && ocrAccount.startsWith(expectedAccount));
-
-    const ocrHasAmount = ocrAmount === expectedAmount;
-
-    if (!(ocrHasAccount && ocrHasAmount)) {
-      const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";
-      Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
-
-      await stopNCB({ device_id });
-
-      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
-
-      await saveAlertToDatabase({
-        timestamp: new Date().toISOString(),
-        reason: `${reason} (id: ${device_id})`,
-        filePath: localPath
-      });
-
-      return;
-    } else {
-      ocrMatchedByDevice[device_id] = true;
-      Logger.log(0, 'OCR TRÙNG info-qr về account_number và amount. OCR ảnh .', __filename);
-    }
-
-  } catch (error) {
-    console.error("checkContentNCB got an error:", error.message);
-  }
+  Logger.log(0, 'NCB không hỗ trợ dump.', __filename);
 }
 // ok - ok2
 async function checkContentOCB(device_id, localPath) {
@@ -1088,124 +1007,7 @@ async function checkContentTPB(device_id, localPath) {
 }
 // ok tieng viet - ok tieng viet2 - VPB khong on dinh de dump xml :((
 async function checkContentVPB(device_id, localPath) {
-  try {
-    const xml = fs.readFileSync(localPath, "utf-8").trim();
-    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
-    const jsonData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-
-    let expectedAccount = "";
-    let expectedAmount = "";
-    const vietqrUrl = jsonData.data?.vietqr_url || "";
-    const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
-    if (match) {
-      expectedAccount = match[1].replace(/\s/g, "");
-      expectedAmount = match[2].replace(/[^\d]/g, "");
-    }
-
-    /* Trường hợp 1: Màn hình thao tác thủ công cần cảnh báo */
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"],
-        en: ["Tới tài khoản", "Tới thẻ", "Tới tài khoản/&#10;thẻ của tôi", "Cộng đồng&#10;thịnh vượng"]
-      },
-      {
-        name: "Chuyển đến số tài khoản",
-        vi: ["Chuyển đến số tài khoản", "Tài khoản nguồn", "Thông tin người nhận", "Chọn ngân hàng"],
-        en: ["Chuyển đến số tài khoản", "Tài khoản nguồn", "Thông tin người nhận", "Chọn ngân hàng"]
-      }
-    ];
-
-    for (const screen of screenKeywords) {
-      if (
-        screen.vi.every(kw => xml.includes(kw)) ||
-        screen.en.every(kw => xml.includes(kw))
-      ) {
-        Logger.log(1, `Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name}`, __filename);
-        Logger.log(0, 'Đóng app VPB', __filename);
-
-        await stopVPB({ device_id });
-
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: `Phát hiện có thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name}`
-        });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-        );
-
-        Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `Phát hiện thao tác thủ công khi xuất với VPB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      }
-    }
-
-    /* Trường hợp 2: Check QR */
-    const isTransferToScreen = xml.includes('resource-id="com.vnpay.vpbankonline:id/titleReceiveInfo"');
-
-    if (isTransferToScreen) {
-      let accountNumber = "";
-      const accMatch = xml.match(/text="([\d\s]+)"\s+resource-id="com\.vnpay\.vpbankonline:id\/edtAccount"/);
-      if (accMatch) {
-        accountNumber = accMatch[1].replace(/\s/g, "");
-      }
-
-      let amount = "";
-      const amtMatch = xml.match(/text="([\d\s,.]+)"\s+resource-id="com\.vnpay\.vpbankonline:id\/edtAmount"/);
-      if (amtMatch) {
-        amount = amtMatch[1].replace(/[^\d]/g, "").trim();
-      }
-
-      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `OCR Amount: ${amount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
-
-      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
-
-      if (!isMatch) {
-        const reason = `VPB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
-
-        await stopVPB({ device_id });
-
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: reason
-        });
-
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
-
-        Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
-
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
-
-        return;
-      } else {
-        Logger.log(0, 'VPB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-        return;
-      }
-    }
-  } catch (error) {
-    console.error("checkContentVPB got an error :", error.message);
-  }
+  Logger.log(0, 'VPB không còn hỗ trợ dump.', __filename);
 }
 //ok - ok2
 async function checkContentMB(device_id, localPath) {
@@ -2051,6 +1853,6 @@ async function stopTCB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentABB, checkContentACB, checkContentEIB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
+module.exports = { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
   stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
 }
