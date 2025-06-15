@@ -39,7 +39,9 @@ import HandleTransfer from './sections/bank_handle/HandleTransfer';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleICB from './sections/bank_handle/HandleICB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
+import HandleSEAB from './sections/bank_handle/HandleSEAB';
 import HandleVAB from './sections/bank_handle/HandleVAB';
+import HandleVIB from './sections/bank_handle/HandleVIB';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
 import ImportFileComp from './components/Import';
@@ -298,7 +300,9 @@ function App() {
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                       
+                      <HandleSEAB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVAB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleVIB item={item} X={X} Y={Y} setLoading={setLoading} />
                     </CardContent>
                   </Card>
                 </Grid>

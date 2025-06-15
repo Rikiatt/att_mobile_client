@@ -1,0 +1,63 @@
+diff --git a/node_modules/gopd/gOPD.js b/node_modules/gopd/gOPD.js
+deleted file mode 100644
+index cf9616c..0000000
+--- a/node_modules/gopd/gOPD.js
++++ /dev/null
+@@ -1,4 +0,0 @@
+-'use strict';
+-
+-/** @type {import('./gOPD')} */
+-module.exports = Object.getOwnPropertyDescriptor;
+diff --git a/node_modules/gopd/index.js b/node_modules/gopd/index.js
+index a4081b0..be9fd8b 100644
+--- a/node_modules/gopd/index.js
++++ b/node_modules/gopd/index.js
+@@ -1,15 +1,20 @@
+-'use strict';
++// 'use strict';
++
++// /** @type {import('.')} */
++// var $gOPD = require('./gOPD');
+ 
+-/** @type {import('.')} */
+-var $gOPD = require('./gOPD');
++// if ($gOPD) {
++// 	try {
++// 		$gOPD([], 'length');
++// 	} catch (e) {
++// 		// IE 8 has a broken gOPD
++// 		$gOPD = null;
++// 	}
++// }
+ 
+-if ($gOPD) {
+-	try {
+-		$gOPD([], 'length');
+-	} catch (e) {
+-		// IE 8 has a broken gOPD
+-		$gOPD = null;
+-	}
+-}
++// module.exports = $gOPD;
++
++// Thay vì import từ file thiếu, dùng trực tiếp native API
++'use strict';
+ 
+-module.exports = $gOPD;
++module.exports = Object.getOwnPropertyDescriptor;
+\ No newline at end of file
+diff --git a/node_modules/gopd/tsconfig.json b/node_modules/gopd/tsconfig.json
+deleted file mode 100644
+index d9a6668..0000000
+--- a/node_modules/gopd/tsconfig.json
++++ /dev/null
+@@ -1,9 +0,0 @@
+-{
+-	"extends": "@ljharb/tsconfig",
+-	"compilerOptions": {
+-		"target": "es2021",
+-	},
+-	"exclude": [
+-		"coverage",
+-	],
+-}

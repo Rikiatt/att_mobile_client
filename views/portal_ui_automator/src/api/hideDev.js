@@ -8,7 +8,7 @@ export const endpoints = {
 
 export async function postActionHideDev(data) {
   try {
-    const response = await axios.post('/api/hide-dev/action-hide-dev', data);
+    const response = await axios.post('/hideDev/action-hide-dev', data);
 
     if (!response.data.valid) {
       swalNotification('warning', 'Thông báo', response.data.message);

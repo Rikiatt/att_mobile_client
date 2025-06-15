@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "postinstall": "patch-package"
   },
   "author": "iris",
   "license": "ISC",
@@ -38,6 +39,7 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "patch-package": "^8.0.0"
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   }
 }

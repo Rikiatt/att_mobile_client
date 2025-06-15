@@ -8,7 +8,7 @@ export const endpoints = {
 
 export async function postActionHideUSB(data) {
   try {
-    const response = await axios.post('/api/hide-usb/action-hide-usb', data);
+    const response = await axios.post('/hideUSBDebugging/action-hide-usb', data);
 
     if (!response.data.valid) {
       swalNotification('warning', 'Thông báo', response.data.message);

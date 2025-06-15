@@ -25,8 +25,8 @@ import {
   import { randomId } from '../utils/content';
   import Loading from './Loading';
   
-  const GOOGLE_SHEET_PROXY_URL = 'http://localhost:3456/device/google-sheet';
-  const SYNC_TO_MONGODB_URL = 'http://localhost:3456/device/sync-banks';
+  const GOOGLE_SHEET_PROXY_URL = 'http://localhost:8899/device/google-sheet';
+  const SYNC_TO_MONGODB_URL = 'http://localhost:8899/device/sync-banks';
   
   const ImportFileComp = ({ devices }) => {
     const [list, setList] = useState([]);

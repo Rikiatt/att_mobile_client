@@ -2,6 +2,8 @@ import { swalInputPass, swalNotification, swalToast } from '../utils/swal';
 import { actionADB } from './adb.service';
 import { actionBank } from './bank.service';
 import { actionDevice } from './device.service';
+import { actionHideDev } from './hideDev.service';
+import { actionHideUSB } from './hideUSB.service';
 
 export const typeText = async (data, setLoading) => {
   const text = await swalInputPass('Nhập ký tự', '', 'Nhập ký tự cần truyền vào thiết bị');
@@ -598,6 +600,17 @@ export const ncbLogin = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== SEAB ============== //
+
+export const hideDevOptions = async (data, setLoading) => {  
+  setLoading(true);    
+
+  console.log('1. Đang ẩn chế độ nhà phát triển...');
+  await actionHideDev({ action: 'hideDevOptions', device_id: data.device_id });
+
+  setLoading(false);
+};
+
 // ============== VAB ============== //
 
 export const vabLogin = async (data, setLoading) => {  
@@ -642,6 +655,17 @@ export const vabLogin = async (data, setLoading) => {
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+  setLoading(false);
+};
+
+// ============== VIB ============== //
+
+export const hideUSBDebugging = async (data, setLoading) => {  
+  setLoading(true);    
+
+  console.log('1. Đang ẩn USB Debugging...');
+  await actionHideUSB({ action: 'hideUSBDebugging', device_id: data.device_id });
 
   setLoading(false);
 };
