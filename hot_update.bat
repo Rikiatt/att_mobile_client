@@ -3,13 +3,13 @@ cd /d C:\att_mobile_client
 
 :: Xoá cache và modules
 rd /s /q node_modules
-npm cache clean --force
 
 :: Kéo source mới
 git config --global --add safe.directory "%cd%"
-git reset --hard
-git pull
+
+:: install lại xong mới pull về
 npm install
+git pull
 
 :: Khởi động lại
 pm2 delete ui
