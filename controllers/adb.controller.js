@@ -1,10 +1,10 @@
 const { listDevice, delADBImg, clickConfirmICB, inputPINVPB, inputPINMSB, inputPINBIDV, inputPINICB, 
   copyQRImages, scanQRICB, clickScanQRICB, 
-  clickConfirmScanFaceBIDV, clickScanQRMSB, clickScanQRNCB, clickLoginNAB, scanQRBAB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
+  clickConfirmScanFaceBIDV, clickScanQRMSB, clickScanQRNCB, clickLoginNAB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
   stopICB, startICB,  
   tapADB, inputADB, inputICB, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDevice, checkDeviceNCB, checkDeviceMSB, checkDeviceOCB, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
   connectTcpIp, disconnectTcpIp,
-  stopBIDV, startBIDV, closeAll, clickLoginACB, clickPasswordFieldEIB } = require('../functions/adb.function');
+  stopBIDV, startBIDV, closeAll, clickLoginHDB, clickLoginACB, clickPasswordFieldEIB } = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 const { trackingLoop } = require('../functions/bankStatus.function');
@@ -12,8 +12,8 @@ const { trackingLoop } = require('../functions/bankStatus.function');
 const mapAction = {    
   trackingLoop: trackingLoop,  
   closeAll: closeAll,
-  clickLoginACB: clickLoginACB,  
-  scanQRBAB: scanQRBAB,
+  clickLoginHDB: clickLoginHDB,
+  clickLoginACB: clickLoginACB,    
   clickScanQRNCB: clickScanQRNCB,   
   clickPasswordFieldEIB: clickPasswordFieldEIB,             
   delImg: delADBImg,

@@ -9,6 +9,7 @@ const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 
 const coordinatesLoginACB = require('../config/coordinatesLoginACB.json');
+const coordinatesLoginHDB = require('../config/coordinatesLoginHDB.json');
 const coordinatesLoginICB = require('../config/coordinatesLoginICB.json');
 const coordinatesScanQRACB = require('../config/coordinatesScanQRACB.json');
 const coordinatesScanQREIB = require('../config/coordinatesScanQREIB.json');
@@ -282,6 +283,12 @@ module.exports = {
     await delay(500);  
     await adbHelper.tapXY(device_id, ...coordinatesLoginACB['Field-Password']);        
 
+    return { status: 200, message: 'Success' };
+  },
+
+  clickLoginHDB: async ({ device_id }) => {    
+    const coordinatesLoginHDB = await loadCoordinatesLoginHDB(device_id);
+    await adbHelper.tapXY(device_id, ...coordinatesLoginHDB['Click-Login']);       
     return { status: 200, message: 'Success' };
   },
   
@@ -1001,6 +1008,19 @@ async function loadCoordinatesLoginACB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesLoginACB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesLoginHDB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+
+    const deviceCoordinates = coordinatesLoginHDB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesLoginHDB for device: ${error.message}`);
     throw error;
   }
 };

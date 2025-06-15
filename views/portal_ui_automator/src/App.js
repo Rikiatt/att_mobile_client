@@ -37,6 +37,7 @@ import { blue } from '@mui/material/colors';
 import HandleBIDV from './sections/bank_handle/HandleBIDV';
 import HandleTransfer from './sections/bank_handle/HandleTransfer';
 import HandleVCB from './sections/bank_handle/HandleVCB';
+import HandleHDB from './sections/bank_handle/HandleHDB';
 import HandleICB from './sections/bank_handle/HandleICB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleSEAB from './sections/bank_handle/HandleSEAB';
@@ -298,6 +299,7 @@ function App() {
                       <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />                                                                                        
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
+                      <HandleHDB item={item} X={X} Y={Y} setLoading={setLoading} />  
                       <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                       
                       <HandleSEAB item={item} X={X} Y={Y} setLoading={setLoading} />

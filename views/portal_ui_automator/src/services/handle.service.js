@@ -391,6 +391,33 @@ export const vcbNewGetOTP = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== HDB ============== //
+
+export const hdbLogin = async (data, setLoading) => {  
+  setLoading(true);    
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu HDB cần truyền vào thiết bị');
+  if (!text) return;
+
+  console.log('1. Đang đóng các app đang mở...');
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
+  await delay(500);  
+
+  console.log('2. Khởi động HDB...');
+  await actionBank({ action: 'startHDB', device_id: data.device_id });
+  await delay(5500);
+
+  console.log('3. Login...');
+  await actionADB({ action: 'clickLoginHDB', device_id: data.device_id });
+  await delay(500);
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(700);
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
+
+  setLoading(false);
+};
+
 // ============== ICB ============== //
 
 export const icbScanQR = async (data, setLoading) => {  
@@ -616,7 +643,7 @@ export const hideDevOptions = async (data, setLoading) => {
 export const vabLogin = async (data, setLoading) => {  
   setLoading(true);    
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu NCB cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu VAB cần truyền vào thiết bị');
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');

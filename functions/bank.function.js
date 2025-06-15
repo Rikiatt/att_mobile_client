@@ -259,7 +259,7 @@ const startTPB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
-startVPB = async ({ device_id }) => {
+const startVPB = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động VPB...`, __filename);
   await client.shell(device_id, 'monkey -p com.vnpay.vpbankonline -c android.intent.category.LAUNCHER 1');
   await delay(500);
@@ -1042,5 +1042,6 @@ module.exports = {
   bankTransfer,
   runBankTransfer,  
   startNCB,
-  startVAB
+  startVAB,
+  startHDB
 };
