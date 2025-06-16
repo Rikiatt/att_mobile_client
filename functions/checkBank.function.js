@@ -173,128 +173,133 @@ async function dumpOCRToLocal(device_id, localPath) {
 let ocrMatchedByDevice = {}; // Theo dõi trạng thái từng thiết bị
 let lastActivityByDevice = {}; // Theo dõi activity gần nhất của từng thiết bị
 
-//ok-ok2
+// ok - ok2 - ok3
 async function checkContentEIB(device_id, localPath) {
-    try {
-        const content = fs.readFileSync(localPath, "utf-8").trim();
+  try {
+    const content = fs.readFileSync(localPath, "utf-8").trim();
 
-        const currentActivity = content.match(/package=\"(.*?)\"/);
-        const currentPackage = currentActivity ? currentActivity[1] : "";
-        const lastActivity = lastActivityByDevice[device_id] || "";
+    const currentActivity = content.match(/package=\"(.*?)\"/);
+    const currentPackage = currentActivity ? currentActivity[1] : "";
+    const lastActivity = lastActivityByDevice[device_id] || "";
 
-        if (ocrMatchedByDevice[device_id] && currentPackage !== lastActivity && currentPackage.includes("com.vnpay.EximBankOmni")) {
-            Logger.log(0, 'Đã chuyển màn hình sau khi OCR trùng. Reset ocrMatchedByDevice.', __filename);
-            ocrMatchedByDevice[device_id] = false;
+    if (ocrMatchedByDevice[device_id] && currentPackage !== lastActivity && currentPackage.includes("com.vnpay.EximBankOmni")) {
+      Logger.log(0, 'Đã chuyển màn hình sau khi OCR trùng. Reset ocrMatchedByDevice.', __filename);
+      ocrMatchedByDevice[device_id] = false;
+    }
+
+    lastActivityByDevice[device_id] = currentPackage;
+
+    const hasCollapsingToolbarMenuTransfer = content.includes('resource-id="com.vnpay.EximBankOmni:id/collapsingToolbarMenuTransfer"');
+    const hasBtnMenuTransferAddForm = content.includes('resource-id="com.vnpay.EximBankOmni:id/btnMenuTransferAddForm"');
+
+    if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
+      const screenName = "Chuyển tiền (XML)";
+
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`
+      });
+
+      await stopEIB({ device_id });
+      await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`);
+      Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`, __filename);
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`,
+        filePath: localPath
+      });
+      return;
+    }
+
+    const hasConfirmScreenHint =
+      content.includes('resource-id="com.vnpay.EximBankOmni:id/swSaveBene"') &&
+      content.includes('class="android.widget.Switch"')
+
+    if (hasConfirmScreenHint && !ocrMatchedByDevice[device_id]) {
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
+
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        Logger.log(0, 'Quét xong QR. Tiến hành OCR...', __filename);
+
+        const remoteScreenshot = '/sdcard/screenshot.png';
+        const screenshotDir = 'C:/att_mobile_client/resource/screenshot';
+        const localScreenshot = path.join(screenshotDir, `${device_id}_screen.png`);
+
+        await client.shell(device_id, 'input swipe 540 1777 540 1444 300').then(adb.util.readAll);
+        await client.shell(device_id, `screencap -p ${remoteScreenshot}`).then(adb.util.readAll);
+
+        const transferStream = await client.pull(device_id, remoteScreenshot);
+        const writeStream = fs.createWriteStream(localScreenshot);
+        await new Promise((resolve, reject) => {
+          transferStream.pipe(writeStream);
+          transferStream.on('end', resolve);
+          transferStream.on('error', reject);
+        });
+
+        const { data: { text } } = await Tesseract.recognize(localScreenshot, 'vie+eng');
+        Logger.log(0, `log text from OCR:\n${text}`, __filename);
+
+        const { ocrAccount, ocrAmount } = extractOCRFieldsFromLinesEIB(text);
+
+        const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+        const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+
+        let expectedAccount = "";
+        let expectedAmount = "";
+        const vietqrUrl = jsonData.data?.vietqr_url || "";
+        const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
+        if (match) {
+          expectedAccount = normalizeText(match[1]);
+          expectedAmount = normalizeText(match[2]);
         }
 
-        lastActivityByDevice[device_id] = currentPackage;
+        Logger.log(0, `OCR Account Number: ${ocrAccount} | length: ${ocrAccount.length}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount} | length: ${expectedAccount.length}`, __filename);
+        Logger.log(0, `OCR Amount: ${ocrAmount} | length: ${ocrAmount.length}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount} | length: ${expectedAmount.length}`, __filename);
 
-        const hasCollapsingToolbarMenuTransfer = content.includes('resource-id="com.vnpay.EximBankOmni:id/collapsingToolbarMenuTransfer"');
-        const hasBtnMenuTransferAddForm = content.includes('resource-id="com.vnpay.EximBankOmni:id/btnMenuTransferAddForm"');
+        const ocrHasAccount =
+          ocrAccount === expectedAccount ||
+          (ocrAccount.length === expectedAccount.length + 1 && ocrAccount.startsWith(expectedAccount));
 
-        if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
-            const screenName = "Chuyển tiền (XML)";
+        const ocrHasAmount = ocrAmount === expectedAmount;
 
-            notifier.emit('multiple-banks-detected', {
-              device_id,
-              message: `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`
-            });
+        if (!(ocrHasAccount && ocrHasAmount)) {
+          const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-            await stopEIB({ device_id });
-            await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`);
-            Logger.log(1, `Cảnh báo! Phát hiện thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`, __filename);
-            await saveAlertToDatabase({
-                timestamp: new Date().toISOString(),
-                reason: `Thao tác thủ công ở màn hình: ${screenName} (id: ${device_id})`,
-                filePath: localPath
-            });
-            return;
-        }
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: `OCR KHÁC info-qr về số tài khoản hoặc số tiền`
+          });
 
-        const hasConfirmScreenHint =
-            content.includes('resource-id="com.vnpay.EximBankOmni:id/swSaveBene"') &&
-            content.includes('class="android.widget.Switch"')
-
-        if (hasConfirmScreenHint && !ocrMatchedByDevice[device_id]) {
-            Logger.log(0, 'Quét xong QR. Tiến hành OCR...', __filename);
-
-            const remoteScreenshot = '/sdcard/screenshot.png';
-            const screenshotDir = 'C:/att_mobile_client/resource/screenshot';
-            const localScreenshot = path.join(screenshotDir, `${device_id}_screen.png`);
-
-            await client.shell(device_id, 'input swipe 540 1777 540 1444 300').then(adb.util.readAll);
-            await client.shell(device_id, `screencap -p ${remoteScreenshot}`).then(adb.util.readAll);
-
-            const transferStream = await client.pull(device_id, remoteScreenshot);
-            const writeStream = fs.createWriteStream(localScreenshot);
-            await new Promise((resolve, reject) => {
-                transferStream.pipe(writeStream);
-                transferStream.on('end', resolve);
-                transferStream.on('error', reject);
-            });
-
-            const { data: { text } } = await Tesseract.recognize(localScreenshot, 'vie+eng');
-            Logger.log(0, `log text from OCR:\n${text}`, __filename);
-
-            const { ocrAccount, ocrAmount } = extractOCRFieldsFromLinesEIB(text);
-
-            const jsonPath = "C:/att_mobile_client/database/info-qr.json";
-            const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-
-            let expectedAccount = "";
-            let expectedAmount = "";
-            const vietqrUrl = jsonData.data?.vietqr_url || "";
-            const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
-            if (match) {
-                expectedAccount = normalizeText(match[1]);
-                expectedAmount = normalizeText(match[2]);
-            }
-
-            Logger.log(0, `OCR Account Number: ${ocrAccount} | length: ${ocrAccount.length}`, __filename);
-            Logger.log(0, `INFO Account Number: ${expectedAccount} | length: ${expectedAccount.length}`, __filename);
-            Logger.log(0, `OCR Amount: ${ocrAmount} | length: ${ocrAmount.length}`, __filename);
-            Logger.log(0, `INFO Amount: ${expectedAmount} | length: ${expectedAmount.length}`, __filename);
-
-            const ocrHasAccount =
-                ocrAccount === expectedAccount ||
-                (ocrAccount.length === expectedAccount.length + 1 && ocrAccount.startsWith(expectedAccount));
-
-            const ocrHasAmount = ocrAmount === expectedAmount;
-
-            if (!(ocrHasAccount && ocrHasAmount)) {
-                const reason = "OCR KHÁC info-qr về số tài khoản hoặc số tiền";
-                Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
-
-                notifier.emit('multiple-banks-detected', {
-                  device_id,
-                  message: `OCR KHÁC info-qr về số tài khoản hoặc số tiền`
-                });
-
-                await stopEIB({ device_id });
-                await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
-                Logger.log(1, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`, __filename);
-                await saveAlertToDatabase({
-                    timestamp: new Date().toISOString(),
-                    reason: `${reason} (id: ${device_id})`,
-                    filePath: localScreenshot
-                });
-                return;
-            } else {
-                ocrMatchedByDevice[device_id] = true;
-                Logger.log(0, 'OCR TRÙNG info-qr về account_number và amount. OCR ảnh .', __filename);
-            }
+          await stopEIB({ device_id });
+          await sendTelegramAlert(telegramToken, chatId, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`);
+          Logger.log(1, `Cảnh báo! ${reason} tại màn hình xác nhận giao dịch (id: ${device_id})`, __filename);
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id: ${device_id})`,
+            filePath: localScreenshot
+          });
+          return;
+        } else {
+          ocrMatchedByDevice[device_id] = true;
+          Logger.log(0, 'OCR TRÙNG info-qr về account_number và amount. OCR ảnh .', __filename);
+          }
         }
 
         if (!content.includes("com.vnpay.EximBankOmni")) {
-            ocrMatchedByDevice[device_id] = false;
+          ocrMatchedByDevice[device_id] = false;
         }
-
+      }
     } catch (error) {
         console.error("checkContentEIB got an error:", error.message);
     }
 }
 
-//khong lam duoc do ICB khong dump
+// khong dump dc
 async function checkContentICB(device_id, localPath) {
     try {
         const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -527,6 +532,7 @@ async function checkContentACB(device_id, localPath) {
   }
 }
 
+// khong dump dc
 async function checkContentBIDV(device_id, localPath) {
   Logger.log(0, 'BIDV không hỗ trợ dump.', __filename);
 }
@@ -535,7 +541,8 @@ async function checkContentBIDV(device_id, localPath) {
 async function checkContentNCB(device_id, localPath) {
   Logger.log(0, 'NCB không hỗ trợ dump.', __filename);
 }
-// ok - ok2
+
+// ok - ok2 - ok3
 async function checkContentOCB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -554,11 +561,11 @@ async function checkContentOCB(device_id, localPath) {
 
     // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
     const screenKeywords = [
-        {
-            name: "Chuyển tiền",
-            vi: ["Chuyển tiền", "Trong OCB", "Ngân hàng khác", "Đến số thẻ", "Xem tất cả", "Chuyển gần đây"],
-            en: ["Transfer money", "Within OCB", "Interbank", "To card number", "See all", "Recent transferred"]
-        }
+      {
+        name: "Chuyển tiền",
+        vi: ["Chuyển tiền", "Trong OCB", "Ngân hàng khác", "Đến số thẻ", "Xem tất cả", "Chuyển gần đây"],
+        en: ["Transfer money", "Within OCB", "Interbank", "To card number", "See all", "Recent transferred"]
+      }
     ];
 
     for (const screen of screenKeywords) {
@@ -609,50 +616,57 @@ async function checkContentOCB(device_id, localPath) {
     }    
 
     if (detectText.length >= 3) {
-      const accountNumber = (detectText[0] || "").replace(/\s/g, "");
-      const amount = (detectText[1] || "").replace(/[.,\s]/g, "");
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
 
-      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `OCR Amount: ${amount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        const accountNumber = (detectText[0] || "").replace(/\s/g, "");
+        const amount = (detectText[1] || "").replace(/[.,\s]/g, "");
 
-      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `OCR Amount: ${amount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-      if (!isMatch) {
-        const reason = `OCB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
-        
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: `OCB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
-        });
+        const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
 
-        await stopOCB({ device_id });
+        if (!isMatch) {
+          const reason = `OCB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+          
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: `OCB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
+          });
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+          await stopOCB({ device_id });
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+          );
 
-        return;
-      } else {        
-        Logger.log(0, 'OCB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-        return;
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {        
+          Logger.log(0, 'OCB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+          return;
+        }
       }
     } 
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
-//ok -ok2
+
+// ok - ok2 - ok3
 async function checkContentNAB(device_id, localPath) {
   try {
     // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
@@ -727,31 +741,37 @@ async function checkContentNAB(device_id, localPath) {
           Logger.log(0, `OCR Amount: ${ocrAmount}`, __filename);
           Logger.log(0, `INFO Amount: ${expectedAmt}`, __filename);
 
-          if (ocrAccount !== expectedAcc || ocrAmount !== expectedAmt) {
-            await stopNAB({ device_id });
+          const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+          const qrDevice = infoQR?.data?.device_id || '';
+          const qrType = infoQR?.type || '';
 
-            await sendTelegramAlert(
-              telegramToken,
-              chatId,
-              `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
-            );
+          if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+            if (ocrAccount !== expectedAcc || ocrAmount !== expectedAmt) {
+              await stopNAB({ device_id });
 
-            Logger.log(1, `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`, __filename);
+              await sendTelegramAlert(
+                telegramToken,
+                chatId,
+                `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
+              );
 
-            notifier.emit('multiple-banks-detected', {
-              device_id,
-              message: `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
-            });
+              Logger.log(1, `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`, __filename);
 
-            await saveAlertToDatabase({
-              timestamp: new Date().toISOString(),
-              reason: `Lệch QR NAB: account_number hoặc amount không khớp (${device_id})`,
-              filePath: localPath
-            });
-            return;
-          } else {
-            Logger.log(0, 'OCR khớp info-qr.json, tiếp tục theo dõi...', __filename);
-          }
+              notifier.emit('multiple-banks-detected', {
+                device_id,
+                message: `Cảnh báo! Lệch QR NAB ở màn hình "${screen.name}" (${device_id})\nTài khoản: ${ocrAccount}, Số tiền: ${ocrAmount}`
+              });
+
+              await saveAlertToDatabase({
+                timestamp: new Date().toISOString(),
+                reason: `Lệch QR NAB: account_number hoặc amount không khớp (${device_id})`,
+                filePath: localPath
+              });
+              return;
+            } else {
+              Logger.log(0, 'OCR khớp info-qr.json, tiếp tục theo dõi...', __filename);
+            }
+          }          
         }
       }
     }
@@ -759,7 +779,8 @@ async function checkContentNAB(device_id, localPath) {
     console.error("checkContentNAB got an error:", error.message);
   }
 }
-//ok- ok2
+
+// ok - ok2 - ok3
 async function checkContentSHBSAHA(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -815,70 +836,77 @@ async function checkContentSHBSAHA(device_id, localPath) {
     ].every(keyword => content.includes(keyword));
 
     if (hasTransferForm) {
-      const accountMatch = content.match(/text="Số tài khoản"[\s\S]*?text="(\d{6,})"/);
-      const amountMatch = content.match(/text="Số tiền"[\s\S]*?text="([0-9,\. ]+ VND)"/);
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
 
-      const xmlAccount = accountMatch ? accountMatch[1].replace(/\D/g, '') : "";
-      const xmlAmount = amountMatch ? amountMatch[1].replace(/[^0-9]/g, '') : "";
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        const accountMatch = content.match(/text="Số tài khoản"[\s\S]*?text="(\d{6,})"/);
+        const amountMatch = content.match(/text="Số tiền"[\s\S]*?text="([0-9,\. ]+ VND)"/);
 
-      const jsonPath = "C:/att_mobile_client/database/info-qr.json";
-      const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        const xmlAccount = accountMatch ? accountMatch[1].replace(/\D/g, '') : "";
+        const xmlAmount = amountMatch ? amountMatch[1].replace(/[^0-9]/g, '') : "";
 
-      let expectedAccount = "";
-      let expectedAmount = "";
-      const vietqrUrl = jsonData.data?.vietqr_url || "";
-      const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
-      if (match) {
-        expectedAccount = match[1].replace(/\D/g, "");
-        expectedAmount = match[2].replace(/\D/g, "");
-      }
+        const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+        const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
-      Logger.log(0, `XML Account Number: ${xmlAccount}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `XML Amount: ${xmlAmount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+        let expectedAccount = "";
+        let expectedAmount = "";
+        const vietqrUrl = jsonData.data?.vietqr_url || "";
+        const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
+        if (match) {
+          expectedAccount = match[1].replace(/\D/g, "");
+          expectedAmount = match[2].replace(/\D/g, "");
+        }
 
-      const xmlHasAccount =
-        xmlAccount === expectedAccount ||
-        (xmlAccount.length === expectedAccount.length + 1 && xmlAccount.startsWith(expectedAccount));
+        Logger.log(0, `XML Account Number: ${xmlAccount}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `XML Amount: ${xmlAmount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-      const xmlHasAmount = xmlAmount === expectedAmount;
+        const xmlHasAccount =
+          xmlAccount === expectedAccount ||
+          (xmlAccount.length === expectedAccount.length + 1 && xmlAccount.startsWith(expectedAccount));
 
-      if (!(xmlHasAccount && xmlHasAmount)) {
-        const reason = "XML KHÁC info-qr về số tài khoản hoặc số tiền";
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+        const xmlHasAmount = xmlAmount === expectedAmount;
 
-        await stopSHBSAHA({ device_id });
+        if (!(xmlHasAccount && xmlHasAmount)) {
+          const reason = "XML KHÁC info-qr về số tài khoản hoặc số tiền";
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: `XML KHÁC info-qr về số tài khoản hoặc số tiền`
-        });
+          await stopSHBSAHA({ device_id });
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`
-        );
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: `XML KHÁC info-qr về số tài khoản hoặc số tiền`
+          });
 
-        Logger.log(1, `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`, __filename);
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`
+          );
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
+          Logger.log(1, `Cảnh báo! ${reason} với SHB SAHA (id thiết bị: ${device_id})`, __filename);
 
-        return;
-      } else {
-        Logger.log(0, 'XML TRÙNG info-qr về account_number và amount.', __filename);
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {
+          Logger.log(0, 'XML TRÙNG info-qr về account_number và amount.', __filename);
+        }
       }
     }
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
-// ok tieng viet - ok tieng viet2
+
+// ok tieng viet - ok tieng viet2 - ok tieng viet3
 async function checkContentTPB(device_id, localPath) {
   try {
     const xml = fs.readFileSync(localPath, "utf-8").trim();
@@ -899,58 +927,64 @@ async function checkContentTPB(device_id, localPath) {
       xml.includes('resource-id="com.tpb.mb.gprsandroid:id/btn_continue"');
 
     if (isTransferToScreen) {
-      // Lấy account_number trước dấu phẩy từ node tv_number
-      let accountNumber = "";
-      const accMatch = xml.match(/text="([^"]+?),[^"]*?"\s+resource-id="com\.tpb\.mb\.gprsandroid:id\/tv_number"/);
-      if (accMatch) {
-        accountNumber = accMatch[1].replace(/\s/g, "").trim();
-      }
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
 
-      // Lấy amount từ node edtInputMoney
-      let amount = "";
-      const amtMatch = xml.match(/text="([^"]+)"\s+resource-id="com\.tpb\.mb\.gprsandroid:id\/edtInputMoney"/);
-      if (amtMatch) {
-        amount = amtMatch[1].replace(/[,\s]/g, "").trim();
-      }
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        // Lấy account_number trước dấu phẩy từ node tv_number
+        let accountNumber = "";
+        const accMatch = xml.match(/text="([^"]+?),[^"]*?"\s+resource-id="com\.tpb\.mb\.gprsandroid:id\/tv_number"/);
+        if (accMatch) {
+          accountNumber = accMatch[1].replace(/\s/g, "").trim();
+        }
 
-      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `OCR Amount: ${amount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+        // Lấy amount từ node edtInputMoney
+        let amount = "";
+        const amtMatch = xml.match(/text="([^"]+)"\s+resource-id="com\.tpb\.mb\.gprsandroid:id\/edtInputMoney"/);
+        if (amtMatch) {
+          amount = amtMatch[1].replace(/[,\s]/g, "").trim();
+        }
 
-      const isMatch =
-        accountNumber === expectedAccount &&
-        amount === expectedAmount;
+        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `OCR Amount: ${amount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-      if (!isMatch) {
-        const reason = `TPB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+        const isMatch =
+          accountNumber === expectedAccount &&
+          amount === expectedAmount;
 
-        await stopTPB({ device_id });
+        if (!isMatch) {
+          const reason = `TPB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: reason
-        });
+          await stopTPB({ device_id });
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: reason
+          });
 
-        Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+          );
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
+          Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
 
-        return;
-      } else {
-        Logger.log(0, 'TPB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-        return;
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {
+          Logger.log(0, 'TPB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+          return;
+        }
       }
     }
 
@@ -1005,11 +1039,13 @@ async function checkContentTPB(device_id, localPath) {
     console.error("checkContentTPB got an error:", error.message);
   }
 }
+
 // ok tieng viet - ok tieng viet2 - VPB khong on dinh de dump xml :((
 async function checkContentVPB(device_id, localPath) {
   Logger.log(0, 'VPB không còn hỗ trợ dump.', __filename);
 }
-//ok - ok2
+
+// ok - ok2 - ok3
 async function checkContentMB(device_id, localPath) {
   try {
     const xml = fs.readFileSync(localPath, "utf-8").trim();
@@ -1071,60 +1107,68 @@ async function checkContentMB(device_id, localPath) {
                                xml.includes('resource-id="MInput_c3a8b456-f94f-471b-bca1-dc2cb3662035"');
 
     if (isTransferToScreen) {
-      let accountNumber = "";
-      const accMatch = xml.match(/text="([\d\s]+)"\s+resource-id="MInput_c3a8b456-f94f-471b-bca1-dc2cb3662035"/);
-      if (accMatch) {
-        accountNumber = accMatch[1].replace(/\s/g, "");
-      }
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
 
-      let amount = "";
-      const amtMatch = xml.match(/text="([\d\s,.]+)"\s+resource-id="MInput_0a67f0a6-0cc5-483a-8e23-9300e20ab1ac"/);
-      if (amtMatch) {
-        amount = amtMatch[1].replace(/[^\d]/g, "").trim();
-      }
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        let accountNumber = "";
+        const accMatch = xml.match(/text="([\d\s]+)"\s+resource-id="MInput_c3a8b456-f94f-471b-bca1-dc2cb3662035"/);
+        if (accMatch) {
+          accountNumber = accMatch[1].replace(/\s/g, "");
+        }
 
-      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `OCR Amount: ${amount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+        let amount = "";
+        const amtMatch = xml.match(/text="([\d\s,.]+)"\s+resource-id="MInput_0a67f0a6-0cc5-483a-8e23-9300e20ab1ac"/);
+        if (amtMatch) {
+          amount = amtMatch[1].replace(/[^\d]/g, "").trim();
+        }
 
-      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `OCR Amount: ${amount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-      if (!isMatch) {
-        const reason = `MB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+        const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
 
-        await stopMB({ device_id });
+        if (!isMatch) {
+          const reason = `MB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: reason
-        });
+          await stopMB({ device_id });
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: reason
+          });
 
-        Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+          );
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
+          Logger.log(1, `Cảnh báo! ${reason} (id thiết bị: ${device_id})`, __filename);
 
-        return;
-      } else {
-        Logger.log(0, 'MB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-        return;
-      }
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {
+          Logger.log(0, 'MB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+          return;
+        }
+      }    
     }
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
+
+// khong dump dc
 async function checkContentMSB(device_id, localPath) {
   try {
     const xml = fs.readFileSync(localPath, "utf-8").trim();
@@ -1240,7 +1284,8 @@ async function checkContentMSB(device_id, localPath) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
-//ok -ok2
+
+// ok - ok2 - ok3
 async function checkContentSEAB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1306,43 +1351,49 @@ async function checkContentSEAB(device_id, localPath) {
     }
 
     if (detectText.length >= 2) {
-      const accountNumber = detectText[0].replace(/\s/g, "");
-      const amount = detectText[1].replace(/[.,\s]/g, "");
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
 
-      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `OCR Amount: ${amount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        const accountNumber = detectText[0].replace(/\s/g, "");
+        const amount = detectText[1].replace(/[.,\s]/g, "");
 
-      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `OCR Amount: ${amount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-      if (!isMatch) {
-        const reason = `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+        const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
 
-        await stopSEAB({ device_id });
+        if (!isMatch) {
+          const reason = `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: reason
-        });
+          await stopSEAB({ device_id });
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: reason
+          });
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+          );
 
-        return;
-      } else {
-        Logger.log(0, 'SEAB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-        return;
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {
+          Logger.log(0, 'SEAB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+          return;
+        }
       }
     }
 
@@ -1351,6 +1402,7 @@ async function checkContentSEAB(device_id, localPath) {
   }
 }
 
+// chua check QR
 async function checkContentSTB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1419,6 +1471,7 @@ async function checkContentSTB(device_id, localPath) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
+
 // chua lam// chua lam// chua lam
 async function checkContentTCB(device_id, localPath) {
   try {
@@ -1468,6 +1521,7 @@ async function checkContentTCB(device_id, localPath) {
     }
 }
 
+// khong dump dc
 async function checkContentVCB(device_id, localPath) { // chua lam
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1570,6 +1624,7 @@ async function checkContentVCB(device_id, localPath) { // chua lam
   }
 }
 
+// chua lam
 async function checkContentVIB(device_id, localPath) { // chua lam
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1628,46 +1683,51 @@ async function checkContentVIB(device_id, localPath) { // chua lam
     }
 
     if (detectText.length >= 2) {
-      const accountNumber = detectText[0].replace(/\s/g, "");
-      const amount = detectText[1].replace(/[.,\s]/g, "");
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
 
-      Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-      Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-      Logger.log(0, `OCR Amount: ${amount}`, __filename);
-      Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+        const accountNumber = detectText[0].replace(/\s/g, "");
+        const amount = detectText[1].replace(/[.,\s]/g, "");
 
-      const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `OCR Amount: ${amount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-      if (!isMatch) {
-        const reason = `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-        Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+        const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
 
-        await stopSEAB({ device_id });
+        if (!isMatch) {
+          const reason = `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
-        });
+          await stopSEAB({ device_id });
 
-        await sendTelegramAlert(
-          telegramToken,
-          chatId,
-          `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-        );
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
+          });
 
-        await saveAlertToDatabase({
-          timestamp: new Date().toISOString(),
-          reason: `${reason} (id thiết bị: ${device_id})`,
-          filePath: localPath
-        });
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
+          );
 
-        return;
-      } else {
-        Logger.log(0, 'VIB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-        return;
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {
+          Logger.log(0, 'VIB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+          return;
+        }
       }
     }
-
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
