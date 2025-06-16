@@ -394,7 +394,28 @@ export const vcbNewGetOTP = async (data, setLoading) => {
 // ============== HDB ============== //
 
 export const hdbLogin = async (data, setLoading) => {  
-  setLoading(true);    
+  setLoading(true); 
+  
+  const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
+
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ HDBank", "Vui lòng chuyển ngân hàng sang điện thoại khác");          
+  }  
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");      
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+	  return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+  }
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu HDB cần truyền vào thiết bị');
   if (!text) return;
@@ -642,6 +663,27 @@ export const hideDevOptions = async (data, setLoading) => {
 
 export const vabLogin = async (data, setLoading) => {  
   setLoading(true);    
+
+  const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
+
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ VietABank", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");      
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+	  return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+  }
 
   const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu VAB cần truyền vào thiết bị');
   if (!text) return;
