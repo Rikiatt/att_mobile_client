@@ -1,7 +1,7 @@
 import {
   Accordion, AccordionDetails, AccordionSummary, Stack, Tooltip,
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Select, MenuItem, FormControl, InputLabel, Box
+  TextField, Select, MenuItem, FormControl, InputLabel, Box, Autocomplete
 } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
@@ -101,7 +101,7 @@ const HandleTestQR = ({ item }) => {
         <DialogTitle textAlign="center">Tạo QR chuyển tiền</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <FormControl fullWidth variant="outlined" size="small">
+            {/* <FormControl fullWidth variant="outlined" size="small">
               <InputLabel id="bank-entry-label">NGÂN HÀNG - SỐ TÀI KHOẢN</InputLabel>
               <Select
                 labelId="bank-entry-label"
@@ -119,7 +119,31 @@ const HandleTestQR = ({ item }) => {
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
+            <Autocomplete
+              fullWidth
+              size="small"
+              options={bankData}
+              getOptionLabel={(option) =>
+                `${option["NGÂN HÀNG"]} - ${option["SỐ TÀI KHOẢN"]} - ${option["TÊN CHỦ THẺ"] || ''}`.trim()
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Tìm kiếm ngân hàng / số TK / tên chủ thẻ" variant="outlined" />
+              )}
+              filterOptions={(options, { inputValue }) => {
+                const keyword = inputValue.toLowerCase().trim();
+                return options.filter(opt =>
+                  opt["NGÂN HÀNG"]?.toLowerCase().includes(keyword) ||
+                  opt["SỐ TÀI KHOẢN"]?.toLowerCase().includes(keyword) ||
+                  opt["TÊN CHỦ THẺ"]?.toLowerCase().includes(keyword)
+                );
+              }}
+              onChange={(event, value) => {
+                if (value) {
+                  setSelectedEntry(`${value["NGÂN HÀNG"]}|${value["SỐ TÀI KHOẢN"]}`);
+                }
+              }}
+            />
             <TextField
               fullWidth
               label="Số tiền"

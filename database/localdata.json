@@ -1,1 +1,9 @@
-{}
+{
+  "att": {
+    "endpoint": "https://device.attapps.net",
+    "site": "ui_manual/connect/shbet",
+    "connected": true,
+    "message": "Success"
+  },
+  "connect": "att"
+}
