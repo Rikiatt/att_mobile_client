@@ -41,7 +41,7 @@ if (siteToChatIdMap[validSite]) {
 }
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
+const { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
   stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
 } 
 = require('../functions/checkBank.function');
@@ -346,6 +346,83 @@ async function trackEIB ( { device_id } ) {
       return await trackingLoop({ device_id });
     }
   }
+  return { status: 200, message: 'Success' };
+}
+
+async function trackHDB({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+  Logger.log(1, 'Đang theo dõi HDB...', __filename);
+
+  let running = await isHDBRunning( { device_id } );
+
+  if (!running) {      
+    return await trackingLoop({ device_id });
+  }
+
+  await clearTempFile( { device_id } );
+
+  while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
+    const qrType = infoQR?.type || '';
+    // Check send.bank nếu là org hoặc att (test bỏ qua)
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'hdb' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là HDB nhưng QR yêu cầu bank khác (${qrBank}), stop HDB.`
+      });      
+
+      await stopHDB({ device_id }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là HDB nhưng QR yêu cầu bank khác (${qrBank}), stop HDB (id: ${device_id})`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
+
+      return await trackingLoop({ device_id });
+    } 
+    else {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+      await dumpXmlToLocal(device_id, localPath);
+      await checkContentHDB(device_id, localPath);
+    }    
+
+    running = await isHDBRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });    
+    if (currentApp === null) {      
+      // Nếu isHDBRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        Logger.log(0, 'HDB process đã tắt. Dừng theo dõi.', __filename);
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'com.vnpay.hdbank') {
+      Logger.log(0, `HDB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }    
+
+    if (!running) {
+      Logger.log(0, 'HDB đã tắt. Dừng theo dõi.', __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+
   return { status: 200, message: 'Success' };
 }
 
@@ -722,6 +799,82 @@ async function trackTPB ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
+async function trackVIETBANK({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+  Logger.log(1, 'Đang theo dõi VIETBANK...', __filename);
+
+  let running = await isVIETBANKRunning( { device_id } );
+
+  if (!running) {      
+    return await trackingLoop({ device_id });
+  }
+
+  await clearTempFile( { device_id } );
+
+  while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'com.vnpay.vietbank' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là VIETBANK nhưng QR yêu cầu bank khác (${qrBank}), stop VIETBANK.`
+      });      
+
+      await stopVIETBANK({ device_id }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là VIETBANK nhưng QR yêu cầu bank khác (${qrBank}), stop VIETBANK (id: ${device_id})`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
+
+      return await trackingLoop({ device_id });
+    } 
+    else {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+      await dumpXmlToLocal(device_id, localPath);
+      await checkContentVIETBANK(device_id, localPath);
+    }    
+
+    running = await isVIETBANKRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });    
+    if (currentApp === null) {      
+      // Nếu isVIETBANKRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        Logger.log(0, 'VIETBANK process đã tắt. Dừng theo dõi.', __filename);
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'com.vnpay.vietbank') {
+      Logger.log(0, `VIETBANK không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }    
+
+    if (!running) {
+      Logger.log(0, 'VIETBANK đã tắt. Dừng theo dõi.', __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+
+  return { status: 200, message: 'Success' };
+}
+
 async function trackVPB ( { device_id } ) {    
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -870,6 +1023,82 @@ async function trackMB({ device_id }) {
 
     if (!running) {
       Logger.log(0, 'MB đã tắt. Dừng theo dõi.', __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+
+  return { status: 200, message: 'Success' };
+}
+
+async function trackBAB({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+  Logger.log(1, 'Đang theo dõi BAB...', __filename);
+
+  let running = await isBABRunning( { device_id } );
+
+  if (!running) {      
+    return await trackingLoop({ device_id });
+  }
+
+  await clearTempFile( { device_id } );
+
+  while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'bab' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là BAB nhưng QR yêu cầu bank khác (${qrBank}), stop BAB.`
+      });      
+
+      await stopBAB({ device_id }); 
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là BAB nhưng QR yêu cầu bank khác (${qrBank}), stop BAB (id: ${device_id})`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
+
+      return await trackingLoop({ device_id });
+    } 
+    else {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+      await dumpXmlToLocal(device_id, localPath);
+      await checkContentBAB(device_id, localPath);
+    }    
+
+    running = await isBABRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });    
+    if (currentApp === null) {      
+      // Nếu isBABRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        Logger.log(0, 'BAB process đã tắt. Dừng theo dõi.', __filename);
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'babzzzzzzzzzz') { // chua lam
+      Logger.log(0, `BAB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }    
+
+    if (!running) {
+      Logger.log(0, 'BAB đã tắt. Dừng theo dõi.', __filename);
       await clearTempFile({ device_id });
       return await trackingLoop({ device_id });
     }
@@ -1029,6 +1258,7 @@ async function trackVCB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// chua xong
 async function trackVIB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1097,6 +1327,83 @@ async function trackVIB({ device_id }) {
 
     if (!running) {
       Logger.log(0, 'VIB đã tắt. Dừng theo dõi.', __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+
+  return { status: 200, message: 'Success' };
+}
+
+// chua xong
+async function trackVIKKI({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+  Logger.log(1, 'Đang theo dõi VIKKI...', __filename);
+
+  let running = await isVIKKIRunning( { device_id } );
+
+  if (!running) {      
+    return await trackingLoop({ device_id });
+  }
+
+  await clearTempFile( { device_id } );
+
+  while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'vikki' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là VIKKI nhưng QR yêu cầu bank khác (${qrBank}), stop VIKKI.`
+      });
+
+      await stopVIKKI({ device_id });   
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là VIKKI nhưng QR yêu cầu bank khác (${qrBank}), stop VIKKI (id: ${device_id})`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
+
+      return await trackingLoop({ device_id });
+    } 
+    else {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+      await dumpXmlToLocal(device_id, localPath);
+      await checkContentVIKKI(device_id, localPath);
+    }    
+
+    running = await isVIKKIRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });
+    if (currentApp === null) {      
+      // Nếu isVIKKIRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        Logger.log(0, 'VIKKI process đã tắt. Dừng theo dõi.', __filename);
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'zzzzzzzzzzzzzzzzzzzzzzz') { // chua lam
+      Logger.log(0, `VIKKI không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+
+    if (!running) {
+      Logger.log(0, 'VIKKI đã tắt. Dừng theo dõi.', __filename);
       await clearTempFile({ device_id });
       return await trackingLoop({ device_id });
     }
@@ -1256,6 +1563,7 @@ async function trackICB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// chua lam
 async function trackPVCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1332,6 +1640,7 @@ async function trackPVCB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// chua lam
 async function trackLPBANK({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1408,6 +1717,7 @@ async function trackLPBANK({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// chua lam
 async function trackMSB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1638,8 +1948,10 @@ async function trackTCB({ device_id }) {
 const trackFunctions = {
   ABB: trackABB,
   ACB: trackACB,
+  BAB: trackBAB,
   BIDV: trackBIDV,
   EIB: trackEIB,
+  HDB: trackHDB,
   ICB: trackICB,
   LPBANK: trackLPBANK,
   MB: trackMB,
@@ -1654,7 +1966,9 @@ const trackFunctions = {
   TCB: trackTCB,
   TPB: trackTPB,
   VCB: trackVCB,
+  VIETBANK: trackVIETBANK,
   VIB: trackVIB,  
+  VIKKI: trackVIKKI,
   VPB: trackVPB
 };
 
@@ -1838,16 +2152,22 @@ async function isBIDVRunning( { device_id } ) {
   }
 }
 
+async function isHDBRunning( { device_id } ) {             
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vnpay.hdbank');    
+
+    return isInTopStack;
+  } catch (error) {
+    console.error("Error checking HDB app status via activity stack:", error.message);
+    return false;
+  }
+}
+
 async function isVCBRunning( { device_id } ) {             
-  // try {
-  //   const output = await client.shell(device_id, 'pidof com.VCB')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking VCB app status:", error.message);
-  //   return false;
-  // }
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)

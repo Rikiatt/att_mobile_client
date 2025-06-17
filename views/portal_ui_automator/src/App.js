@@ -41,7 +41,7 @@ import HandleHDB from './sections/bank_handle/HandleHDB';
 import HandleICB from './sections/bank_handle/HandleICB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleSEAB from './sections/bank_handle/HandleSEAB';
-import HandleVAB from './sections/bank_handle/HandleVAB';
+import HandleVIETBANK from './sections/bank_handle/HandleVIETBANK';
 import HandleVIB from './sections/bank_handle/HandleVIB';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
@@ -303,7 +303,7 @@ function App() {
                       <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
                       <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                       
                       <HandleSEAB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleVAB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleVIETBANK item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVIB item={item} X={X} Y={Y} setLoading={setLoading} />
                     </CardContent>
                   </Card>

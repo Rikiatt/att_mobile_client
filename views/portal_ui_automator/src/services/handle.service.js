@@ -659,9 +659,9 @@ export const hideDevOptions = async (data, setLoading) => {
   setLoading(false);
 };
 
-// ============== VAB ============== //
+// ============== VIETBANK ============== //
 
-export const vabLogin = async (data, setLoading) => {  
+export const vietbankLogin = async (data, setLoading) => {  
   setLoading(true);    
 
   const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id }); 
@@ -670,7 +670,7 @@ export const vabLogin = async (data, setLoading) => {
   const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
 
   if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
-    return swalNotification("error", "Thiết bị chưa hỗ trợ VietABank", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    return swalNotification("error", "Thiết bị chưa hỗ trợ VIETBANK", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
   }  
 
   if (checkFontScale.status === 500 || checkFontScale.valid === false) {
@@ -685,15 +685,15 @@ export const vabLogin = async (data, setLoading) => {
 	  return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
   }
 
-  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu VAB cần truyền vào thiết bị');
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu VIETBANK cần truyền vào thiết bị');
   if (!text) return;
 
   console.log('1. Đang đóng các app đang mở...');
   await actionADB({ action: 'closeAll', device_id: data.device_id }); 
   await delay(500);  
 
-  console.log('2. Khởi động VAB...');
-  await actionBank({ action: 'startVAB', device_id: data.device_id });
+  console.log('2. Khởi động VIETBANK...');
+  await actionBank({ action: 'startVIETBANK', device_id: data.device_id });
   await delay(8000);
 
   console.log('3. Login...');  

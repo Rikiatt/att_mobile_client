@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { vabLogin } from '../../services/handle.service';
+import { vietbankLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleVAB = ({ item, X, Y, setLoading }) => {
+const HandleVIETBANK = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,7 +19,7 @@ const HandleVAB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>VAB</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>VIETBANK</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>          
           <Tooltip title="Nhập mật khẩu và đăng nhập" arrow>
@@ -28,7 +28,7 @@ const HandleVAB = ({ item, X, Y, setLoading }) => {
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => vabLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => vietbankLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>
@@ -39,4 +39,4 @@ const HandleVAB = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleVAB;
+export default HandleVIETBANK;

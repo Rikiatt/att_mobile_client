@@ -537,6 +537,10 @@ async function checkContentBIDV(device_id, localPath) {
   Logger.log(0, 'BIDV không hỗ trợ dump.', __filename);
 }
 
+async function checkContentHDB(device_id, localPath) {
+  Logger.log(0, 'HDB chưa làm.', __filename);
+}
+
 // chua lam duoc, OCR chan lam - chua lam duoc, OCR chan lam 2
 async function checkContentNCB(device_id, localPath) {
   Logger.log(0, 'NCB không hỗ trợ dump.', __filename);
@@ -1038,6 +1042,10 @@ async function checkContentTPB(device_id, localPath) {
   } catch (error) {
     console.error("checkContentTPB got an error:", error.message);
   }
+}
+
+async function checkContentVIETBANK(device_id, localPath) {
+  Logger.log(0, 'VIETBANK chưa làm.', __filename);
 }
 
 // ok tieng viet - ok tieng viet2 - VPB khong on dinh de dump xml :((
@@ -1625,112 +1633,28 @@ async function checkContentVCB(device_id, localPath) { // chua lam
 }
 
 // chua lam
-async function checkContentVIB(device_id, localPath) { // chua lam
-  try {
-    const content = fs.readFileSync(localPath, "utf-8").trim();
+async function checkContentVIB(device_id, localPath) {
+  Logger.log(0, 'VIB chưa làm.', __filename);
+}
 
-    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
-    const jsonData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-    const expectedAccount = jsonData.data?.account_number?.replace(/\s/g, "") || "";
-    const expectedAmount = jsonData.data?.amount?.toString().replace(/,/g, "").replace(/\./g, "") || "";
+// chua lam
+async function checkContentBAB(device_id, localPath) {
+  Logger.log(0, 'BAB chưa làm.', __filename);
+}
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
-    const screenKeywords = [
-      {
-        name: "Chuyển tiền",
-        vi: ["Chuyển tiền", "Tới số tài khoản của tôi", "Tới số tài khoản khác", "Tới số điện thoại", "Tới số thẻ", "Quét mã QR", "Chuyển tiền định kỳ", "Gửi tiền mừng", "Chuyển tiền quốc tế"],
-	      en: ["Transfer", "Transfer to my account", "Transfer to other account", "Transfer to phone number", "Transfer to card number", "Scan QR code", "Periodic money transfer", "Transfer lucky money", "Chuyển tiền quốc tế"]
-      }
-    ];
+// chua lam
+async function checkContentLPBANK(device_id, localPath) {
+  Logger.log(0, 'LPBANK chưa làm.', __filename);
+}
 
-    for (const screen of screenKeywords) {
-      if (
-            screen.vi.every(kw => content.includes(kw)) ||
-            screen.en.every(kw => content.includes(kw))
-        ) {
-            Logger.log(1, `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
-            Logger.log(0, 'Đóng app VIB', __filename);
+// chua lam
+async function checkContentVIKKI(device_id, localPath) {
+  Logger.log(0, 'VIKKI chưa làm.', __filename);
+}
 
-            notifier.emit('multiple-banks-detected', {
-              device_id,
-              message: `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            });
-
-            await stopSEAB({ device_id });
-
-            await sendTelegramAlert(
-              telegramToken,
-              chatId,
-              `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-            );         
-
-            await saveAlertToDatabase({
-              timestamp: new Date().toISOString(),
-              reason: `Phát hiện có thao tác thủ công khi xuất với VIB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-              filePath: localPath
-            });
-
-            return;
-        }
-    }
-
-    // --- TH2: Check QR thông qua edittext ---
-    const regex = /text="([^"]+)"\s+resource-id="vn\.com\.seabank\.mb1:id\/edittext"/g;
-    const detectText = [];
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      detectText.push(match[1]);
-    }
-
-    if (detectText.length >= 2) {
-      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));          
-      const qrDevice = infoQR?.data?.device_id || '';
-      const qrType = infoQR?.type || '';
-
-      if ( device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
-        const accountNumber = detectText[0].replace(/\s/g, "");
-        const amount = detectText[1].replace(/[.,\s]/g, "");
-
-        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-        Logger.log(0, `OCR Amount: ${amount}`, __filename);
-        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
-
-        const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
-
-        if (!isMatch) {
-          const reason = `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
-
-          await stopSEAB({ device_id });
-
-          notifier.emit('multiple-banks-detected', {
-            device_id,
-            message: `VIB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`
-          });
-
-          await sendTelegramAlert(
-            telegramToken,
-            chatId,
-            `Cảnh báo! ${reason} (id thiết bị: ${device_id})`
-          );
-
-          await saveAlertToDatabase({
-            timestamp: new Date().toISOString(),
-            reason: `${reason} (id thiết bị: ${device_id})`,
-            filePath: localPath
-          });
-
-          return;
-        } else {
-          Logger.log(0, 'VIB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-          return;
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Lỗi xử lý XML:", error.message);
-  }
+// chua lam
+async function checkContentPVCB(device_id, localPath) {
+  Logger.log(0, 'PVCB chưa làm.', __filename);
 }
 
 // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng OCB
@@ -1913,6 +1837,6 @@ async function stopTCB ({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-module.exports = { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
+module.exports = { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB,
   stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
 }

@@ -1,5 +1,5 @@
 import { postActionHideUSB } from '../api/hideUSB';
-import { swalToast } from '../utils/swal';
+import { swalToast, swalNotification } from '../utils/swal';
 
 export async function actionHideUSB(data) {
   try {
@@ -10,6 +10,15 @@ export async function actionHideUSB(data) {
     }
 
     swalToast('success', 'Ẩn USB Debugging thành công');
+
+    setTimeout(() => {
+      swalNotification(
+        'info',
+        'Lưu ý',
+        'Chú ý 20% PIN sẽ phải mang đi sạc!'
+      );
+    }, 800);
+    
     return result;
   } catch (error) {
     console.log(error);
