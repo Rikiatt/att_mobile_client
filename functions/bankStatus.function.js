@@ -1919,7 +1919,7 @@ async function trackTCB({ device_id }) {
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentTCB(device_id, localPath);
     }
 
