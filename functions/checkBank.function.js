@@ -1482,51 +1482,7 @@ async function checkContentSTB(device_id, localPath) {
 
 // chua lam// chua lam// chua lam
 async function checkContentTCB(device_id, localPath) {
-  try {
-        const content = fs.readFileSync(localPath, "utf-8").trim();
-
-        const screenKeywords = [{
-            name: "Chuyển tiền",
-            vi: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ", "Tên ngân hàng", "Số tài khoản nhận", "Số tiền cần chuyển"],
-            en: ["Chuyển tiền", "Số điện thoại", "Số tài khoản", "Số thẻ", "Tên ngân hàng", "Số tài khoản nhận", "Số tiền cần chuyển"]
-        }];
-        const exceptionKeyword = "Tên người nhận";
-
-        for (const screen of screenKeywords) {
-            const viMatch = screen.vi.every(kw => content.includes(kw));
-            const enMatch = screen.en.every(kw => content.includes(kw));
-            const isException = content.includes(exceptionKeyword);
-
-            if ((viMatch || enMatch) && !isException) {
-                Logger.log(1, `Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name}`, __filename);
-                Logger.log(0, 'Đóng app TCB', __filename);
-
-                await stopTCB({ device_id });
-
-                notifier.emit('multiple-banks-detected', {
-                  device_id,
-                  message: `Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name}`
-                });
-
-                await sendTelegramAlert(
-                    telegramToken,
-                    chatId,
-                    `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
-                );
-                Logger.log(1, `Cảnh báo! Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`, __filename);
-
-                await saveAlertToDatabase({
-                    timestamp: new Date().toISOString(),
-                    reason: `Phát hiện có thao tác thủ công khi xuất với TCB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`,
-                    filePath: localPath
-                });
-
-                return;
-            }
-        }      
-    } catch (error) {
-        console.error("Lỗi xử lý XML:", error.message);
-    }
+  Logger.log(0, 'TCB chưa làm.', __filename);
 }
 
 // khong dump dc

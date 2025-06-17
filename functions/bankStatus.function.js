@@ -46,6 +46,7 @@ const { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, che
 } 
 = require('../functions/checkBank.function');
 const { Logger } = require('../config/require.config');
+const { run } = require('node-cmd');
 
 async function clearTempFile( { device_id } ) {
   try {                
@@ -356,6 +357,8 @@ async function trackHDB({ device_id }) {
 
   let running = await isHDBRunning( { device_id } );
 
+  console.log('log running:',running);
+
   if (!running) {      
     return await trackingLoop({ device_id });
   }
@@ -363,6 +366,7 @@ async function trackHDB({ device_id }) {
   await clearTempFile( { device_id } );
 
   while (running) {
+    console.log('aloooooooooooooooooooooooooooo');
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
@@ -1570,6 +1574,7 @@ async function trackPVCB({ device_id }) {
   Logger.log(1, 'PVCB không có thiết bị để nghiên cứu nên không hỗ trợ theo dõi...', __filename);
 
   let running = await isPVCBRunning( { device_id } );
+  console.log('log running in trackPVCB:', running);
 
   if (!running) {      
     return await trackingLoop({ device_id });
@@ -1974,7 +1979,8 @@ const trackFunctions = {
 
 async function trackingLoop({ device_id }) {
   while (true) {    
-    const bankName = await checkRunningBanks({ device_id });    
+    const bankName = await checkRunningBanks({ device_id });  
+    console.log('log bankName:', bankName);  
 
     if (bankName) {
       const trackFunction = trackFunctions[bankName];
@@ -2008,45 +2014,69 @@ async function checkDeviceSemiAuto({ device_id }) {
   }
 }
 
-async function isACBRunning( { device_id } ) {             
+async function isACBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('mobile.acb.com.vn');    
+    const packageName = 'mobile.acb.com.vn';
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
 
-    return isInTopStack;
+    if (isForeground) return true;
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    return isInTaskList;
   } catch (error) {
     console.error("Error checking ACB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isEIBRunning({ device_id }) {                 
+async function isEIBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vnpay.EximBankOmni');    
+    const packageName = 'com.vnpay.EximBankOmni';
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
 
-    return isInTopStack;
+    if (isForeground) return true;
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    return isInTaskList;
   } catch (error) {
     console.error("Error checking EIB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isOCBRunning({ device_id }) {                 
+async function isOCBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.com.ocb.awe');    
+    const packageName = 'vn.com.ocb.awe';
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
 
-    return isInTopStack;
+    if (isForeground) return true;
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    return isInTaskList;
   } catch (error) {
     console.error("Error checking OCB app status via activity stack:", error.message);
     return false;
@@ -2059,318 +2089,564 @@ async function isNCBRunning({ device_id }) {
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.ncb.bank');    
+    const packageName = 'com.ncb.bank';
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
 
-    return isInTopStack;
+    if (isForeground) return true;
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    return isInTaskList;
   } catch (error) {
     console.error("Error checking NCB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isNABRunning( { device_id } ) {      
+async function isNABRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('ops.namabank.com.vn');    
+    const packageName = 'ops.namabank.com.vn';
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
 
-    return isInTopStack;
+    if (isForeground) return true;
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    return isInTaskList;
   } catch (error) {
     console.error("Error checking NAB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isTPBRunning( { device_id } ) {      
+// async function isPVCBRunning({ device_id }) {
+//   try {
+//     const output = await client.shell(device_id, 'dumpsys activity activities')
+//       .then(adb.util.readAll)
+//       .then(buffer => buffer.toString());
+
+//     console.log('log in isPVCBRunning');
+
+//     const packageName = 'com.pvcombank.retail';
+//     const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+
+//     if (isForeground) return true;
+
+//     const escaped = packageName.replace(/\./g, '\\.');
+//     const isInTaskList =
+//       new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+//       new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+//     return isInTaskList;
+//   } catch (error) {
+//     console.error("Error checking PVCB app status via activity stack:", error.message);
+//     return false;
+//   }
+// }
+
+async function isPVCBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.tpb.mb.gprsandroid');    
+    const packageName = 'com.pvcombank.retail';
 
-    return isInTopStack;
+    // Ghi log để debug
+    console.log('Checking PVCB - package:', packageName);
+    console.log('Resumed Activity contains:', output.includes('mResumedActivity'));
+    console.log('Package name found in output:', output.includes(packageName));
+
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) {
+      console.log('✅ PVCB is in foreground');
+      return true;
+    }
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    console.log('✅ PVCB is in background:', isInTaskList);
+
+    return isInTaskList;
+  } catch (error) {
+    console.error('❌ Error checking PVCB app status:', error.message);
+    return false;
+  }
+}
+
+async function isTPBRunning({ device_id }) {
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const packageName = 'com.tpb.mb.gprsandroid';
+
+    // 1. App đang ở trạng thái foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. App đang background (có trong task/activity record)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. App không còn chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking TPB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isVPBRunning( { device_id } ) {      
+async function isVPBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vnpay.vpbankonline');    
+    const packageName = 'com.vnpay.vpbankonline';
 
-    return isInTopStack;
+    // 1. Kiểm tra nếu app đang foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra nếu app đang background (vẫn có trong task/activity stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không còn chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking VPB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isMBRunning( { device_id } ) {             
+async function isMBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.mbmobile');    
+    const packageName = 'com.mbmobile';
 
-    return isInTopStack;
+    // 1. Kiểm tra foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (còn tồn tại trong task stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không còn chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking MB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isBIDVRunning( { device_id } ) {             
-  // try {
-  //   const output = await client.shell(device_id, 'pidof com.vnpay.bidv')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking BIDV app status:", error.message);
-  //   return false;
-  // }
+async function isBIDVRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vnpay.bidv');    
+    const packageName = 'com.vnpay.bidv';
 
-    return isInTopStack;
+    // 1. Kiểm tra nếu app đang foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra nếu app đang background (vẫn có trong task/activity stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking BIDV app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isHDBRunning( { device_id } ) {             
+async function isHDBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vnpay.hdbank');    
+    // 1. Check foreground (resumed)
+    const isForeground = output.includes('mResumedActivity') && output.includes('com.vnpay.hdbank');
+    if (isForeground) return true;
 
-    return isInTopStack;
+    // 2. Check background (still exists in task list)
+    const isInTaskList = /ActivityRecord\{.*com\.vnpay\.hdbank/.test(output) || /TaskRecord\{.*com\.vnpay\.hdbank/.test(output);
+    if (isInTaskList) return true;
+
+    // 3. Not running
+    return false;
+
   } catch (error) {
     console.error("Error checking HDB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isVCBRunning( { device_id } ) {             
+async function isVCBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.VCB');    
+    const packageName = 'com.VCB';
 
-    return isInTopStack;
+    // 1. Check foreground (mResumedActivity)
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Check background (TaskRecord hoặc ActivityRecord có app)
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${packageName.replace(/\./g, '\\.')}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${packageName.replace(/\./g, '\\.')}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. App không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking VCB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isVIBRunning( { device_id } ) {             
+async function isVIKKIRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vib.myvib2');    
+    // 1. Check if app is in foreground (resumed)
+    const isForeground = output.includes('mResumedActivity') && output.includes('com.finx.vikki');
+    if (isForeground) return true;
 
-    return isInTopStack;
+    // 2. Check if app is in background (exists in task or activity records)
+    const isInTaskList =
+      /ActivityRecord\{.*com\.finx\.vikki/.test(output) ||
+      /TaskRecord\{.*com\.finx\.vikki/.test(output);
+    if (isInTaskList) return true;
+
+    // 3. App is not running
+    return false;
+
+  } catch (error) {
+    console.error("Error checking VIKKI app status via activity stack:", error.message);
+    return false;
+  }
+}
+
+async function isVIETBANKRunning({ device_id }) {
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const packageName = 'com.vnpay.vietbank';
+
+    // 1. Kiểm tra foreground (RESUMED)
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (vẫn còn trong task stack)
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${packageName.replace(/\./g, '\\.')}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${packageName.replace(/\./g, '\\.')}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không còn chạy
+    return false;
+
+  } catch (error) {
+    console.error("Error checking VIETBANK app status via activity stack:", error.message);
+    return false;
+  }
+}
+
+async function isVIBRunning({ device_id }) {
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const packageName = 'com.vib.myvib2';
+
+    // 1. Kiểm tra foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (task hoặc activity records)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking VIB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isSEABRunning( { device_id } ) {             
-  // try {
-  //   const output = await client.shell(device_id, 'pidof vn.com.seabank.mb1')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking SEAB app status:", error.message);
-  //   return false;
-  // }
+async function isSEABRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.com.seabank.mb1');    
+    const packageName = 'vn.com.seabank.mb1';
 
-    return isInTopStack;
+    // 1. Check nếu app đang foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Check nếu app đang background (còn trong task stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. App đã bị kill
+    return false;
+
   } catch (error) {
     console.error("Error checking SEAB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isSHBSAHARunning( { device_id } ) {             
+async function isSHBSAHARunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.shb.saha.mbanking');    
+    const packageName = 'vn.shb.saha.mbanking';
 
-    return isInTopStack;
+    // 1. Kiểm tra foreground (mResumedActivity)
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (TaskRecord hoặc ActivityRecord)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking SHB SAHA app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isICBRunning( { device_id } ) {             
+async function isICBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.vietinbank.ipay');    
+    const packageName = 'com.vietinbank.ipay';
 
-    return isInTopStack;
+    // 1. Kiểm tra foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (còn trong task stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking ICB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isPVCBRunning( { device_id } ) {             
-  // try {
-  //   const output = await client.shell(device_id, 'pidof com.pvcombank.retail')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking PVCB app status:", error.message);
-  //   return false;
-  // }
+async function isLPBANKRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.pvcombank.retail');    
+    const packageName = 'vn.com.lpb.lienviet24h';
 
-    return isInTopStack;
-  } catch (error) {
-    console.error("Error checking PVCB app status via activity stack:", error.message);
+    // 1. Check nếu app đang foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Check nếu app đang background (vẫn có mặt trong task/activity stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. App không còn chạy
     return false;
-  }
-}
 
-async function isLPBANKRunning( { device_id } ) {             
-  // try {
-  //   const output = await client.shell(device_id, 'pidof vn.com.lpb.lienviet24h')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking LPBANK app status:", error.message);
-  //   return false;
-  // }
-  try {
-    const output = await client.shell(device_id, 'dumpsys activity activities')
-      .then(adb.util.readAll)
-      .then(buffer => buffer.toString());
-
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.com.lpb.lienviet24h');    
-
-    return isInTopStack;
   } catch (error) {
     console.error("Error checking LPBANK app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isABBRunning( { device_id } ) {         
-  // try {
-  //   const output = await client.shell(device_id, 'pidof vn.abbank.retail')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking ABB app status:", error.message);
-  //   return false;
-  // }
+async function isABBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.abbank.retail');    
+    const packageName = 'vn.abbank.retail';
 
-    return isInTopStack;
+    // 1. Kiểm tra nếu app đang ở trạng thái foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra nếu app còn tồn tại trong task stack (background)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking ABB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isMSBRunning( { device_id } ) {                  
-  // try {
-  //   const output = await client.shell(device_id, 'pidof vn.com.msb.smartBanking.corp')
-  //     .then(adb.util.readAll)
-  //     .then(buffer => buffer.toString().trim());                
-  //   if (output !== '') return true;        
-  // } catch (error) {
-  //   console.error("Error checking MSB app status:", error.message);
-  //   return false;
-  // }
+async function isMSBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.com.msb.smartBanking.corp');    
+    const packageName = 'vn.com.msb.smartBanking.corp';
 
-    return isInTopStack;
+    // 1. Kiểm tra nếu app đang foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra nếu app đang background (vẫn còn trong task stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không còn chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking MSB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isSTBRunning( { device_id } ) {                  
+async function isSTBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('com.sacombank.ewallet');    
+    const packageName = 'com.sacombank.ewallet';
 
-    return isInTopStack;
+    // 1. Kiểm tra nếu app đang foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra nếu app còn trong task/activity (background)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
-    console.error("Error checking Sacom app status via activity stack:", error.message);
+    console.error("Error checking STB app status via activity stack:", error.message);
     return false;
   }
 }
 
-async function isTCBRunning( { device_id } ) {                  
+async function isTCBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
-    const isInTopStack = output.includes('TaskRecord') && output.includes('vn.com.techcombank.bb.app');    
+    const packageName = 'vn.com.techcombank.bb.app';
 
-    return isInTopStack;
+    // 1. Kiểm tra nếu app đang ở foreground
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra nếu app đang background (còn tồn tại trong activity/task stack)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
   } catch (error) {
     console.error("Error checking TCB app status via activity stack:", error.message);
     return false;
@@ -2398,24 +2674,29 @@ const bankApps = [
 ];
 
 async function getRunningBankApps({ device_id }) {
-  const runningBanks = [];  
-  
-  try {    
-    // const output = await client.shell(device_id, `dumpsys activity activities`)
-    const output = await client.shell(device_id, `dumpsys window windows`)
+  const runningBanks = [];
+
+  try {
+    const output = await client.shell(device_id, `dumpsys activity activities`)
       .then(adb.util.readAll)
-      .then(buffer => buffer.toString());         
-      
+      .then(buffer => buffer.toString());
+
     for (const app of bankApps) {
-      if (output.includes(app.package)) {
-        Logger.log(0, `\n ${app.name} đang mở trong activity stack.`, __filename);
+      const isForeground = output.includes('mResumedActivity') && output.includes(app.package);
+      const isInTaskList =
+        new RegExp(`ActivityRecord\\{.*${app.package.replace(/\./g, '\\.')}`).test(output) ||
+        new RegExp(`TaskRecord\\{.*${app.package.replace(/\./g, '\\.')}`).test(output);
+
+      if (isForeground || isInTaskList) {
+        Logger.log(0, `\n ${app.name} đang chạy (${isForeground ? 'foreground' : 'background'}).`, __filename);
         runningBanks.push(app.name);
-      } 
-    }  
+      }
+    }
+
   } catch (err) {
-    console.error(`Error checking current foreground app:`, err.message);
-  }  
-      
+    console.error(`Error checking current running bank apps:`, err.message);
+  }
+
   return runningBanks;
 }
 
