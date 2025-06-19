@@ -198,15 +198,6 @@ function extractNodesMSB(obj) {
   return { bin, account_number, amount };
 }
 
-async function stopMSB ({ device_id }) {    
-  await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
-  console.log('Đã dừng app MSB');
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-const { sendTelegramAlert, saveAlertToDatabase } = require('../functions/alert.function');
-
 module.exports = {
   closeAll: async ({ device_id }) => {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);

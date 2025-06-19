@@ -33,9 +33,7 @@ module.exports = {
     const validSites =
       ['shbet', 'new88'].includes(siteOrg) ||
       ['shbet', 'new88'].includes(siteAtt) ||
-      (['jun88cmd', 'jun88k36'].includes(siteOrg));
-      
-    console.log('log validSites:', validSites);
+      (['jun88cmd', 'jun88k36'].includes(siteOrg));          
 
     if (validSites) {      
       await trackingLoop({ device_id });

@@ -72,6 +72,6 @@ setInterval(() => {
     pingBot.sendChatAction(defaultChatId, 'typing')
         .then(() => console.log('[watchdog] Ping sent to Telegram'))
         .catch(err => console.error('[watchdog] Ping failed:', err.message));
-}, 1000 * 60 * 5); // 5 phút
+}, 1000 * 60 * 5);
 
 module.exports = { getChatId, sendTelegramAlert, saveAlertToDatabase };

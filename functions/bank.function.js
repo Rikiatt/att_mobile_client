@@ -224,6 +224,13 @@ const startACB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const startBAB = async ({ device_id }) => {    
+  Logger.log(0, `Đang khởi động BẮC Á BANK...`, __filename);
+  await client.shell(device_id, 'monkey -p com.bab.retailUAT -c android.intent.category.LAUNCHER 1');  
+  await delay(200);
+  return { status: 200, message: 'Success' };
+};
+
 const startEIB = async ({ device_id }) => {      
   Logger.log(0, `Đang khởi động EIB...`, __filename);
   await client.shell(device_id, 'monkey -p com.vnpay.EximBankOmni -c android.intent.category.LAUNCHER 1');  
@@ -280,8 +287,8 @@ const startNCB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
-const startVAB = async ({ device_id }) => {
-  Logger.log(0, `Đang khởi động VAB...`, __filename);
+const startVIETBANK = async ({ device_id }) => {
+  Logger.log(0, `Đang khởi động VIETBANK...`, __filename);
   await client.shell(device_id, 'monkey -p com.vnpay.vietbank -c android.intent.category.LAUNCHER 1');
   await delay(500);
   return { status: 200, message: 'Success' };
@@ -318,6 +325,7 @@ const mapStopBank = {
 const mapStartBank = {
   abb: startABB,
   acb: startACB,
+  bab: startBAB,
   eib: startEIB,
   hdb: startHDB,
   ocb: startOCB,
@@ -1041,7 +1049,7 @@ const bankTransfer = async ({ device_id, bank }) => {
 module.exports = {
   bankTransfer,
   runBankTransfer,  
-  startNCB,
-  startVAB,
-  startHDB
+  startNCB,  
+  startHDB,
+  startVIETBANK
 };

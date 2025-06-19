@@ -41,7 +41,7 @@ if (siteToChatIdMap[validSite]) {
 }
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentABB, checkContentACB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
+const { checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
   stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
 } 
 = require('../functions/checkBank.function');
@@ -126,6 +126,7 @@ async function getCurrentForegroundApp({ device_id }) {
   }
 }
 
+// ok
 async function trackABB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);  
@@ -169,7 +170,7 @@ async function trackABB({ device_id }) {
     else {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentABB(device_id, localPath);
     }
 
@@ -200,6 +201,7 @@ async function trackABB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackACB ( { device_id } ) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -276,6 +278,7 @@ async function trackACB ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackEIB ( { device_id } ) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -350,14 +353,13 @@ async function trackEIB ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackHDB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
   Logger.log(1, 'Đang theo dõi HDB...', __filename);
 
-  let running = await isHDBRunning( { device_id } );
-
-  console.log('log running:',running);
+  let running = await isHDBRunning( { device_id } );  
 
   if (!running) {      
     return await trackingLoop({ device_id });
@@ -365,8 +367,7 @@ async function trackHDB({ device_id }) {
 
   await clearTempFile( { device_id } );
 
-  while (running) {
-    console.log('aloooooooooooooooooooooooooooo');
+  while (running) {    
     const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
     const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
     const qrDevice = infoQR?.data?.device_id || '';
@@ -430,6 +431,7 @@ async function trackHDB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackOCB ( { device_id } ) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1080,7 +1082,7 @@ async function trackBAB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentBAB(device_id, localPath);
     }    
 
@@ -1095,7 +1097,7 @@ async function trackBAB({ device_id }) {
         return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'babzzzzzzzzzz') { // chua lam
+    } else if (currentApp !== 'com.bab.retailUAT') { // chua lam
       Logger.log(0, `BAB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
       await clearTempFile({ device_id });
       return await trackingLoop({ device_id });
@@ -1111,6 +1113,7 @@ async function trackBAB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackBIDV({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1156,7 +1159,7 @@ async function trackBIDV({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentBIDV(device_id, localPath);
     }    
 
@@ -1187,6 +1190,7 @@ async function trackBIDV({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackVCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1231,7 +1235,7 @@ async function trackVCB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentVCB(device_id, localPath);
     }    
 
@@ -1262,7 +1266,7 @@ async function trackVCB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua xong
+// ok
 async function trackVIB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1308,7 +1312,7 @@ async function trackVIB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentVIB(device_id, localPath);
     }    
 
@@ -1385,7 +1389,7 @@ async function trackVIKKI({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentVIKKI(device_id, localPath);
     }    
 
@@ -1416,6 +1420,7 @@ async function trackVIKKI({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackSEAB({ device_id }) {      
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1491,6 +1496,7 @@ async function trackSEAB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackICB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1536,7 +1542,7 @@ async function trackICB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentICB(device_id, localPath);
     }
 
@@ -1614,7 +1620,7 @@ async function trackPVCB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentPVCB(device_id, localPath);
     }
 
@@ -1691,7 +1697,7 @@ async function trackLPBANK({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentLPBANK(device_id, localPath);
     }
 
@@ -1722,7 +1728,7 @@ async function trackLPBANK({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua lam
+// ok
 async function trackMSB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1768,7 +1774,7 @@ async function trackMSB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
       await checkContentMSB(device_id, localPath);
     }
 
@@ -1799,6 +1805,7 @@ async function trackMSB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackSTB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1875,6 +1882,7 @@ async function trackSTB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// ok
 async function trackTCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1979,8 +1987,7 @@ const trackFunctions = {
 
 async function trackingLoop({ device_id }) {
   while (true) {    
-    const bankName = await checkRunningBanks({ device_id });  
-    console.log('log bankName:', bankName);  
+    const bankName = await checkRunningBanks({ device_id });      
 
     if (bankName) {
       const trackFunction = trackFunctions[bankName];
@@ -2129,63 +2136,63 @@ async function isNABRunning({ device_id }) {
   }
 }
 
-// async function isPVCBRunning({ device_id }) {
-//   try {
-//     const output = await client.shell(device_id, 'dumpsys activity activities')
-//       .then(adb.util.readAll)
-//       .then(buffer => buffer.toString());
-
-//     console.log('log in isPVCBRunning');
-
-//     const packageName = 'com.pvcombank.retail';
-//     const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
-
-//     if (isForeground) return true;
-
-//     const escaped = packageName.replace(/\./g, '\\.');
-//     const isInTaskList =
-//       new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
-//       new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
-
-//     return isInTaskList;
-//   } catch (error) {
-//     console.error("Error checking PVCB app status via activity stack:", error.message);
-//     return false;
-//   }
-// }
-
 async function isPVCBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
       .then(adb.util.readAll)
       .then(buffer => buffer.toString());
 
+    console.log('log in isPVCBRunning');
+
     const packageName = 'com.pvcombank.retail';
-
-    // Ghi log để debug
-    console.log('Checking PVCB - package:', packageName);
-    console.log('Resumed Activity contains:', output.includes('mResumedActivity'));
-    console.log('Package name found in output:', output.includes(packageName));
-
     const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
-    if (isForeground) {
-      console.log('✅ PVCB is in foreground');
-      return true;
-    }
+
+    if (isForeground) return true;
 
     const escaped = packageName.replace(/\./g, '\\.');
     const isInTaskList =
       new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
       new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
 
-    console.log('✅ PVCB is in background:', isInTaskList);
-
     return isInTaskList;
   } catch (error) {
-    console.error('❌ Error checking PVCB app status:', error.message);
+    console.error("Error checking PVCB app status via activity stack:", error.message);
     return false;
   }
 }
+
+// async function isPVCBRunning({ device_id }) {
+//   try {
+//     const output = await client.shell(device_id, 'dumpsys activity activities')
+//       .then(adb.util.readAll)
+//       .then(buffer => buffer.toString());
+
+//     const packageName = 'com.pvcombank.retail';
+
+//     // Ghi log để debug
+//     console.log('Checking PVCB - package:', packageName);
+//     console.log('Resumed Activity contains:', output.includes('mResumedActivity'));
+//     console.log('Package name found in output:', output.includes(packageName));
+
+//     const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+//     if (isForeground) {
+//       console.log('✅ PVCB is in foreground');
+//       return true;
+//     }
+
+//     const escaped = packageName.replace(/\./g, '\\.');
+//     const isInTaskList =
+//       new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+//       new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+//     console.log('PVCB is in background:', isInTaskList);
+
+//     return isInTaskList;
+//   } catch (error) {
+//     console.error('❌ Error checking PVCB app status:', error.message);
+//     return false;
+//   }
+// }
 
 async function isTPBRunning({ device_id }) {
   try {
@@ -2656,13 +2663,16 @@ async function isTCBRunning({ device_id }) {
 const bankApps = [
   { name: "ABB", package: "vn.abbank.retail" },
   { name: "ACB", package: "mobile.acb.com.vn" },
+  { name: "BAB", package: "com.bab.retailUAT" }, //com.vn.dongabank
   { name: "BIDV", package: "com.vnpay.bidv" },
   { name: "EIB", package: "com.vnpay.EximBankOmni" },
+  { name: "HDB", package: "com.vnpay.hdbank" },
   { name: "ICB", package: "com.vietinbank.ipay" },
   { name: "MB", package: "com.mbmobile" },
   { name: "NAB", package: "ops.namabank.com.vn" },
   { name: "NCB", package: "com.ncb.bank" },
   { name: "OCB", package: "vn.com.ocb.awe" },
+  { name: "PVCB", package: "com.pvcombank.retail" },
   { name: "SEAB", package: "vn.com.seabank.mb1" },
   { name: "SHB", package: "vn.shb.saha.mbanking" },
   { name: "STB", package: "com.sacombank.ewallet" },
@@ -2670,16 +2680,17 @@ const bankApps = [
   { name: "TPB", package: "com.tpb.mb.gprsandroid" },
   { name: "VCB", package: "com.VCB" },
   { name: "VIB", package: "com.vib.myvib2" },
+  { name: "VIETBANK", package: "com.vnpay.vietbank" },
   { name: "VPB", package: "com.vnpay.vpbankonline" }
 ];
 
 async function getRunningBankApps({ device_id }) {
-  const runningBanks = [];
+  const runningBanks = [];  
 
   try {
     const output = await client.shell(device_id, `dumpsys activity activities`)
       .then(adb.util.readAll)
-      .then(buffer => buffer.toString());
+      .then(buffer => buffer.toString());    
 
     for (const app of bankApps) {
       const isForeground = output.includes('mResumedActivity') && output.includes(app.package);
@@ -2695,37 +2706,28 @@ async function getRunningBankApps({ device_id }) {
 
   } catch (err) {
     console.error(`Error checking current running bank apps:`, err.message);
-  }
+  }  
 
   return runningBanks;
 }
 
-// async function checkRunningBanks({ device_id }) {
-//   const runningBanks = await getRunningBankApps({ device_id });      
-
-//   if (runningBanks.length > 1) {            
-//     await closeAll({ device_id });
-//     Logger.log(1, 'VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)', __filename);
-//     return null;
-//   }
-
-//   return runningBanks[0] || null;
-// }
-
 async function checkRunningBanks({ device_id }) {
   const runningBanks = await getRunningBankApps({ device_id });
   console.log('log runningBanks:', runningBanks);
-  if (runningBanks.length > 1) {
-    await closeAll({ device_id });
-    Logger.log(1, 'VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)', __filename);
-    // Phát thông báo realtime
-    notifier.emit('multiple-banks-detected', {
-      device_id,
-      message: 'VUI LÒNG THỰC HIỆN LẠI (1 BANK)'
-    });
 
-    return null;
-  }
+  // Hidden không dùng nữa tại vì xnk không biết dùng
+
+  // if (runningBanks.length > 1) {
+  //   await closeAll({ device_id });
+  //   Logger.log(1, 'VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)', __filename);
+  //   // Phát thông báo realtime
+  //   notifier.emit('multiple-banks-detected', {
+  //     device_id,
+  //     message: 'VUI LÒNG THỰC HIỆN LẠI (1 BANK)'
+  //   });
+
+  //   return null;
+  // }
 
   return runningBanks[0] || null;
 }
