@@ -27,8 +27,8 @@ import {
   Save,
   Edit,
   Cancel,
-  Launch,  
-  WifiTetheringError  
+  Launch,
+  WifiTetheringError
 } from '@mui/icons-material';
 
 import { swalToast, swalQuestionConfirm, swalInputText, swalInfoChooseText, swalQuestionConfirms } from './utils/swal';
@@ -50,36 +50,21 @@ import HandleShowQR from './sections/HandleShowQR';
 import HandleTestQR from './sections/HandleTestQR';
 import Swal from 'sweetalert2';
 import { getIpPublic, getSetting } from './api/setting';
+import OrderPopup from './components/OrderPopup';
 
 function App() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mutate, setMutate] = useState(false);
   const [newVersion, setNewVersion] = useState('');
-  
+
   const [qr, setQr] = useState(false);
   const [seting, setSeting] = useState({});
   const [ipPublic, setIpPublic] = useState(' - ');
 
-  // useEffect(() => {
-  //   const callAPI = async () => {
-  //     setLoading((prev) => !prev);
-  //     const result = await getListDevice();
-  //     const resultVer = await getVersion();
-  //     const resultSet = await getSetting();
-  //     const resultIp = await getIpPublic()
-  //     setLoading((prev) => !prev);
-  //     if (result.status && result.status === false) {
-  //       return swalToast('error', result.msg);
-  //     }
-  //     setNewVersion(resultVer.version || '');
-  //     setDevices(result);
-  //     setQr(resultSet?.valid);
-  //     setSeting(resultSet?.result || {});
-  //     setIpPublic(resultIp);
-  //   };
-  //   callAPI();
-  // }, [mutate]);
+  const [openOrder, setOpenOrder] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+
   useEffect(() => {
     const callAPI = async () => {
       setLoading((prev) => !prev);
@@ -110,7 +95,7 @@ function App() {
   }, [mutate]);
 
 
-  // 👇 Listen to SSE (Server-Sent Events)
+  // Listen to SSE (Server-Sent Events)
   useEffect(() => {
     const evtSource = new EventSource('/events');
 
@@ -200,7 +185,18 @@ function App() {
                           {index + 1}
                         </Avatar>
                       }
-                      title={<TitleComp title={title} item={item} setMutate={setMutate} />}
+                      // title={<TitleComp title={title} item={item} setMutate={setMutate} />}
+                      title={
+                        <TitleComp
+                          title={title}
+                          item={item}
+                          setMutate={setMutate}
+                          onClickOrder={() => {
+                            setSelectedDeviceId(item.id);
+                            setOpenOrder(true);
+                          }}
+                        />
+                      }
                       subheader={
                         <Box>
                           <Typography
@@ -228,7 +224,7 @@ function App() {
                             Nhập ký tự
                           </Button>
                         </Grid>
-                        
+
                         <Grid item xs={6}>
                           <Button
                             variant="contained"
@@ -256,8 +252,8 @@ function App() {
                                 // setLoading(true);
                                 // await connect({ device_id: item.id, title });
                                 // setLoading(false);
-                                
-                                await connect({ device_id: item.id, title });                                
+
+                                await connect({ device_id: item.id, title });
                               }}
                               startIcon={<Launch />}
                             >
@@ -282,7 +278,7 @@ function App() {
                           </Button>
                         </Grid>
                       </Grid>
-                      
+
                       {qr &&
                         <>
                           <Divider sx={{ mt: 2, mb: 2 }} />
@@ -295,13 +291,13 @@ function App() {
                           <HandleTestQR item={item} />
                         </>
                       }
-                      <Divider sx={{ mt: 2, mb: 2 }} />                                            
-                      <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />                                                                                        
-                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />                      
-                      <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleHDB item={item} X={X} Y={Y} setLoading={setLoading} />  
-                      <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />                                            
-                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />                       
+                      <Divider sx={{ mt: 2, mb: 2 }} />
+                      <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleHDB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSEAB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVIETBANK item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVIB item={item} X={X} Y={Y} setLoading={setLoading} />
@@ -334,102 +330,118 @@ function App() {
           </Stack>
         </Grid>
 
-        {/* <Grid item xs={12}>
-          
-        </Grid> */}
+        {/* </Grid>
+    </> */}
       </Grid>
 
-      
+      {openOrder && (
+        <OrderPopup
+          deviceId={selectedDeviceId}
+          open={openOrder}
+          onClose={() => setOpenOrder(false)}
+        />
+      )}
+
     </>
   );
 }
 
 export default App;
 
-function TitleComp({ title, item, setMutate }) {
+function TitleComp({ title, item, setMutate, onClickOrder }) {
   const regexHost = /\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\:\d{1,5}\b/;
-
   const [isEdit, setEdit] = useState(false);
   const [textTitle, setTextTitle] = useState(title);
 
   const saveHandle = () => {
     localStorage.setItem(item.id, textTitle.trim());
-    setEdit((prev) => !prev);
-    setMutate((prev) => !prev);
+    setEdit(false);
+    setMutate(prev => !prev);
   };
 
   const connectTcpIpHandle = async () => {
-    const q = await swalQuestionConfirm('question', 'Kết nối Wifi debug tới thiết bị - ' + item.id, 'Qua Wifi', 'Qua Proxy')
+    const q = await swalQuestionConfirm('question', 'Kết nối Wifi debug tới thiết bị - ' + item.id, 'Qua Wifi', 'Qua Proxy');
     if (!q) return;
-
     const conn = await connectTcpIp({ device_id: item.id, type: q });
     if (conn?.status === 200) {
       sessionStorage.setItem(`tcpip-${item.id}`, 'connect');
-      window.location.reload()
+      window.location.reload();
     }
   };
 
   const disconnectTcpIpHandle = async () => {
-    const q = await swalQuestionConfirm('question', 'Ngắt kết nối Wifi debug tới thiết bị - ' + item.id, 'Xác nhận')
+    const q = await swalQuestionConfirm('question', 'Ngắt kết nối Wifi debug tới thiết bị - ' + item.id, 'Xác nhận');
     if (!q) return;
-
     const conn = await disconnectTcpIp({ device_id: item.id });
     if (conn?.status === 200) {
       sessionStorage.setItem(`tcpip-${item.id}`, 'disconnect');
-      window.location.reload()
+      window.location.reload();
     }
   };
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
-      {isEdit ? (
-        <>
-          <TextField
-            variant="outlined"
-            placeholder="Tên thiết bị"
-            size="small"
-            value={textTitle}
-            onChange={(event) => setTextTitle(event.target.value)}
-          />
-          <Tooltip title="Lưu" arrow>
-            <IconButton size="small" onClick={saveHandle}>
-              <Save color="primary" sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Hủy" arrow>
-            <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
-              <Cancel color="error" sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        </>
-      ) : (
-        <>
-          <Typography variant="h6" fontWeight="bold">
-            {textTitle}
-          </Typography>
-          <Stack direction={'row'} justifyContent={'end'}>
-            <Tooltip title={"Chỉnh sửa tên thiết bị"} arrow>
-              <IconButton size="small" onClick={() => setEdit((prev) => !prev)}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
+      {/* Bên trái: Tên thiết bị + các icon */}
+      <Stack direction="row" alignItems="center" spacing={1}>
+        {isEdit ? (
+          <>
+            <TextField
+              variant="outlined"
+              placeholder="Tên thiết bị"
+              size="small"
+              value={textTitle}
+              onChange={(event) => setTextTitle(event.target.value)}
+            />
+            <Tooltip title="Lưu" arrow>
+              <IconButton size="small" onClick={saveHandle}>
+                <Save color="primary" sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Hủy" arrow>
+              <IconButton size="small" onClick={() => setEdit(false)}>
+                <Cancel color="error" sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <Typography variant="h6" fontWeight="bold">
+              {textTitle}
+            </Typography>
+            <Tooltip title="Chỉnh sửa tên thiết bị" arrow>
+              <IconButton size="small" onClick={() => setEdit(true)}>
                 <Edit color="primary" sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
-            {!regexHost.test(item.id) &&
-              <Tooltip title={"Kết nối Wifi debug"} arrow>
+            {!regexHost.test(item.id) && (
+              <Tooltip title="Kết nối Wifi debug" arrow>
                 <IconButton size="small" onClick={connectTcpIpHandle}>
                   <AddLink color="primary" sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
-            }
-            {regexHost.test(item.id)
-              && <Tooltip title={"Ngắt kết nối Wifi debug"} arrow>
+            )}
+            {regexHost.test(item.id) && (
+              <Tooltip title="Ngắt kết nối Wifi debug" arrow>
                 <IconButton size="small" onClick={disconnectTcpIpHandle}>
                   <LinkOff color="primary" sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
-            }
-          </Stack>
-        </>
-      )}
+            )}
+          </>
+        )}
+      </Stack>
+
+      {/* Bên phải: Đơn hàng */}
+      <Tooltip title="Xem đơn hàng" arrow>
+        <Button
+          variant="outlined"
+          size="small"
+          sx={{ fontSize: 11, minWidth: 'auto', px: 1 }}
+          onClick={onClickOrder}
+        >
+          Đơn hàng
+        </Button>
+      </Tooltip>
     </Stack>
   );
 }
