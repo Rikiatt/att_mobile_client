@@ -46,7 +46,7 @@ function OrderPopup({ open, onClose, deviceId }) {
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle fontWeight="bold">
-                DANH SÁCH ĐƠN HÀNG RIKI+ ({deviceId})
+                DANH SÁCH ĐƠN HÀNG ATTPAY+ ({deviceId})
             </DialogTitle>
             <DialogContent>
                 {order ? (
