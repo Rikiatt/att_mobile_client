@@ -2712,8 +2712,7 @@ async function getRunningBankApps({ device_id }) {
 }
 
 async function checkRunningBanks({ device_id }) {
-  const runningBanks = await getRunningBankApps({ device_id });
-  console.log('log runningBanks:', runningBanks);
+  const runningBanks = await getRunningBankApps({ device_id });  
 
   // Hidden không dùng nữa tại vì xnk không biết dùng
 

@@ -19,8 +19,6 @@ const coordinatesScanQRNAB = require('../config/coordinatesScanQRNAB.json');
 const coordinatesScanQRTPB = require('../config/coordinatesScanQRTPB.json');
 const coordinatesScanQRVPB = require('../config/coordinatesScanQRVPB.json');
 const coordinatesDevice = require('../config/coordinatesDevice.json');
-const coordinatesScanQRMB2 = require('../config/coordinatesScanQRMB2.json');
-const coordinatesScanQRMB3 = require('../config/coordinatesScanQRMB3.json');
 const coordinatesScanQRNCB = require('../config/coordinatesScanQRNCB.json');
 const coordinatesScanQRMSB = require('../config/coordinatesScanQRMSB.json');
 const coordinatesScanQRICB = require('../config/coordinatesScanQRICB.json');
@@ -960,32 +958,6 @@ async function loadCoordinatesScanQRMB(device_id) {
     return deviceCoordinates;
   } catch (error) {
     console.error(`Error loading coordinatesDevice for device: ${error.message}`);
-    throw error;
-  }
-};
-
-async function loadCoordinatesScanQRMB2(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQRMB2[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQRMB2 for device: ${error.message}`);
-    throw error;
-  }
-};
-
-async function loadCoordinatesScanQRMB3(device_id) {
-  try {
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-
-    const deviceCoordinates = coordinatesScanQRMB3[deviceModel];
-
-    return deviceCoordinates;
-  } catch (error) {
-    console.error(`Error loading coordinatesScanQRMB2 for device: ${error.message}`);
     throw error;
   }
 };

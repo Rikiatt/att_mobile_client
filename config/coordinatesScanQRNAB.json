@@ -1,11 +1,9 @@
 {
     "SM-N960": {
         "ScanQR": [945, 1465],         
-        "Image": [460, 1855],   
-        "Hamburger-Menu": [97, 155],         
-        "Gallery": [97, 1172],
-        "Gallery2": [97, 950],    
-        "Target-Img": [133, 838],
-        "Recent-Test": [97, 293]
+        "Image": [460, 1855], 
+        "Gallery2": [362, 412],                  
+        "Gallery1": [122, 412],            
+        "Target-Img": [133, 838]        
     }
 }

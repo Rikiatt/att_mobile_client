@@ -1,30 +1,6 @@
 import axios from '../utils/axios';
 import { swalNotification } from '../utils/swal';
 
-// export const endpoints = {
-//   key: 'order',
-//   getOrderInfo: '/get-order-info'
-// };
-
-// export async function fetchOrderInfo() {
-//   try {
-//     const url = endpoints.key + endpoints.getOrderInfo;
-//     const response = await axios.get(url);
-
-//     if (!response.data.valid) {
-//       swalNotification('warning', 'Thông báo', response.data.message);
-//     }
-
-//     return response.data;
-//   } catch (error) {
-//     swalNotification('error', 'Lỗi', error.message);
-//     return {
-//       valid: false,
-//       message: error.message
-//     };
-//   }
-// }
-
 /**
  * Gọi API để lấy đơn hàng theo device_id từ backend.
  * Backend sẽ kiểm tra file info-qr.json và trả về đơn hàng nếu device_id trùng khớp.
@@ -46,5 +22,14 @@ export const getOrder = async (deviceId) => {
       valid: false,
       message: error.message
     };
+  }
+};
+
+export const clearOrder = async (deviceId) => {
+  try {
+    const res = await axios.post(`/order/clear`, { device_id: deviceId });
+    return res.data;
+  } catch (err) {
+    return { valid: false, message: 'Lỗi kết nối server' };
   }
 };

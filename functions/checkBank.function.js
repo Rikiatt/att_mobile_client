@@ -25,6 +25,7 @@ const siteOrg = jsonData?.org?.site || '';
 const siteAtt = jsonData?.att?.site?.split('/').pop() || '';
 
 const validSite = siteOrg || siteAtt; // Ưu tiên org nếu có, nếu không dùng att
+const { getDataJson } = require('../functions/function');
 
 const siteToChatIdMap = {
   'shbet': process.env.CHATID_SHBET,

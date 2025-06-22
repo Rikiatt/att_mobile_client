@@ -21,46 +21,6 @@ const reverseBankBins = Object.fromEntries(
   Object.entries(bankBins).map(([k, v]) => [v, k.toUpperCase()])
 );
 
-// const getOrderInfo = async () => {
-//   const filePath = path.join(__dirname, '../database/info-qr.json');
-
-//   if (!fs.existsSync(filePath)) {
-//     return { valid: false, message: 'Không tìm thấy file info-qr.json' };
-//   }
-
-//   try {
-//     const raw = fs.readFileSync(filePath, 'utf-8');
-//     const json = JSON.parse(raw);
-
-//     const { device_id, trans_id, vietqr_url } = json.data || {};
-//     if (json?.type !== 'att' || !device_id || !vietqr_url) {
-//       return { valid: false, message: 'Dữ liệu không hợp lệ' };
-//     }
-
-//     const matches = vietqr_url.match(/image\/(\d+)-(\d+)-qr\.png\?amount=(\d+)/);
-//     if (matches) {
-//       const bin = matches[1];
-//       const account = matches[2];
-//       const amount = matches[3];
-//       const bank = reverseBankBins[bin] || 'UNKNOWN';
-
-//       const orderData = {
-//         id: trans_id,
-//         bank,
-//         account,
-//         amount,
-//         device_id
-//       };
-
-//       return { valid: true, data: orderData };
-//     }
-
-//     return { valid: false, message: 'Không thể phân tích vietqr_url' };
-//   } catch (err) {
-//     return { valid: false, message: 'Lỗi đọc file info-qr.json' };
-//   }
-// };
-
 const getOrderByDevice = (device_id) => {
   try {
     const infoPath = path.join(__dirname, '../database/info-qr.json');
@@ -71,9 +31,11 @@ const getOrderByDevice = (device_id) => {
 
     if (json?.type !== 'att') return null;
     if (json?.data?.device_id !== device_id) return null;
+    if (json?.data?.trans_status !== 'in_process') return null;
 
     const transId = json?.data?.trans_id;
     const vietqr = json?.data?.vietqr_url;
+    const transStatus = json?.data?.trans_status;
 
     const matches = vietqr.match(/image\/(\d+)-(\d+)-qr\.png\?amount=(\d+)/);
     if (!matches) return null;
@@ -84,10 +46,11 @@ const getOrderByDevice = (device_id) => {
     const bank = reverseBankBins[bin] || 'UNKNOWN';
 
     return {
-      transId,
+      id: transId,
       bank,
       account,
       amount,
+      trans_status: transStatus
     };
   } catch (error) {
     console.error('getOrderByDevice error:', error);
@@ -95,4 +58,24 @@ const getOrderByDevice = (device_id) => {
   }
 };
 
-module.exports = { getOrderByDevice };
+const clearOrderStatus = (device_id) => {
+  try {
+    const filePath = path.join(__dirname, '../database/info-qr.json');
+    if (!fs.existsSync(filePath)) return null;
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const json = JSON.parse(raw);
+
+    if (json?.data?.device_id !== device_id || json?.type !== 'att') return null;
+
+    json.data.trans_status = 'success';
+
+    fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf-8');
+    return true;
+  } catch (error) {
+    console.error('clearOrderStatus error:', error);
+    return null;
+  }
+};
+
+module.exports = { getOrderByDevice, clearOrderStatus };
