@@ -16,6 +16,9 @@ const localRaw = fs.readFileSync(localDataPath, 'utf-8');
 const local = JSON.parse(localRaw);
 const siteOrg = local?.org?.site || '';
 const siteAtt = local?.att?.site?.split('/').pop() || '';
+const { checkDeviceFHD, checkFontScale, checkWMDensity } = require('../functions/device.function');
+const notifier = require('../events/notifier');
+const { Logger } = require("../config/require.config");
 
 function getLastDeviceId() {
   if (fs.existsSync(tmpFile)) {
@@ -33,9 +36,48 @@ module.exports = {
     const validSites =
       ['shbet', 'new88'].includes(siteOrg) ||
       ['shbet', 'new88'].includes(siteAtt) ||
-      (['jun88cmd', 'jun88k36'].includes(siteOrg));          
+      (['jun88cmd', 'jun88k36'].includes(siteOrg));
 
-    if (validSites) {      
+    // if (validSites) {      
+    //   await trackingLoop({ device_id });
+    // }
+    if (validSites) {                  
+      const deviceHelper = require('../helpers/deviceHelper');
+
+      const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+      if (deviceModel === 'SM-N960') {
+        const checkFHD = await checkDeviceFHD({ device_id });
+        if (!checkFHD.valid) {
+          Logger.log(1, 'Vui lòng cài đặt độ phân giải màn hình ở FHD+', __filename);
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: 'Vui lòng cài đặt độ phân giải màn hình ở FHD+'
+          });
+          return null;
+        }
+
+        const checkFont = await checkFontScale({ device_id });
+        if (!checkFont.valid) {
+          Logger.log(1, 'Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất', __filename);
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: 'Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất'
+          });
+          return null;
+        }
+
+        const checkDensity = await checkWMDensity({ device_id });
+        if (!checkDensity.valid) {
+          Logger.log(1, 'Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+', __filename);
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: 'Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+'
+          });
+          return null;
+        }
+      }
+
       await trackingLoop({ device_id });
     }
 

@@ -506,6 +506,7 @@ async function trackOCB ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
+// chua lam checkContentNCB
 async function trackNCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -805,6 +806,7 @@ async function trackTPB ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
+// checkContentVIETBANK: 50%
 async function trackVIETBANK({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1037,6 +1039,7 @@ async function trackMB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+// chua lam checkContentBAB
 async function trackBAB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1113,7 +1116,7 @@ async function trackBAB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentBIDV
 async function trackBIDV({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1190,7 +1193,7 @@ async function trackBIDV({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentVCB
 async function trackVCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1266,7 +1269,7 @@ async function trackVCB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentVIB
 async function trackVIB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1343,7 +1346,7 @@ async function trackVIB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua xong
+// chua lam checkContentVIKKI
 async function trackVIKKI({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1420,7 +1423,7 @@ async function trackVIKKI({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentSEAB
 async function trackSEAB({ device_id }) {      
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1496,7 +1499,7 @@ async function trackSEAB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentICB
 async function trackICB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1573,7 +1576,7 @@ async function trackICB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua lam
+// chua lam checkContentPVCB
 async function trackPVCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1651,7 +1654,7 @@ async function trackPVCB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua lam
+// chua lam checkContentLPBANK
 async function trackLPBANK({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1728,7 +1731,7 @@ async function trackLPBANK({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentMSB
 async function trackMSB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1805,7 +1808,7 @@ async function trackMSB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// checkContentSTB - 50%
 async function trackSTB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1882,7 +1885,7 @@ async function trackSTB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// ok
+// chua lam checkContentTCB
 async function trackTCB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);

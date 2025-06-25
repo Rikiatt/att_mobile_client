@@ -109,7 +109,7 @@ async function checkContentACB(device_id, localPath) {
       expectedAmount = match[2].replace(/[.,\s]/g, "");
     }
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     const screenKeywords = [
       {
         name: "Chuyển tiền",
@@ -157,7 +157,7 @@ async function checkContentACB(device_id, localPath) {
       }
     }
 
-    // --- TH2: Màn hình xác nhận sau khi quét QR ---
+    /* TH2: Màn hình xác nhận sau khi quét QR */
     const detectText = [];
     const editTextPattern = /\sresource-id=""\sclass="android\.widget\.EditText"/g;
     let matchEditText;
@@ -338,9 +338,9 @@ async function checkContentEIB(device_id, localPath) {
     const hasCollapsingToolbarMenuTransfer = content.includes('resource-id="com.vnpay.EximBankOmni:id/collapsingToolbarMenuTransfer"');
     const hasBtnMenuTransferAddForm = content.includes('resource-id="com.vnpay.EximBankOmni:id/btnMenuTransferAddForm"');
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     if (hasCollapsingToolbarMenuTransfer && hasBtnMenuTransferAddForm) {
-      const screenName = "Chuyển tiền";      
+      const screenName = "Chuyển tiền";
 
       // Đọc file local-banks.json
       const localBanksPath = path.join(__dirname, "../database/local-banks.json");
@@ -382,7 +382,7 @@ async function checkContentEIB(device_id, localPath) {
       content.includes('resource-id="com.vnpay.EximBankOmni:id/swSaveBene"') &&
       content.includes('class="android.widget.Switch"')
 
-    // --- TH2: Check QR ---
+    /* TH2: Màn hình xác nhận sau khi quét QR */
     if (hasConfirmScreenHint && !ocrMatchedByDevice[device_id]) {
       const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
       const qrDevice = infoQR?.data?.device_id || '';
@@ -468,7 +468,6 @@ async function checkContentEIB(device_id, localPath) {
 }
 
 // ca tieng anh, tieng viet duoc - chinh xong canh bao
-// TH1
 async function checkContentHDB(device_id, localPath) {
   try {
     const xmlData = fs.readFileSync(localPath, 'utf-8');
@@ -488,7 +487,7 @@ async function checkContentHDB(device_id, localPath) {
     const foundTransfer = xmlData.includes('resource-id="com.vnpay.hdbank:id/transfer"');
     const foundSaveContact = xmlData.includes('resource-id="com.vnpay.hdbank:id/swSaveContact"');
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     if ((foundMenuTransfer && foundItemTransfer)
 
       || (foundAccountNo && foundFromAccBalance && foundFromAccTitleBlacnce && foundBalance &&
@@ -525,14 +524,12 @@ async function checkContentHDB(device_id, localPath) {
       notifier.emit('multiple-banks-detected', {
         device_id,
         message: `Phát hiện thao tác thủ công (id: ${device_id})`
-      });      
+      });
 
       await stopHDB({ device_id });
       await sendTelegramAlert(telegramToken, chatId, message);
       await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
       return;
-    } else {
-      Logger.log(0, 'Chưa thấy có thao tác thủ công khi dùng HDB', __filename);
     }
   } catch (error) {
     Logger.log(1, `Lỗi khi kiểm tra HDB: ${error.message}`, __filename);
@@ -560,7 +557,7 @@ async function checkContentMB(device_id, localPath) {
       expectedAmount = match[2].replace(/[^\d]/g, "");
     }
 
-    /* Trường hợp 1: Màn hình thao tác thủ công cần cảnh báo */
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     const screenKeywords = [
       {
         name: "Chuyển tiền",
@@ -570,7 +567,7 @@ async function checkContentMB(device_id, localPath) {
     ];
 
     for (const screen of screenKeywords) {
-      if ( screen.vi.every(kw => xml.includes(kw)) || screen.en.every(kw => xml.includes(kw))) {
+      if (screen.vi.every(kw => xml.includes(kw)) || screen.en.every(kw => xml.includes(kw))) {
         // Đọc file local-banks.json
         const localBanksPath = path.join(__dirname, "../database/local-banks.json");
         let banksData = [];
@@ -608,7 +605,7 @@ async function checkContentMB(device_id, localPath) {
       }
     }
 
-    /* Trường hợp 2: Check QR */
+    /* TH2: Check QR */
     const isTransferToScreen = xml.includes('resource-id="MInput_0a67f0a6-0cc5-483a-8e23-9300e20ab1ac"') &&
       xml.includes('resource-id="MInput_c3a8b456-f94f-471b-bca1-dc2cb3662035"');
 
@@ -682,7 +679,7 @@ async function checkContentMSB(device_id, localPath) {
 // ok - chinh xong canh bao
 async function checkContentNAB(device_id, localPath) {
   try {
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     const content = fs.readFileSync(localPath, "utf-8").trim();
     const screenKeywords = [
       {
@@ -748,7 +745,7 @@ async function checkContentNAB(device_id, localPath) {
           return;
         }
 
-        // --- TH2: Check QR ---
+        /* TH2: Màn hình xác nhận sau khi quét QR */
         if (screen.name === "Chuyển tiền đến tài khoản") {
           const accMatches = [...content.matchAll(/text="([\d\s]+)"\s+resource-id="ops\.namabank\.com\.vn:id\/accountNumber"/g)];
           const amtMatches = [...content.matchAll(/text="([\d.,\s]+)"\s+resource-id="ops\.namabank\.com\.vn:id\/amount"/g)];
@@ -822,7 +819,7 @@ async function checkContentOCB(device_id, localPath) {
       expectedAmount = match[2].replace(/[.,\s]/g, "");
     }
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     const screenKeywords = [
       {
         name: "Chuyển tiền",
@@ -870,7 +867,7 @@ async function checkContentOCB(device_id, localPath) {
       }
     }
 
-    // --- TH2: Check QR ---
+    /* TH2: Màn hình xác nhận sau khi quét QR */
     const detectText = [];
     const targetResourceIds = [
       "vn.com.ocb.awe:id/tvAccountNumber",
@@ -950,7 +947,7 @@ async function checkContentSHBSAHA(device_id, localPath) {
       }
     ];
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     for (const screen of screenKeywords) {
       if (screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
         // Đọc file local-banks.json
@@ -990,7 +987,7 @@ async function checkContentSHBSAHA(device_id, localPath) {
       }
     }
 
-    // --- TH2: Check QR ---
+    /* TH2: Màn hình xác nhận sau khi quét QR */
     // Kiểm tra màn hình "Chuyển tiền đến" (sau khi quét xong QR code)
     const hasTransferForm = [
       "Chuyển tiền đến",
@@ -1090,7 +1087,7 @@ async function checkContentTPB(device_id, localPath) {
     const isTransferToScreen = xml.includes('Chuyển tiền tới') &&
       xml.includes('resource-id="com.tpb.mb.gprsandroid:id/btn_continue"');
 
-    // --- TH2: Check QR ---
+    /* TH2: Màn hình xác nhận sau khi quét QR */
     if (isTransferToScreen) {
       const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
       const qrDevice = infoQR?.data?.device_id || '';
@@ -1153,7 +1150,7 @@ async function checkContentTPB(device_id, localPath) {
       }
     }
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     // Xử lý các màn cũ như "Chuyển tiền/Chatpay"
     const screenKeywords = [
       {
@@ -1169,7 +1166,7 @@ async function checkContentTPB(device_id, localPath) {
     ];
 
     for (const screen of screenKeywords) {
-      if ( screen.vi.every(kw => xml.includes(kw)) || screen.en.every(kw => xml.includes(kw))) {
+      if (screen.vi.every(kw => xml.includes(kw)) || screen.en.every(kw => xml.includes(kw))) {
         // Đọc file local-banks.json
         const localBanksPath = path.join(__dirname, "../database/local-banks.json");
         let banksData = [];
@@ -1244,7 +1241,7 @@ async function checkContentSEAB(device_id, localPath) {
     ];
 
     for (const screen of screenKeywords) {
-      if ( screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
+      if (screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
         // Đọc file local-banks.json
         const localBanksPath = path.join(__dirname, "../database/local-banks.json");
         let banksData = [];
@@ -1437,8 +1434,7 @@ async function checkContentVIB(device_id, localPath) {
   Logger.log(0, 'VIB chưa làm.', __filename);
 }
 
-// ca tieng anh, tieng viet duoc
-// TH1 ok - chinh xong canh bao
+// ca tieng anh, tieng viet duoc - chinh xong canh bao
 async function checkContentVIETBANK(device_id, localPath) {
   try {
     const xmlData = fs.readFileSync(localPath, 'utf-8');
@@ -1449,44 +1445,42 @@ async function checkContentVIETBANK(device_id, localPath) {
     const foundrcvReceiverInfo = xmlData.includes('resource-id="com.vnpay.vietbank:id/rcvReceiverInfo"');
     const foundDanh_ba_thu_huong = xmlData.includes('resource-id="com.vnpay.vietbank:id/Danh_ba_thu_huong"');
 
-    // --- TH1: Màn hình thao tác thủ công cần cảnh báo ---
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
     if ((foundlnReceiverInfo && foundtvTitleInfo && foundrcvReceiverInfo && foundDanh_ba_thu_huong)) {
       // Đọc file local-banks.json
-        const localBanksPath = path.join(__dirname, "../database/local-banks.json");
-        let banksData = [];
+      const localBanksPath = path.join(__dirname, "../database/local-banks.json");
+      let banksData = [];
 
-        if (fs.existsSync(localBanksPath)) {
-          const rawData = fs.readFileSync(localBanksPath, "utf-8").trim();
-          if (rawData) {
-            banksData = JSON.parse(rawData);
-          }
+      if (fs.existsSync(localBanksPath)) {
+        const rawData = fs.readFileSync(localBanksPath, "utf-8").trim();
+        if (rawData) {
+          banksData = JSON.parse(rawData);
         }
+      }
 
-        let message = '';
-        if (banksData.length === 0) {
-          message = `Phát hiện có thao tác thủ công khi xuất với VIETBANK (id thiết bị: ${device_id})`;
+      let message = '';
+      if (banksData.length === 0) {
+        message = `Phát hiện có thao tác thủ công khi xuất với VIETBANK (id thiết bị: ${device_id})`;
+      } else {
+        const bankItem = banksData.find(item => item["THIẾT BỊ"]?.includes(device_id));
+        if (bankItem) {
+          message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng VIETBANK`;
         } else {
-          const bankItem = banksData.find(item => item["THIẾT BỊ"]?.includes(device_id));
-          if (bankItem) {
-            message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng VIETBANK`;
-          } else {
-            message = `Phát hiện có thao tác thủ công khi xuất với VIETBANK (id thiết bị: ${device_id})`;
-          }
+          message = `Phát hiện có thao tác thủ công khi xuất với VIETBANK (id thiết bị: ${device_id})`;
         }
+      }
 
-        Logger.log(1, message, __filename);
-        Logger.log(0, 'Đóng app VIETBANK', __filename);
-        notifier.emit('multiple-banks-detected', {
-          device_id,
-          message: `Phát hiện thao tác thủ công (id: ${device_id})`
-        });
+      Logger.log(1, message, __filename);
+      Logger.log(0, 'Đóng app VIETBANK', __filename);
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Phát hiện thao tác thủ công (id: ${device_id})`
+      });
 
-        await stopVIETBANK({ device_id });
-        await sendTelegramAlert(telegramToken, chatId, message);
-        await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
-        return;
-    } else {
-      Logger.log(0, 'Chưa thấy có thao tác thủ công khi dùng VIETBANK', __filename);
+      await stopVIETBANK({ device_id });
+      await sendTelegramAlert(telegramToken, chatId, message);
+      await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
+      return;
     }
   } catch (error) {
     Logger.log(1, `Lỗi khi kiểm tra VIETBANK: ${error.message}`, __filename);
