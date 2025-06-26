@@ -42,6 +42,7 @@ import HandleICB from './sections/bank_handle/HandleICB';
 import HandleNCB from './sections/bank_handle/HandleNCB';
 import HandleSEAB from './sections/bank_handle/HandleSEAB';
 import HandleVIETBANK from './sections/bank_handle/HandleVIETBANK';
+import HandleEIB from './sections/bank_handle/HandleEIB';
 import HandleVIB from './sections/bank_handle/HandleVIB';
 import { getActionDevice } from './api/device';
 import MacroComp from './components/Macro';
@@ -293,6 +294,7 @@ function App() {
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
                       <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleHDB item={item} X={X} Y={Y} setLoading={setLoading} />

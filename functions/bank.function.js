@@ -1129,5 +1129,6 @@ module.exports = {
   runBankTransfer,  
   startNCB,  
   startHDB,
-  startVIETBANK
+  startVIETBANK,
+  startEIB
 };

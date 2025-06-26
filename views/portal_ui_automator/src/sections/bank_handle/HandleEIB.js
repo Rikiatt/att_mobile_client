@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { eibScanQR } from '../../services/handle.service';
+import { eibLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
@@ -21,16 +21,16 @@ const HandleEIB = ({ item, X, Y, setLoading }) => {
     >
       <AccordionSummary expandIcon={<ExpandMore />}>EIB</AccordionSummary>
       <AccordionDetails>
-        <Stack spacing={1}>
-          <Tooltip title="Start >> ScanQR" arrow>
+        <Stack spacing={1}>          
+          <Tooltip title="Nhập mật khẩu và đăng nhập" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => eibScanQR({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => eibLogin({ device_id: item.id, X, Y }, setLoading)}
             >
-              Quét QR
+              Đăng nhập
             </Button>
           </Tooltip>
         </Stack>

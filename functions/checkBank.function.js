@@ -1410,9 +1410,7 @@ async function checkContentSTB(device_id, localPath) {
       }
     }
 
-    // Có thể bổ sung check QR như các bank khác nếu cần sau này
-    // const accMatch = ...;
-    // const amtMatch = ...;
+    // TH2: Chưa làm
 
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);

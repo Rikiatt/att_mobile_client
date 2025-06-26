@@ -19,7 +19,7 @@ const HandleSEAB = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>SEAB / VIKKI</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>SEAB / VIKKI / KBank</AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1}>
           <Tooltip title="Ẩn chế độ nhà phát triển" arrow>

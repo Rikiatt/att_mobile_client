@@ -739,6 +739,69 @@ export const hideUSBDebugging = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ============== EIB ============== //
+
+export const eibLogin = async (data, setLoading) => {  
+  setLoading(true);    
+
+  const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id }); 
+  const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+  const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+  const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
+
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ EIB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+  } 
+
+  if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+    return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");      
+  } 
+
+  if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+	  return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+  }
+
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu EIB cần truyền vào thiết bị');
+  if (!text) return;
+
+  console.log('1. Đang đóng các app đang mở...');
+  await actionADB({ action: 'closeAll', device_id: data.device_id }); 
+  await delay(500);  
+
+  console.log('2. Khởi động EIB...');
+  await actionBank({ action: 'startEIB', device_id: data.device_id });
+  await delay(5000);
+
+  console.log('3. Login...');  
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await delay(1000);
+
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+  await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
+  await delay(1000);
+
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+  await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+  setLoading(false);
+};
+
 export const runMacro = async (macro, device) => {
   try {
     const sizeX = device.screenSize.split('x')[0];

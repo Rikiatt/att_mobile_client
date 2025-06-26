@@ -2164,39 +2164,6 @@ async function isPVCBRunning({ device_id }) {
   }
 }
 
-// async function isPVCBRunning({ device_id }) {
-//   try {
-//     const output = await client.shell(device_id, 'dumpsys activity activities')
-//       .then(adb.util.readAll)
-//       .then(buffer => buffer.toString());
-
-//     const packageName = 'com.pvcombank.retail';
-
-//     // Ghi log để debug
-//     console.log('Checking PVCB - package:', packageName);
-//     console.log('Resumed Activity contains:', output.includes('mResumedActivity'));
-//     console.log('Package name found in output:', output.includes(packageName));
-
-//     const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
-//     if (isForeground) {
-//       console.log('✅ PVCB is in foreground');
-//       return true;
-//     }
-
-//     const escaped = packageName.replace(/\./g, '\\.');
-//     const isInTaskList =
-//       new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
-//       new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
-
-//     console.log('PVCB is in background:', isInTaskList);
-
-//     return isInTaskList;
-//   } catch (error) {
-//     console.error('❌ Error checking PVCB app status:', error.message);
-//     return false;
-//   }
-// }
-
 async function isTPBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
@@ -2719,17 +2686,17 @@ async function checkRunningBanks({ device_id }) {
 
   // Hidden không dùng nữa tại vì xnk không biết dùng
 
-  // if (runningBanks.length > 1) {
-  //   await closeAll({ device_id });
-  //   Logger.log(1, 'VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)', __filename);
-  //   // Phát thông báo realtime
-  //   notifier.emit('multiple-banks-detected', {
-  //     device_id,
-  //     message: 'VUI LÒNG THỰC HIỆN LẠI (1 BANK)'
-  //   });
+  if (runningBanks.length > 1) {
+    await closeAll({ device_id });
+    Logger.log(1, 'VUI LÒNG THỰC HIỆN LẠI (CHỈ 1 BANK)', __filename);
+    // Phát thông báo realtime
+    notifier.emit('multiple-banks-detected', {
+      device_id,
+      message: 'VUI LÒNG THỰC HIỆN LẠI (1 BANK)'
+    });
 
-  //   return null;
-  // }
+    return null;
+  }
 
   return runningBanks[0] || null;
 }

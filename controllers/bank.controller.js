@@ -1,5 +1,5 @@
 const responseHelper = require('../helpers/responseHelper');
-const { bankTransfer, startNCB, startHDB, startVIETBANK} = require('../functions/bank.function');
+const { bankTransfer, startNCB, startHDB, startVIETBANK, startEIB} = require('../functions/bank.function');
 const { checkRunningBanks } = require('../functions/bankStatus.function');
 
 const mapAction = {  
@@ -8,6 +8,7 @@ const mapAction = {
     startNCB: startNCB,       
     startHDB: startHDB,
     startVIETBANK: startVIETBANK,
+    startEIB: startEIB,
 }
 
 module.exports = {  
