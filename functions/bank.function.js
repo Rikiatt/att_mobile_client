@@ -461,7 +461,7 @@ const loginTPB = async ({ device_id, bank }) => {
   await client.shell(device_id, 'input tap 326 1333');
   await delay(500);
   await client.shell(device_id, `input text ${password}`);
-  await delay(800);  
+  await delay(1100);  
   await client.shell(device_id, 'input tap 760 997');
 };
 
@@ -481,7 +481,7 @@ const loginNAB = async ({ device_id, bank }) => {
   await client.shell(device_id, 'input tap 540 866');
   await delay(600);
   await client.shell(device_id, `input text ${password}`);
-  await delay(800);  
+  await delay(1100);  
   await client.shell(device_id, 'input tap 540 1186');
 };
 
@@ -538,7 +538,7 @@ const loginSHBSAHA = async ({ device_id }) => {
     await delay(500);
   }        
   await client.shell(device_id, `input text ${password}`);
-  await delay(1000);
+  await delay(1100);
   await client.shell(device_id, 'input tap 540 1220');
 };
 
@@ -556,7 +556,7 @@ const loginSTB = async ({ device_id }) => {
   await client.shell(device_id, 'input tap 540 1666');
   await delay(1000);
   await client.shell(device_id, `input text ${password}`);
-  await delay(300);
+  await delay(1100);
   await client.shell(device_id, 'input tap 540 911');
 };
 
