@@ -11,6 +11,7 @@ const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning } = require('../functions/bankStatus.function');
 const notifier = require('../events/notifier');
+const { escapeAdbText } = require('../helpers/adbHelper');
 
 async function clearTempFile( { device_id } ) {
   try {                
@@ -417,7 +418,8 @@ const loginABB = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank?.toUpperCase(); // googlesheet viết hoa bank
-  const password = getBankPass(bank, device_id);
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
         
   // nó có cái nhập mật khẩu bằng mã PIN hoặc chuỗi chưa làm.
   for (const char of password) {
@@ -437,14 +439,16 @@ const loginEIB = async ({ device_id, bank }) => {
 
   // bank = info?.data?.bank;
   bank = info?.data?.bank_temp || info?.data?.bank;
-  const password = getBankPass(bank, device_id);        
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
+
   await client.shell(device_id, 'input tap 918 305');
   await delay(1000);
   await client.shell(device_id, 'input tap 118 820');
   await delay(400);
   await client.shell(device_id, 'input tap 118 820');
   await delay(400);
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1200);  
   await client.shell(device_id, 'input tap 540 1020');
 };
@@ -457,10 +461,12 @@ const loginTPB = async ({ device_id, bank }) => {
   const info = JSON.parse(raw);
 
   bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);        
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
+
   await client.shell(device_id, 'input tap 326 1333');
   await delay(500);
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1100);  
   await client.shell(device_id, 'input tap 760 997');
 };
@@ -473,14 +479,16 @@ const loginNAB = async ({ device_id, bank }) => {
   const info = JSON.parse(raw);
 
   bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);        
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
+
   await client.shell(device_id, 'input tap 540 655');
   await delay(800);
   await client.shell(device_id, 'input tap 540 866');
   await delay(300);
   await client.shell(device_id, 'input tap 540 866');
   await delay(600);
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1100);  
   await client.shell(device_id, 'input tap 540 1186');
 };
@@ -493,12 +501,13 @@ const loginMB = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
   
   await client.shell(device_id, 'input keyevent 61');
   await client.shell(device_id, 'input keyevent 61');
   await delay(500);
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1000);
   await client.shell(device_id, 'input keyevent 66');
   await client.shell(device_id, 'input keyevent 66');
@@ -512,11 +521,13 @@ const loginOCB = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);   
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
+
   await client.shell(device_id, 'input tap 540 1955');
   await delay(1500);
   console.log('log password in loginOCB:', password);   
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
 };
 
 const loginSHBSAHA = async ({ device_id }) => {    
@@ -528,7 +539,9 @@ const loginSHBSAHA = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);   
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
+
   if (deviceModel === 'SM-N960') {
     await client.shell(device_id, 'input tap 118 1040');
     await delay(500);
@@ -537,7 +550,7 @@ const loginSHBSAHA = async ({ device_id }) => {
     await client.shell(device_id, 'input tap 118 1147');
     await delay(500);
   }        
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1100);
   await client.shell(device_id, 'input tap 540 1220');
 };
@@ -550,12 +563,14 @@ const loginSTB = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);        
+  const password = getBankPass(bank, device_id);    
+  const escapedPassword = escapeAdbText(password);
+
   await client.shell(device_id, 'input tap 970 220');
   await delay(300);   
   await client.shell(device_id, 'input tap 540 1666');
   await delay(1000);
-  await client.shell(device_id, `input text ${password}`);
+  await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1100);
   await client.shell(device_id, 'input tap 540 911');
 };
@@ -569,14 +584,16 @@ const loginSTB = async ({ device_id }) => {
 
 //   // bank = info?.data?.bank;
 //   bank = info?.data?.bank_temp || info?.data?.bank;
-//   const password = getBankPass(bank, device_id);        
+//   const password = getBankPass(bank, device_id);    
+//   const escapedPassword = escapeAdbText(password);     
+
 //   await client.shell(device_id, 'input tap 918 305');
 //   await delay(1000);
 //   await client.shell(device_id, 'input tap 118 820');
 //   await delay(400);
 //   await client.shell(device_id, 'input tap 118 820');
 //   await delay(400);
-//   await client.shell(device_id, `input text ${password}`);
+//   await client.shell(device_id, `input text ${escapedPassword}`);
 //   await delay(1200);  
 //   await client.shell(device_id, 'input tap 540 1020');
 // };
@@ -1078,6 +1095,10 @@ const bankTransfer = async ({ device_id, bank }) => {
   transId = json?.data?.transId;  
 
   if (type !== 'att' || !device_id || !bank) {
+    notifier.emit('multiple-banks-detected', {
+      device_id,
+      message: `Thiếu thông tin hoặc sai kiểu kết nối`
+    });
     return { status: 400, valid: false, message: 'Thiếu thông tin hoặc sai kiểu kết nối' };
   }
 
