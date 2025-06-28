@@ -11,7 +11,7 @@ async function tapXY(device_id, x, y) {
     return { status: 200, message: 'Success' };
 }
 
-async function escapeAdbText(str) {
+function escapeAdbText(str) {
   return str
     .replace(/\\/g, '\\\\')
     .replace(/\$/g, '\\$')
