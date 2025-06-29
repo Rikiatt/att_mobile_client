@@ -54,7 +54,7 @@ module.exports = {
             device_id,
             message: 'Vui lòng cài đặt độ phân giải màn hình ở FHD+'
           });
-          return null;
+          return;
         }
 
         const checkFont = await checkFontScale({ device_id });
@@ -64,7 +64,7 @@ module.exports = {
             device_id,
             message: 'Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất'
           });
-          return null;
+          return;
         }
 
         const checkDensity = await checkWMDensity({ device_id });
@@ -74,7 +74,7 @@ module.exports = {
             device_id,
             message: 'Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+'
           });
-          return null;
+          return;
         }
       }
 
