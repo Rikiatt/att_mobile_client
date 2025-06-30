@@ -1280,59 +1280,59 @@ async function checkContentSEAB(device_id, localPath) {
     }
 
     /* TH2: Check QR thông qua edittext */
-    const regex = /text="([^"]+)"\s+resource-id="vn\.com\.seabank\.mb1:id\/edittext"/g;
-    const detectText = [];
-    let matchItem;
-    while ((matchItem = regex.exec(content)) !== null) {
-      detectText.push(matchItem[1]);
-    }
+    // const regex = /text="([^"]+)"\s+resource-id="vn\.com\.seabank\.mb1:id\/edittext"/g;
+    // const detectText = [];
+    // let matchItem;
+    // while ((matchItem = regex.exec(content)) !== null) {
+    //   detectText.push(matchItem[1]);
+    // }
 
-    if (detectText.length >= 2) {
-      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
-      const qrDevice = infoQR?.data?.device_id || '';
-      const qrType = infoQR?.type || '';
+    // if (detectText.length >= 2) {
+    //   const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    //   const qrDevice = infoQR?.data?.device_id || '';
+    //   const qrType = infoQR?.type || '';
 
-      if (device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
-        const accountNumber = detectText[0].replace(/\s/g, "");
-        const amount = detectText[1].replace(/[.,\s]/g, "");
+    //   if (device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
+    //     const accountNumber = detectText[0].replace(/\s/g, "");
+    //     const amount = detectText[1].replace(/[.,\s]/g, "");
 
-        Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-        Logger.log(0, `OCR Amount: ${amount}`, __filename);
-        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+    //     Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
+    //     Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+    //     Logger.log(0, `OCR Amount: ${amount}`, __filename);
+    //     Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
 
-        const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
+    //     const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
 
-        if (!isMatch) {
-          const reason = `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+    //     if (!isMatch) {
+    //       const reason = `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
+    //       Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-          await stopSEAB({ device_id });
+    //       await stopSEAB({ device_id });
 
-          notifier.emit('multiple-banks-detected', {
-            device_id,
-            message: reason
-          });
+    //       notifier.emit('multiple-banks-detected', {
+    //         device_id,
+    //         message: reason
+    //       });
 
-          await sendTelegramAlert(
-            telegramToken,
-            chatId,
-            `${reason} (id thiết bị: ${device_id})`
-          );
+    //       await sendTelegramAlert(
+    //         telegramToken,
+    //         chatId,
+    //         `${reason} (id thiết bị: ${device_id})`
+    //       );
 
-          await saveAlertToDatabase({
-            timestamp: new Date().toISOString(),
-            reason: `${reason} (id thiết bị: ${device_id})`,
-            filePath: localPath
-          });
+    //       await saveAlertToDatabase({
+    //         timestamp: new Date().toISOString(),
+    //         reason: `${reason} (id thiết bị: ${device_id})`,
+    //         filePath: localPath
+    //       });
 
-          return;
-        } else {
-          Logger.log(0, 'SEAB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-          return;
-        }
-      }
-    }
+    //       return;
+    //     } else {
+    //       Logger.log(0, 'SEAB: OCR TRÙNG info-qr về account_number và amount.', __filename);
+    //       return;
+    //     }
+    //   }
+    // }
 
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
