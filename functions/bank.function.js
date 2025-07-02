@@ -61,6 +61,7 @@ async function dumpXmlToLocal(device_id, localPath) {
 }
 
 const allCoordinates = {
+  hdb: require('../config/coordinatesScanQRHDB.json'),
   tpb: require('../config/coordinatesScanQRTPB.json'),
   eib: require('../config/coordinatesScanQREIB.json'),
   shb: require('../config/coordinatesScanQRSHBSAHA.json'),
@@ -76,7 +77,7 @@ async function loadCoordinates(bankCode, device_id) {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
     const coordinates = allCoordinates[bankCode.toLowerCase()]?.[deviceModel];
 
-    if (!coordinates) throw new Error(`Không tìm thấy tọa độ cho thiết bị: ${deviceModel}`);
+    if (!coordinates) throw new Error(`Không tìm thấy tọa độ cho thiết bị: ${deviceModel} để mà scan QR`);
 
     return coordinates;
   } catch (error) {
@@ -447,20 +448,15 @@ const loginEIB = async ({ device_id, bank }) => {
 
   await client.shell(device_id, 'input tap 918 305');
   await delay(1000);
+  await client.shell(device_id, 'input tap 118 820');  
   await client.shell(device_id, 'input tap 118 820');
-  await delay(400);
-  await client.shell(device_id, 'input tap 118 820');
-  await delay(400);
+  await delay(600);
   await client.shell(device_id, `input text ${escapedPassword}`);
   await delay(1100);
   await client.shell(device_id, 'input tap 540 1020');
 };
 
 const loginTPB = async ({ device_id, bank }) => {
-  // text="Mật khẩu" resource-id="com.tpb.mb.gprsandroid:id/etPasswordBlur"
-  // text="Mật khẩu" resource-id="com.tpb.mb.gprsandroid:id/etPassword"
-
-  // text="Mật khẩu" resource-id="com.tpb.mb.gprsandroid:id/etPassword"
   Logger.log(0, `3. Login TPB...`, __filename);
 
   const infoPath = path.join(__dirname, '../database/info-qr.json');
@@ -474,10 +470,8 @@ const loginTPB = async ({ device_id, bank }) => {
   await client.shell(device_id, 'input tap 326 1333');
   await delay(500);
   await client.shell(device_id, `input text ${escapedPassword}`);
-  // Đợi đến khi đủ ký tự dạng ● rồi mới tap "Đăng nhập"
-  console.log('log password.length:',password.length);
-  await submitLoginTPB({ device_id, bank }, password.length, 0);  
-  // await client.shell(device_id, 'input tap 760 997');
+  // Đợi đến khi đủ ký tự dạng ● rồi mới tap "Đăng nhập"  
+  await submitLoginTPB({ device_id, bank }, password.length, 0);
 };
 
 const loginNAB = async ({ device_id, bank }) => {
@@ -498,8 +492,34 @@ const loginNAB = async ({ device_id, bank }) => {
   await client.shell(device_id, 'input tap 540 866');
   await delay(600);
   await client.shell(device_id, `input text ${escapedPassword}`);
-  await delay(1100);
-  await client.shell(device_id, 'input tap 540 1186');
+  // await delay(1100);
+  // await client.shell(device_id, 'input tap 540 1186');
+  // Đợi đến khi đủ ký tự dạng ● rồi mới tap "Đăng nhập"  
+  await submitLoginNAB({ device_id, bank }, password.length, 0);
+};
+
+const loginHDB = async ({ device_id, bank }) => {
+  Logger.log(0, `3. Login HDB...`, __filename);
+
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const info = JSON.parse(raw);
+
+  bank = info?.data?.bank;
+  const password = getBankPass(bank, device_id);
+  const escapedPassword = escapeAdbText(password);
+
+  await client.shell(device_id, 'input tap 540 800'); // click Login HDB
+  await delay(200);
+  await client.shell(device_id, 'input tap 540 800');
+  await delay(300);
+  await client.shell(device_id, `input text ${escapedPassword}`);
+  // await delay(1000);
+  // await client.shell(device_id, 'input keyevent 66');
+  // await client.shell(device_id, 'input keyevent 66');
+  
+  // Đợi đến khi không có thông báo lỗi nhập sai mật khẩu thì mới submit login    
+  await submitLoginHDB({ device_id, bank }, password.length, 0);  
 };
 
 const loginMB = async ({ device_id }) => {
@@ -513,13 +533,20 @@ const loginMB = async ({ device_id }) => {
   const password = getBankPass(bank, device_id);
   const escapedPassword = escapeAdbText(password);
 
-  await client.shell(device_id, 'input keyevent 61');
-  await client.shell(device_id, 'input keyevent 61');
+  console.log('log password:',password);
+  console.log('log escapedPassword:',escapedPassword);
+
+  await client.shell(device_id, 'input tap 540 1280');
+  await client.shell(device_id, 'input tap 540 1280');
   await delay(500);
   await client.shell(device_id, `input text ${escapedPassword}`);
-  await delay(1000);
-  await client.shell(device_id, 'input keyevent 66');
-  await client.shell(device_id, 'input keyevent 66');
+  // await client.shell(device_id, `input text NHka789%`);
+
+  // await delay(1000);
+  // await client.shell(device_id, 'input keyevent 66');
+  // await client.shell(device_id, 'input keyevent 66');
+  // Đợi đến khi đủ ký tự dạng ● rồi mới tap "Đăng nhập"  
+  await submitLoginMB({ device_id, bank }, password.length, 0);
 };
 
 const loginOCB = async ({ device_id }) => {
@@ -528,18 +555,14 @@ const loginOCB = async ({ device_id }) => {
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
-
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);
-  const escapedPassword = escapeAdbText(password);
+  const password = getBankPass(bank, device_id);  
 
-  await client.shell(device_id, 'input tap 540 1955');
-  await delay(1500);
-  console.log('log password in loginOCB:', password);
-  await client.shell(device_id, `input text ${escapedPassword}`);
+  await client.shell(device_id, 'input tap 540 1955');  
+  await submitLoginOCB({ device_id, bank, password }, 0);
 };
 
-const loginSHBSAHA = async ({ device_id }) => {
+const loginSHB = async ({ device_id }) => {
   const deviceModel = await deviceHelper.getDeviceModel(device_id);
   Logger.log(0, `3. Login SHB SAHA...`, __filename);
 
@@ -560,8 +583,12 @@ const loginSHBSAHA = async ({ device_id }) => {
     await delay(500);
   }
   await client.shell(device_id, `input text ${escapedPassword}`);
-  await delay(1100);
-  await client.shell(device_id, 'input tap 540 1220');
+  // await delay(1100);
+  // await client.shell(device_id, 'input tap 540 1220');
+
+  // Đợi đến khi đủ ký tự dạng ● rồi mới tap "Đăng nhập"
+  console.log('log password.length:',password.length);
+  await submitLoginSHB ({ device_id, bank }, password.length, 0);  
 };
 
 const loginSTB = async ({ device_id }) => {
@@ -608,9 +635,10 @@ const loginSTB = async ({ device_id }) => {
 // };
 
 const mapLoginBank = {
+  hdb: loginHDB,
   tpb: loginTPB,
   eib: loginEIB,
-  shb: loginSHBSAHA,
+  shb: loginSHB,
   ocb: loginOCB,
   abb: loginABB,
   nab: loginNAB,
@@ -672,6 +700,23 @@ const scanQRTPB = async ({ device_id, transId }) => {
   await adbHelper.tapXY(device_id, ...coordinates['Image']);
   await delay(800);
   await adbHelper.tapXY(device_id, ...coordinates['Target-Image-1']);
+
+  return { status: 200, message: 'QR đã được chọn' };
+};
+
+const scanQRHDB = async ({ device_id, transId }) => {
+  const coordinates = await loadCoordinates('hdb', device_id);
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const info = JSON.parse(raw);
+  transId = info?.data?.trans_id;
+
+  await adbHelper.tapXY(device_id, ...coordinates['ScanQR']);
+  await delay(800);
+  await adbHelper.tapXY(device_id, ...coordinates['Image']);
+  await delay(800);
+  await adbHelper.tapXY(device_id, ...coordinates['Target-Image-1']);
+  await delay(800);
 
   return { status: 200, message: 'QR đã được chọn' };
 };
@@ -869,6 +914,7 @@ const scanQRSTB = async ({ device_id }) => {
 };
 
 const scanQRMap = {
+  hdb: scanQRHDB,
   tpb: scanQRTPB,
   eib: scanQREIB,
   shb: scanQRSHBSAHA,
@@ -880,10 +926,7 @@ const scanQRMap = {
 };
 
 const bankStartSuccessKeywords = {
-  // resource-id="com.tpb.mb.gprsandroid:id/tv_item"
-  // resource-id="com.tpb.mb.gprsandroid:id/tv_item"
-  // resource-id="com.tpb.mb.gprsandroid:id/tv_language_name"
-  // resource-id="com.tpb.mb.gprsandroid:id/tv_language_name"
+  hdb: ["com.vnpay.hdbank:id/forget_pass"],
   tpb: ["Smart OTP", "Quét QR", "Mật khẩu"], // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
   eib: [""], // Màn hình đăng nhập (sau khi khởi động app) là rỗng
   shb: ["Nhập mật khẩu"],
@@ -894,15 +937,15 @@ const bankStartSuccessKeywords = {
   vpb: ["Mật khẩu", "Đăng nhập", "Quên mật khẩu?"] // chưa ok
 };
 
-const bankLoginSuccessKeywords = {
-  // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
-  tpb: ["Xin chào &#128075;&#127996;", "Trang Chủ", "Chợ tiện ích", "Quét mọi QR", "Dịch vụ NH", "Cá Nhân"],
-  eib: [""], // Màn hình sau login là rỗng
-  shb: ["Chuyển tiền", "Thanh toán", "Tài khoản", "Tiết kiệm", "Thẻ"],
+const bankLoginSuccessKeywords = {  
+  shb: ["Tài khoản trực tuyến", "Tài khoản", "Tiết kiệm", "Chuyển tiền", "Thanh toán"],
   ocb: ["Tài khoản của tôi", "Chuyển tiền", "Xem tất cả", "Thanh toán hóa đơn"],
-  nab: ["Trang chủ", "Tiện ích", "Đăng nhập VTM", "Giới thiệu", "Cài đặt", "Quét QR", "Xin chào,"],
-  mb: ["Trang chủ", "Thẻ", "Ưu đãi", "Chuyển tiền", "Tổng số dư VND&#10;*** *** VND"], // Chú ý đoạn này sau update app
-  acb: ["Tài khoản", "Chuyển khoản", "Hóa đơn"], // chưa làm    
+  nab: ["ops.namabank.com.vn:id/title_trang_chu", "ops.namabank.com.vn:id/title_dich_vu", "ops.namabank.com.vn:id/titleQRCode", "ops.namabank.com.vn:id/title_thanh_vien", "ops.namabank.com.vn:id/title_tien_ich", "Quét QR", "Thẻ"],
+  mb: ["Trang chủ", "Thẻ", "Chuyển tiền", "Tổng số dư VND&#10;*** *** VND"], // Chú ý đoạn này sau update app
+  acb: ["Số dư khả dụng", "Dịch vụ ngân hàng", "Trang chủ", "Tài khoản"],
+  hdb: ["com.vnpay.hdbank:id/tvTitle", "com.vnpay.hdbank:id/tvLoanAmount", "com.vnpay.hdbank:id/transfer_in", "com.vnpay.hdbank:id/transfer"],  
+  eib: [""], // Màn hình sau login là rỗng                
+  tpb: ["Trang Chủ", "Chợ tiện ích", "Quét mọi QR", "Dịch vụ NH", "Cá Nhân"], // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
   vpb: ["Tài khoản", "QR Code", "Chuyển tiền"] // chưa ok
 };
 
@@ -960,34 +1003,19 @@ async function checkStartApp({ device_id, bank }) {
 
 async function checkHome({ device_id, bank }) {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
-  const requiredKeywordsMap = {
-    // TPB 01/07/2025 không còn cho dump nữa
-    tpb: [
-      'text="Trang Chủ" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_large_label_view"',
-      'text="Chợ tiện ích" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
-      'text="Quét mọi QR" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
-      'text="Dịch vụ NH" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
-      'text="Cá Nhân" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
-      'text="Lịch sử GD"',
-      'text="QR của tôi"'
-    ],
+  const requiredKeywordsMap = {    
     shb: [
       'Tài khoản trực tuyến',
       'Tài khoản',
       'Tiết kiệm',
       'Chuyển tiền',
       'Thanh toán'
-    ],
-    eib: [
-      ''
-    ],
+    ],    
     ocb: [
       'Tài khoản của tôi',
       'Chuyển tiền',
-      'Tiết kiệm',
-      'Thanh toán hóa đơn',
-      'Trung tâm trò chơi',
-      'Nạp',
+      'Xem tất cả',
+      'Thanh toán hóa đơn'
     ],
     nab: [
       'ops.namabank.com.vn:id/title_trang_chu',
@@ -1006,11 +1034,26 @@ async function checkHome({ device_id, bank }) {
     ],
     acb: [
       'Số dư khả dụng',
-      'Dịch vụ ngân hàng',
-      'Dịch vụ khác',
-      'Trang chủ',
-      'Chuyển tiền',
+      'Dịch vụ ngân hàng',      
+      'Trang chủ',      
       'Tài khoản'      
+    ],    
+    eib: [
+      ''
+    ],
+    hdb: [
+      'com.vnpay.hdbank:id/tvTitle',
+      'com.vnpay.hdbank:id/tvLoanAmount',
+      'com.vnpay.hdbank:id/transfer_in',
+      'com.vnpay.hdbank:id/transfer'
+    ],
+    // TPB 01/07/2025 không còn cho dump nữa
+    tpb: [
+      'Trang Chủ',
+      'Chợ tiện ích',
+      'Quét mọi QR',
+      'Dịch vụ NH',
+      'Cá Nhân',            
     ]
   };
 
@@ -1030,11 +1073,9 @@ async function checkHome({ device_id, bank }) {
   const latestFile = path.join(logDir, files[0].name);
   const content = fs.readFileSync(latestFile, 'utf-8');
 
-  const allMatched = keywords.every(keyword => content.includes(keyword));
-  console.log('alo allMatched:',allMatched);
+  const allMatched = keywords.every(keyword => content.includes(keyword));  
 
-  if (allMatched) {
-    console.log('alo in allMatched');
+  if (allMatched) {    
     Logger.log(0, `${bank.toUpperCase()} xác nhận đang ở màn hình HOME`, __filename);
     return true;
   } else {
@@ -1046,7 +1087,6 @@ async function checkHome({ device_id, bank }) {
 const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
 
-  // 1. Tìm file XML mới nhất
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -1060,7 +1100,7 @@ const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
   const latestFile = path.join(logDir, files[0].name);
   const content = fs.readFileSync(latestFile, 'utf-8');
 
-  // 2. Regex kiểm tra dãy dấu chấm (• hoặc ●) ứng với mật khẩu
+  // Regex kiểm tra dãy dấu chấm (• hoặc ●) ứng với mật khẩu
   const regex = /text="([•●]{4,})" resource-id="com\.tpb\.mb\.gprsandroid:id\/etPassword"/;
   const match = content.match(regex);
 
@@ -1076,7 +1116,7 @@ const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
 
   console.log('log isCompleted:', isCompleted);
 
-  // 3. Nếu đủ ký tự → tap "Đăng nhập"
+  // Nếu đủ ký tự → tap "Đăng nhập"
   if (isCompleted) {
     console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');
     // await client.shell(device_id, 'input tap 750 1010');
@@ -1084,6 +1124,209 @@ const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
   } else {
     const t = await reset(timer, device_id, bank);
     setTimeout(() => submitLoginTPB({ device_id, bank }, expectedLength, t), 500);
+  }
+};
+
+const submitLoginHDB = async ({ device_id, bank }, expectedLength, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  // Đợi hệ thống render thông báo lỗi (nếu có)
+  await delay(200);
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitLoginHDB({ device_id, bank }, expectedLength, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  const msg1 = 'Quý khách đã nhập sai thông tin đăng nhập 1 lần';
+  const msg2 = 'Quý khách đã nhập sai thông tin đăng nhập 2 lần';
+
+  const hasError1 = content.includes(msg1);
+  const hasError2 = content.includes(msg2);
+
+  console.log('🟥 hasError1:', hasError1);
+  console.log('🟥 hasError2:', hasError2);
+
+  if (!hasError1 && !hasError2) {
+    await delay(1000);
+    console.log('✅ Không phát hiện lỗi đăng nhập HDB → submit login');
+    await client.shell(device_id, 'input keyevent 66');
+    await client.shell(device_id, 'input keyevent 66');
+  } else {
+    console.log('⚠️ Phát hiện cảnh báo sai mật khẩu HDB → không submit.');
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitLoginHDB({ device_id, bank }, expectedLength, t), 500);
+  }
+};
+
+const submitLoginSHB = async ({ device_id, bank }, expectedLength, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitLoginSHB({ device_id, bank }, expectedLength, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  // Regex kiểm tra dãy dấu chấm (• hoặc ●) ứng với mật khẩu
+  const regex = /text="([•●]{4,})" resource-id="vn\.shb\.saha\.mbanking:id\/edtPwd"/;
+  const match = content.match(regex);
+
+  console.log('🟡 match:', match);
+
+  const isCompleted = match?.[1]?.length === expectedLength;
+
+  if (match && match[1]) {
+    console.log(`🟡 match[1].length: ${match[1].length}`);
+    const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
+    console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
+  }
+
+  console.log('log isCompleted:', isCompleted);
+
+  // Nếu đủ ký tự → tap "Đăng nhập"
+  if (isCompleted) {
+    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');    
+    await client.shell(device_id, 'input tap 540 1220');
+  } else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitLoginSHB({ device_id, bank }, expectedLength, t), 500);
+  }
+};
+
+const submitLoginOCB = async ({ device_id, bank, password }, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const info = JSON.parse(raw);
+
+  bank = info?.data?.bank;
+  password = getBankPass(bank, device_id);  
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitLoginOCB({ device_id, bank, password }, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  const hasUnlockPrompt = content.includes('Nhập mã mở khóa');
+
+  console.log('🟡 Có dòng "Nhập mã mở khóa"?', hasUnlockPrompt);
+
+  if (hasUnlockPrompt) {
+    console.log('✅ Đã tới màn hình nhập mã PIN OCB → nhập mã PIN...');
+    await client.shell(device_id, `input text ${password}`);
+  } else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitLoginOCB({ device_id, bank, password }, t), 500);
+  }
+};
+
+const submitLoginNAB = async ({ device_id, bank }, expectedLength, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitLoginNAB({ device_id, bank }, expectedLength, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  // Regex kiểm tra dãy dấu chấm (• hoặc ●) ứng với mật khẩu
+  const regex = /text="([•●]{4,})" resource-id="ops\.namabank\.com\.vn:id\/etPassword"/;
+  const match = content.match(regex);
+
+  console.log('🟡 match:', match);
+
+  const isCompleted = match?.[1]?.length === expectedLength;
+
+  if (match && match[1]) {
+    console.log(`🟡 match[1].length: ${match[1].length}`);
+    const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
+    console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
+  }
+
+  console.log('log isCompleted:', isCompleted);
+
+  // Nếu đủ ký tự → tap "Đăng nhập"
+  if (isCompleted) {
+    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');    
+    await client.shell(device_id, 'input tap 540 1186');
+  } else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitLoginNAB({ device_id, bank }, expectedLength, t), 500);
+  }
+};
+
+const submitLoginMB = async ({ device_id, bank }, expectedLength, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitLoginMB({ device_id, bank }, expectedLength, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  // Regex mới: tìm node có text chứa 4+ ký tự ● hoặc • và class EditText
+  const regex = /<node[^>]*text="([•●]{4,})"[^>]*class="android\.widget\.EditText"[^>]*>/;
+  const match = content.match(regex);
+
+  console.log('🟡 match:', match);
+
+  const isCompleted = match?.[1]?.length === expectedLength;
+  console.log('🧩 expectedLength:', expectedLength);
+
+  if (match && match[1]) {
+    console.log(`🟡 match[1].length: ${match[1].length}`);
+    const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
+    console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
+  }
+
+  console.log('log isCompleted:', isCompleted);
+
+  // Nếu đủ ký tự → tap "Đăng nhập"
+  if (isCompleted) {
+    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');    
+    await client.shell(device_id, 'input keyevent 66');
+    await client.shell(device_id, 'input keyevent 66');
+  } else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitLoginMB({ device_id, bank }, expectedLength, t), 500);
   }
 };
 
@@ -1173,12 +1416,16 @@ const runBankTransfer = async ({ device_id, bank, controller }) => {
   const startApp = mapStartBank[bank.toLowerCase()];
   const loginApp = mapLoginBank[bank.toLowerCase()];
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
+  console.log('log stopApp in runBankTransfer:',stopApp);
+  console.log('log startApp in runBankTransfer:',startApp);
+  console.log('log loginApp in runBankTransfer:',loginApp);
 
   // Dọn sạch logs cũ
   fs.readdirSync(logDir)
     .filter(file => file.endsWith('.xml'))
     .forEach(file => fs.unlinkSync(path.join(logDir, file)));
 
+  console.log('aloooooooooooo2');
   if (!startApp || !loginApp) {
     return { status: 400, valid: false, message: 'Không hỗ trợ ngân hàng này' };
   }
@@ -1257,11 +1504,17 @@ const bankTransfer = async ({ device_id, bank, controller }) => {
   const json = JSON.parse(raw);
   const type = json?.type;
   bank = json?.data?.bank;
-  transId = json?.data?.transId;
+  transId = json?.data?.trans_id;  
   
   console.log('[BANKTRANSFER] Đang chạy với:', { device_id, bank, cancelled: controller?.cancelled });
 
-  if (type !== 'att' || !device_id || !bank) {
+  console.log('alo1');
+
+  console.log('log bank:',bank);
+  console.log('log transId:',transId);
+  console.log('log type:',type);
+  console.log('log device_id:',device_id);  
+  if (type !== 'att' || !device_id || !bank) {    
     notifier.emit('multiple-banks-detected', {
       device_id,
       message: `Thiếu thông tin hoặc sai kiểu kết nối`
@@ -1332,7 +1585,7 @@ const startTransfer = async ({ device_id }) => {
   }
 
   transferTaskManager.start(device_id, async (controller) => {
-    await bankTransfer({ device_id, bank, controller });
+    await bankTransfer({ device_id, bank, controller });    
   });  
 
   return { status: 200, valid: true, message: 'Đã bắt đầu bankTransfer' };

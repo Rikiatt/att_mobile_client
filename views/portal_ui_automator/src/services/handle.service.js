@@ -445,9 +445,10 @@ export const hdbLogin = async (data, setLoading) => {
 
   console.log('3. Login...');
   await actionADB({ action: 'clickLoginHDB', device_id: data.device_id });
-  await delay(500);
+  await actionADB({ action: 'clickLoginHDB', device_id: data.device_id });
+  await delay(300);
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
-  await delay(700);
+  await delay(1000);
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
   await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
 
