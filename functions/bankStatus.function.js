@@ -776,8 +776,8 @@ async function trackTPB ( { device_id } ) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      await dumpXmlToLocal(device_id, localPath);
-      await checkContentTPB(device_id, localPath);
+      // await dumpXmlToLocal(device_id, localPath);
+      // await checkContentTPB(device_id, localPath);
     }
 
     running = await isTPBRunning({ device_id });
