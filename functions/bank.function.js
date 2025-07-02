@@ -12,6 +12,7 @@ const deviceHelper = require('../helpers/deviceHelper');
 const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, isVPBRunning, isMBRunning, isMSBRunning } = require('../functions/bankStatus.function');
 const notifier = require('../events/notifier');
 const { escapeAdbText } = require('../helpers/adbHelper');
+const transferTaskManager = require('../helpers/transferTaskManager');
 
 async function clearTempFile({ device_id }) {
   try {
@@ -451,7 +452,7 @@ const loginEIB = async ({ device_id, bank }) => {
   await client.shell(device_id, 'input tap 118 820');
   await delay(400);
   await client.shell(device_id, `input text ${escapedPassword}`);
-  await delay(1200);
+  await delay(1100);
   await client.shell(device_id, 'input tap 540 1020');
 };
 
@@ -617,19 +618,19 @@ const mapLoginBank = {
   stb: loginSTB,
 };
 
-const reset = async (timer, device_id, bank) => {
+const reset = async (timer, device_id, bank, controller) => {
   timer++;
   const count = 30;
 
   if (isNaN(timer)) {
     Logger.log(2, `Reset vì timer không hợp lệ: ${timer}`, __filename);
-    await runBankTransfer({ device_id, bank });
+    await runBankTransfer({ device_id, bank, controller });
     return 0;
   }
 
   if (timer >= count) {
     Logger.log(1, `Đã đạt giới hạn retry (${timer}/${count}), reset lại...`, __filename);
-    await runBankTransfer({ device_id, bank });
+    await runBankTransfer({ device_id, bank, controller });
     return 0;
   }
 
@@ -883,7 +884,7 @@ const bankStartSuccessKeywords = {
   // resource-id="com.tpb.mb.gprsandroid:id/tv_item"
   // resource-id="com.tpb.mb.gprsandroid:id/tv_language_name"
   // resource-id="com.tpb.mb.gprsandroid:id/tv_language_name"
-  tpb: ["Smart OTP", "Quét QR", "Mật khẩu"],
+  tpb: ["Smart OTP", "Quét QR", "Mật khẩu"], // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
   eib: [""], // Màn hình đăng nhập (sau khi khởi động app) là rỗng
   shb: ["Nhập mật khẩu"],
   ocb: ["Tìm ATM và chi nhánh", "Tra cứu lãi suất", "Liên hệ hỗ trợ", "Đăng nhập"],
@@ -894,6 +895,7 @@ const bankStartSuccessKeywords = {
 };
 
 const bankLoginSuccessKeywords = {
+  // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
   tpb: ["Xin chào &#128075;&#127996;", "Trang Chủ", "Chợ tiện ích", "Quét mọi QR", "Dịch vụ NH", "Cá Nhân"],
   eib: [""], // Màn hình sau login là rỗng
   shb: ["Chuyển tiền", "Thanh toán", "Tài khoản", "Tiết kiệm", "Thẻ"],
@@ -954,6 +956,91 @@ async function checkStartApp({ device_id, bank }) {
 
   Logger.log(2, `${bank.toUpperCase()} khởi động app thất bại hoặc không xác định qua XML sau ${maxAttempts} lần thử`, __filename);
   return false;
+}
+
+async function checkHome({ device_id, bank }) {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+  const requiredKeywordsMap = {
+    // TPB 01/07/2025 không còn cho dump nữa
+    tpb: [
+      'text="Trang Chủ" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_large_label_view"',
+      'text="Chợ tiện ích" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
+      'text="Quét mọi QR" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
+      'text="Dịch vụ NH" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
+      'text="Cá Nhân" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"',
+      'text="Lịch sử GD"',
+      'text="QR của tôi"'
+    ],
+    shb: [
+      'Tài khoản trực tuyến',
+      'Tài khoản',
+      'Tiết kiệm',
+      'Chuyển tiền',
+      'Thanh toán'
+    ],
+    eib: [
+      ''
+    ],
+    ocb: [
+      'Tài khoản của tôi',
+      'Chuyển tiền',
+      'Tiết kiệm',
+      'Thanh toán hóa đơn',
+      'Trung tâm trò chơi',
+      'Nạp',
+    ],
+    nab: [
+      'ops.namabank.com.vn:id/title_trang_chu',
+      'ops.namabank.com.vn:id/title_dich_vu',
+      'ops.namabank.com.vn:id/titleQRCode',
+      'ops.namabank.com.vn:id/title_thanh_vien',
+      'ops.namabank.com.vn:id/title_tien_ich',
+      'Quét QR',
+      'Thẻ'
+    ],
+    mb: [
+      'Tổng số dư VND&#10;*** *** VND',
+      'Chuyển tiền',      
+      'Trang chủ',
+      'Thẻ'
+    ],
+    acb: [
+      'Số dư khả dụng',
+      'Dịch vụ ngân hàng',
+      'Dịch vụ khác',
+      'Trang chủ',
+      'Chuyển tiền',
+      'Tài khoản'      
+    ]
+  };
+
+  const keywords = requiredKeywordsMap[bank.toLowerCase()];
+  if (!keywords) return false;
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    Logger.log(2, `Không tìm thấy XML file cho ${bank.toUpperCase()}`, __filename);
+    return false;
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  const allMatched = keywords.every(keyword => content.includes(keyword));
+  console.log('alo allMatched:',allMatched);
+
+  if (allMatched) {
+    console.log('alo in allMatched');
+    Logger.log(0, `${bank.toUpperCase()} xác nhận đang ở màn hình HOME`, __filename);
+    return true;
+  } else {
+    Logger.log(1, `${bank.toUpperCase()} chưa ở màn hình HOME`, __filename);
+    return false;
+  }
 }
 
 const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
@@ -1081,16 +1168,16 @@ async function checkScanQR({ device_id, bank, transId }) {
   return false;
 }
 
-const runBankTransfer = async ({ device_id, bank }) => {
+const runBankTransfer = async ({ device_id, bank, controller }) => {
   const stopApp = mapStopBank[bank.toLowerCase()];
-  // Dọn sạch logs cũ
+  const startApp = mapStartBank[bank.toLowerCase()];
+  const loginApp = mapLoginBank[bank.toLowerCase()];
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  // Dọn sạch logs cũ
   fs.readdirSync(logDir)
     .filter(file => file.endsWith('.xml'))
     .forEach(file => fs.unlinkSync(path.join(logDir, file)));
-
-  const startApp = mapStartBank[bank.toLowerCase()];
-  const loginApp = mapLoginBank[bank.toLowerCase()];
 
   if (!startApp || !loginApp) {
     return { status: 400, valid: false, message: 'Không hỗ trợ ngân hàng này' };
@@ -1100,16 +1187,33 @@ const runBankTransfer = async ({ device_id, bank }) => {
   await stopApp({ device_id });
   await forceKillApp({ device_id, packageName: bank });
 
+  console.log('log controller?.cancelled:', controller?.cancelled);
+  if (controller?.cancelled) {
+    Logger.log(1, `Dừng sau stopApp`, __filename);
+    throw new Error('Dừng sau stopApp');
+  }
+
   Logger.log(0, `2. Start ${bank.toUpperCase()}`, __filename);
   await startApp({ device_id });
   await delay(waitStartApp[bank.toLowerCase()]);
 
+  if (controller?.cancelled) {
+    Logger.log(1, `Dừng sau startApp`, __filename);
+    throw new Error('Dừng sau startApp');
+  }
+
   let startAppDetected = false;
   for (let attempt = 0; attempt < 3; attempt++) {
+    if (controller?.cancelled) {
+      Logger.log(1, `Dừng khi đang kiểm tra startApp (lần ${attempt + 1})`, __filename);
+      throw new Error('Dừng khi đang kiểm tra startApp');
+    }
+
     startAppDetected = await checkStartApp({ device_id, bank });
     if (startAppDetected) break;
+
     Logger.log(1, `Retry xác định màn hình startApp lần ${attempt + 1}`, __filename);
-    await delay(5000); // delay 5s giữa các lần thử
+    await delay(5000);
   }
 
   if (!startAppDetected) {
@@ -1118,19 +1222,26 @@ const runBankTransfer = async ({ device_id, bank }) => {
 
   Logger.log(0, `3. Login ${bank.toUpperCase()}`, __filename);
   await loginApp({ device_id });
-  await delay(waitLoginApp[bank.toLowerCase()]);
 
-  // const loginDetected = await checkLogin({ device_id, bank });
-  // if (!loginDetected) {
-  //   return { status: 400, valid: false, message: 'Không xác định được màn hình login thành công' };
-  // }
+  if (controller?.cancelled) {
+    Logger.log(1, `Dừng sau loginApp`, __filename);
+    throw new Error('Dừng sau loginApp');
+  }
+
+  await delay(waitLoginApp[bank.toLowerCase()]);
 
   let loginDetected = false;
   for (let attempt = 0; attempt < 3; attempt++) {
+    if (controller?.cancelled) {
+      Logger.log(1, `Dừng khi đang kiểm tra login (lần ${attempt + 1})`, __filename);
+      throw new Error('Dừng khi đang kiểm tra login');
+    }
+
     loginDetected = await checkLogin({ device_id, bank });
     if (loginDetected) break;
-    Logger.log(1, `Retry xác định màn hình startApp lần ${attempt + 1}`, __filename);
-    await delay(5000); // delay 5s giữa các lần thử
+
+    Logger.log(1, `Retry xác định màn hình loginApp lần ${attempt + 1}`, __filename);
+    await delay(5000);
   }
 
   if (!loginDetected) {
@@ -1140,62 +1251,63 @@ const runBankTransfer = async ({ device_id, bank }) => {
   return { status: 200, valid: true, message: 'Đăng nhập thành công' };
 };
 
-const bankTransfer = async ({ device_id, bank }) => {
+const bankTransfer = async ({ device_id, bank, controller }) => {
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const json = JSON.parse(raw);
   const type = json?.type;
   bank = json?.data?.bank;
   transId = json?.data?.transId;
+  
+  console.log('[BANKTRANSFER] Đang chạy với:', { device_id, bank, cancelled: controller?.cancelled });
 
   if (type !== 'att' || !device_id || !bank) {
     notifier.emit('multiple-banks-detected', {
       device_id,
       message: `Thiếu thông tin hoặc sai kiểu kết nối`
     });
-    return { status: 400, valid: false, message: 'Thiếu thông tin hoặc sai kiểu kết nối' };
+    return;
   }
 
   const scanQRApp = scanQRMap[bank.toLowerCase()];
-  if (!scanQRApp) {
-    return { status: 400, valid: false, message: 'Ngân hàng chưa hỗ trợ scanQR' };
-  }
+  if (!scanQRApp) return;
 
   let retries = 0;
 
   while (retries < 30) {
-    const transStatus = await checkTransactions({ device_id });
-    const started = await isBankAppRunning({ bank, device_id });
+    if (controller.cancelled) throw new Error('Dừng theo yêu cầu người dùng');
 
-    if (transStatus === 'in_process' && started) {
-      // text="Trang Chủ" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_large_label_view"
-      // text="Chợ tiện ích" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"
-      // text="Quét mọi QR" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"
-      // text="Dịch vụ NH" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"
-      // text="Cá Nhân" resource-id="com.tpb.mb.gprsandroid:id/navigation_bar_item_small_label_view"
-      // text="Lịch sử GD"
-      // text="QR của tôi"
+    const transStatus = await checkTransactions({ device_id });
+    if (controller.cancelled) throw new Error('Dừng sau checkTransactions');
+
+    const started = await isBankAppRunning({ bank, device_id });
+    if (controller.cancelled) throw new Error('Dừng sau isBankAppRunning');
+
+    if (transStatus === 'in_process' && started && await checkHome({ device_id, bank })) {
       Logger.log(0, `TH1 - Đã login app + có đơn -> ScanQR`, __filename);
       await scanQRApp({ device_id });
-      return { status: 200, valid: true, message: 'TH1: ScanQR thành công' };
+      return;
     }
 
-    if (transStatus !== 'in_process' && started) {
-      Logger.log(0, `TH2 - Đã login app + chưa có đơn -> retry...max 30 -> reset`, __filename);
+    if (transStatus !== 'in_process' && started && await checkHome({ device_id, bank })) {
+      Logger.log(0, `TH2 - Đã login app + chưa có đơn -> retry...`, __filename);
     }
 
     if (transStatus === 'in_process' && !started) {
       Logger.log(0, `TH3 - Có đơn + chưa login app → chạy lại`, __filename);
-      await runBankTransfer({ device_id, bank });
+      console.log('allooooooooooooooooooooooooooooooo');
+      await runBankTransfer({ device_id, bank, controller });
       await delay(waitStartApp[bank.toLowerCase()]);
+      if (controller.cancelled) throw new Error('Dừng sau login');
+
       await scanQRApp({ device_id, transId });
       const scanned = await checkScanQR({ device_id, bank, transId });
-      if (scanned) return { status: 200, valid: true, message: 'TH3: ScanQR thành công sau login' };
+      if (scanned) return;
     }
 
     if (transStatus !== 'in_process' && !started) {
       Logger.log(0, `TH4 - Chưa login app + chưa có đơn → chạy login trước`, __filename);
-      await runBankTransfer({ device_id, bank });
+      await runBankTransfer({ device_id, bank, controller });
       await delay(waitStartApp[bank.toLowerCase()]);
     }
 
@@ -1206,11 +1318,43 @@ const bankTransfer = async ({ device_id, bank }) => {
   return { status: 200, valid: true, message: 'Hết retry, đã reset lại app và chờ đơn mới' };
 };
 
+const startTransfer = async ({ device_id }) => {
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const json = JSON.parse(raw);
+  const type = json?.type;
+  const bank = json?.data?.bank;
+
+  console.log('[TRANSFER] Gọi bankTransfer với:', { device_id, bank });
+
+  if (type !== 'att' || !device_id || !bank) {
+    return { status: 400, valid: false, message: 'Thiếu device_id hoặc bank' };
+  }
+
+  transferTaskManager.start(device_id, async (controller) => {
+    await bankTransfer({ device_id, bank, controller });
+  });  
+
+  return { status: 200, valid: true, message: 'Đã bắt đầu bankTransfer' };
+};
+
+const stopTransfer = async ({ device_id }) => {
+  if (!device_id) {
+    return { valid: false, message: 'Thiếu device_id' };
+  }
+
+  transferTaskManager.stop(device_id);
+  return { valid: true, message: 'Đã yêu cầu dừng bankTransfer' };
+};
+
 module.exports = {
   bankTransfer,
   runBankTransfer,
   startNCB,
   startHDB,
   startVIETBANK,
-  startEIB
+  startEIB,
+  startTransfer,
+  stopTransfer,
+  checkHome
 };

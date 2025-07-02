@@ -3,7 +3,7 @@ const { bankTransfer, startNCB, startHDB, startVIETBANK, startEIB} = require('..
 const { checkRunningBanks } = require('../functions/bankStatus.function');
 
 const mapAction = {  
-    bankTransfer: bankTransfer,
+    bankTransfer: bankTransfer,    
     checkRunningBanks: checkRunningBanks,    
     startNCB: startNCB,       
     startHDB: startHDB,

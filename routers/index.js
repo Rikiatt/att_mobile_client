@@ -6,6 +6,7 @@ const setting = require('./setting.route');
 const hideDev = require('./hideDev.route');
 const hideUSBDebugging = require('./hideUSB.route');
 const order = require('./order.route');
+const transfer = require('./transfer.route');
 
 module.exports = (app) => {
   app.use('/adb', adb);
@@ -16,4 +17,5 @@ module.exports = (app) => {
   app.use('/hideDev', hideDev); 
   app.use('/hideUSBDebugging', hideUSBDebugging); 
   app.use('/order', order);
+  app.use('/transfer', transfer);
 };

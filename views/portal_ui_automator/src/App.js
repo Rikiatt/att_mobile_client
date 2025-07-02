@@ -293,7 +293,7 @@ function App() {
                         </>
                       }
                       <Divider sx={{ mt: 2, mb: 2 }} />
-                      <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleTransfer item={item} X={X} Y={Y} setLoading={setLoading} />                      
                       <HandleEIB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleBIDV item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />

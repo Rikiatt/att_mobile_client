@@ -69,6 +69,21 @@ export const bankTransfer = async (data, setLoading) => {
   setLoading(false);
 };
 
+export const stopBankTransfer = async (data, setLoading) => {  
+  const deviceCoordinates = await actionADB({ action: 'checkDevice', device_id: data.device_id }); 
+
+  if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
+    return swalNotification("error", "Thiết bị chưa hỗ trợ xuất bán tự động", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+  }  
+
+  setLoading(true);    
+
+  console.log('2. Dừng chạy tự động');
+  await actionBank({ action: 'stopBankTransfer', device_id: data.device_id }); 
+
+  setLoading(false);
+};
+
 // ============== BIDV ============== //
 
 export const bidvLogin = async (data, setLoading) => {
