@@ -215,9 +215,61 @@ async function checkContentACB(device_id, localPath) {
   }
 }
 
-// chua lam
+// Chưa làm TH2
 async function checkContentBAB(device_id, localPath) {
-  Logger.log(0, 'BAB chưa làm.', __filename);
+  try {
+    const content = fs.readFileSync(localPath, "utf-8").trim();
+
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["Chuyển tiền", "Tới tài khoản khác", "Tới số thẻ", "Tới tài khoản của tôi"],
+        en: ["Chuyển tiền", "Tới tài khoản khác", "Tới số thẻ", "Tới tài khoản của tôi"]
+      }
+    ];
+
+    for (const screen of screenKeywords) {
+      if (screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
+        // Đọc file local-banks.json
+        const localBanksPath = path.join(__dirname, "../database/local-banks.json");
+        let banksData = [];
+
+        if (fs.existsSync(localBanksPath)) {
+          const rawData = fs.readFileSync(localBanksPath, "utf-8").trim();
+          if (rawData) {
+            banksData = JSON.parse(rawData);
+          }
+        }
+
+        let message = '';
+        if (banksData.length === 0) {
+          message = `Phát hiện có thao tác thủ công khi xuất với BAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+        } else {
+          const bankItem = banksData.find(item => item["THIẾT BỊ"]?.includes(device_id));
+          if (bankItem) {
+            message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng BAB`;
+          } else {
+            message = `Phát hiện có thao tác thủ công khi xuất với BAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+          }
+        }
+
+        Logger.log(1, message, __filename);
+        Logger.log(0, 'Đóng app BAB', __filename);
+        notifier.emit('multiple-banks-detected', {
+          device_id,
+          message: `Phát hiện có thao tác thủ công khi xuất với BAB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        });
+
+        await stopBAB({ device_id });
+        await sendTelegramAlert(telegramToken, chatId, message);
+        await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
+        return;
+      }
+    }
+  } catch (error) {
+    console.error("Lỗi xử lý XML:", error.message);
+  }
 }
 
 // khong dump dc
@@ -935,7 +987,7 @@ async function checkContentOCB(device_id, localPath) {
 }
 
 // ok - chinh xong canh bao
-async function checkContentSHBSAHA(device_id, localPath) {
+async function checkContentSHB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
@@ -1202,7 +1254,7 @@ async function checkContentSEAB(device_id, localPath) {
   }
 }
 
-// chua check QR - chinh xong canh bao
+// chua chinh canh bao
 async function checkContentSTB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1273,8 +1325,76 @@ async function checkContentSTB(device_id, localPath) {
       }
     }
 
-    // TH2: Chưa làm
+    // TH2: Màn hình xác nhận sau khi quét QR của STB
+    const hasTransferForm = [
+      "Số tài khoản",
+      "Tên người nhận",
+      "Số tiền cần chuyển"
+    ].every(keyword => content.includes(keyword));
 
+    if (hasTransferForm) {
+      const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+      const qrDevice = infoQR?.data?.device_id || '';
+      const qrType = infoQR?.type || '';
+
+      if (device_id === qrDevice && qrType !== 'test') {
+        const accountMatch = content.match(/text="(\d{6,})"\s+resource-id="com\.sacombank\.ewallet:id\/tv_input_user_receiver"/);
+        const amountMatch = content.match(/text="([0-9.,]+)đ"\s+resource-id="com\.sacombank\.ewallet:id\/tv_input_money_tk"/);
+
+        const xmlAccount = accountMatch ? accountMatch[1].replace(/\D/g, '') : "";
+        const xmlAmount = amountMatch ? amountMatch[1].replace(/[^0-9]/g, '') : "";
+
+        const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+        const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+
+        let expectedAccount = "";
+        let expectedAmount = "";
+        const vietqrUrl = jsonData.data?.vietqr_url || "";
+        const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
+        if (match) {
+          expectedAccount = match[1].replace(/\D/g, "");
+          expectedAmount = match[2].replace(/\D/g, "");
+        }
+
+        Logger.log(0, `XML Account Number: ${xmlAccount}`, __filename);
+        Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
+        Logger.log(0, `XML Amount: ${xmlAmount}`, __filename);
+        Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
+
+        const xmlHasAccount =
+          xmlAccount === expectedAccount ||
+          (xmlAccount.length === expectedAccount.length + 1 && xmlAccount.startsWith(expectedAccount));
+
+        const xmlHasAmount = xmlAmount === expectedAmount;
+
+        if (!(xmlHasAccount && xmlHasAmount)) {
+          const reason = "XML KHÁC info-qr về số tài khoản hoặc số tiền";
+          Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
+
+          await stopSTB({ device_id });
+          notifier.emit('multiple-banks-detected', {
+            device_id,
+            message: reason
+          });
+
+          await sendTelegramAlert(
+            telegramToken,
+            chatId,
+            `${reason} với STB (id thiết bị: ${device_id})`
+          );
+
+          await saveAlertToDatabase({
+            timestamp: new Date().toISOString(),
+            reason: `${reason} (id thiết bị: ${device_id})`,
+            filePath: localPath
+          });
+
+          return;
+        } else {
+          Logger.log(0, 'XML TRÙNG info-qr về account_number và amount.', __filename);
+        }
+      }
+    }
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
@@ -1546,6 +1666,6 @@ async function stopTCB({ device_id }) {
 }
 
 module.exports = {
-  checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, checkContentVIETBANK, checkContentVIKKI,
+  checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, checkContentVIETBANK, checkContentVIKKI,
   stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
 }

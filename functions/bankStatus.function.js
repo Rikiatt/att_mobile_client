@@ -41,7 +41,7 @@ if (siteToChatIdMap[validSite]) {
 }
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHBSAHA, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
+const { checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
   stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
 } 
 = require('../functions/checkBank.function');
@@ -703,7 +703,7 @@ async function trackSHBSAHA ( { device_id } ) {
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
       await dumpXmlToLocal(device_id, localPath);
-      await checkContentSHBSAHA(device_id, localPath);
+      await checkContentSHB(device_id, localPath);
     }
 
     running = await isSHBSAHARunning({ device_id });
@@ -1039,7 +1039,7 @@ async function trackMB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua lam checkContentBAB
+// dang lam checkContentBAB
 async function trackBAB({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1085,7 +1085,7 @@ async function trackBAB({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      // await dumpXmlToLocal(device_id, localPath);
+      await dumpXmlToLocal(device_id, localPath);
       await checkContentBAB(device_id, localPath);
     }    
 
@@ -1100,7 +1100,7 @@ async function trackBAB({ device_id }) {
         return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'com.bab.retailUAT') { // chua lam
+    } else if (currentApp !== 'com.bab.retailUAT') {
       Logger.log(0, `BAB không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
       await clearTempFile({ device_id });
       return await trackingLoop({ device_id });
@@ -2043,6 +2043,29 @@ async function isACBRunning({ device_id }) {
     return isInTaskList;
   } catch (error) {
     console.error("Error checking ACB app status via activity stack:", error.message);
+    return false;
+  }
+}
+
+async function isBABRunning({ device_id }) {
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const packageName = 'com.bab.retailUAT';
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+
+    if (isForeground) return true;
+
+    const escaped = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escaped}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escaped}`).test(output);
+
+    return isInTaskList;
+  } catch (error) {
+    console.error("Error checking BAB app status via activity stack:", error.message);
     return false;
   }
 }
