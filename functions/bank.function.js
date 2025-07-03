@@ -1233,10 +1233,10 @@ const submitLoginOCB = async ({ device_id, bank, password }, timer) => {
 
   const hasUnlockPrompt = content.includes('Nhập mã mở khóa');
 
-  console.log('🟡 Có dòng "Nhập mã mở khóa"?', hasUnlockPrompt);
+  console.log('Check màn hình "Nhập mã mở khóa"?', hasUnlockPrompt);
 
   if (hasUnlockPrompt) {
-    console.log('✅ Đã tới màn hình nhập mã PIN OCB → nhập mã PIN...');
+    console.log('Đã tới màn hình nhập mã PIN OCB → nhập mã PIN...');
     await client.shell(device_id, `input text ${password}`);
   } else {
     const t = await reset(timer, device_id, bank);
@@ -1416,16 +1416,12 @@ const runBankTransfer = async ({ device_id, bank, controller }) => {
   const startApp = mapStartBank[bank.toLowerCase()];
   const loginApp = mapLoginBank[bank.toLowerCase()];
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
-  console.log('log stopApp in runBankTransfer:',stopApp);
-  console.log('log startApp in runBankTransfer:',startApp);
-  console.log('log loginApp in runBankTransfer:',loginApp);
 
   // Dọn sạch logs cũ
   fs.readdirSync(logDir)
     .filter(file => file.endsWith('.xml'))
     .forEach(file => fs.unlinkSync(path.join(logDir, file)));
-
-  console.log('aloooooooooooo2');
+  
   if (!startApp || !loginApp) {
     return { status: 400, valid: false, message: 'Không hỗ trợ ngân hàng này' };
   }
@@ -1506,14 +1502,6 @@ const bankTransfer = async ({ device_id, bank, controller }) => {
   bank = json?.data?.bank;
   transId = json?.data?.trans_id;  
   
-  console.log('[BANKTRANSFER] Đang chạy với:', { device_id, bank, cancelled: controller?.cancelled });
-
-  console.log('alo1');
-
-  console.log('log bank:',bank);
-  console.log('log transId:',transId);
-  console.log('log type:',type);
-  console.log('log device_id:',device_id);  
   if (type !== 'att' || !device_id || !bank) {    
     notifier.emit('multiple-banks-detected', {
       device_id,
@@ -1548,7 +1536,7 @@ const bankTransfer = async ({ device_id, bank, controller }) => {
 
     if (transStatus === 'in_process' && !started) {
       Logger.log(0, `TH3 - Có đơn + chưa login app → chạy lại`, __filename);
-      console.log('allooooooooooooooooooooooooooooooo');
+      
       await runBankTransfer({ device_id, bank, controller });
       await delay(waitStartApp[bank.toLowerCase()]);
       if (controller.cancelled) throw new Error('Dừng sau login');
