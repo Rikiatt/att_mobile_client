@@ -353,21 +353,6 @@ function extractOCRFieldsFromLinesNCB(ocrRawText) {
   };
 }
 
-async function dumpOCRToLocal(device_id, localPath) {
-  try {
-    const screencapStream = await client.shell(device_id, `screencap -p`);
-
-    await pipeline(
-      screencapStream,
-      fs.createWriteStream(localPath)
-    );
-
-    Logger.log(0, `Screenshot saved to: ${localPath}`, __filename);
-  } catch (error) {
-    Logger.log(2, `dumpOCRToLocal error: ${error.message}`, __filename);
-  }
-}
-
 let ocrMatchedByDevice = {}; // Theo dõi trạng thái từng thiết bị
 let lastActivityByDevice = {}; // Theo dõi activity gần nhất của từng thiết bị
 

@@ -28,39 +28,6 @@ const coordinatesScanQROCB = require('../config/coordinatesScanQROCB.json');
 const adbHelper = require('../helpers/adbHelper');
 const deviceHelper = require('../helpers/deviceHelper');
 
-const ensureDirectoryExists = ( dirPath ) => {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-}
-
-async function clearTempFile( { device_id } ) {
-  try {                
-    await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
-    await delay(1000);    
-  } catch (error) {
-    console.error("Cannot delete file temp_dump.xml:", error.message);
-  }
-}
-
-async function dumpXmlToLocal ( device_id, localPath ) {  
-  try {          
-    const tempPath = `/sdcard/temp_dump.xml`;
-      
-    await client.shell(device_id, `uiautomator dump ${tempPath}`);    
-      
-    await client.pull( device_id , tempPath)
-      .then(stream => new Promise((resolve, reject) => {        
-        const fileStream = fs.createWriteStream(localPath);
-        stream.pipe(fileStream);
-        fileStream.on('finish', resolve);
-        fileStream.on('error', reject);
-    }));    
-  } catch (error) {
-      console.error(`Error occurred while dumping XML to local. ${error.message}`);
-  }
-}
-
 // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng NAB
 const bankBinMapNAB = {
   // chưa xong

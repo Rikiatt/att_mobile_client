@@ -13,6 +13,7 @@ const { isACBRunning, isEIBRunning, isOCBRunning, isNABRunning, isTPBRunning, is
 const notifier = require('../events/notifier');
 const { escapeAdbText } = require('../helpers/adbHelper');
 const transferTaskManager = require('../helpers/transferTaskManager');
+const { del } = require('request');
 
 async function clearTempFile({ device_id }) {
   try {
@@ -38,26 +39,6 @@ async function waitForXmlReady(device_id, remotePath = '/sdcard/temp_dump.xml', 
     await delay(200); // không nên để thấp hơn 200ms để tránh spam shell
   }
   return false;
-}
-
-async function dumpXmlToLocal(device_id, localPath) {
-  try {
-    const remotePath = `/sdcard/temp_dump.xml`;
-    await client.shell(device_id, `uiautomator dump ${remotePath}`);
-
-    const ready = await waitForXmlReady(device_id, remotePath);
-    if (!ready) throw new Error('XML file not ready after dump');
-
-    const transfer = await client.pull(device_id, remotePath);
-    await new Promise((resolve, reject) => {
-      const fileStream = fs.createWriteStream(localPath);
-      transfer.pipe(fileStream);
-      fileStream.on('finish', resolve);
-      fileStream.on('error', reject);
-    });
-  } catch (error) {
-    console.error(`dumpXmlToLocal error: ${error.message}`);
-  }
 }
 
 const allCoordinates = {
@@ -814,14 +795,17 @@ const scanQREIB = async ({ device_id, transId }) => {
   return { status: 200, message: 'QR đã được chọn' };
 };
 
-const scanQRSHB = async ({ device_id }) => {
+const scanQRSHB = async ({ device_id, bank }) => {
   const coordinates = await loadCoordinates('shb', device_id);
 
   await adbHelper.tapXY(device_id, ...coordinates['ScanQR']);
   await delay(600);
-  await adbHelper.tapXY(device_id, ...coordinates['Image']);
-  await delay(900);
-  await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);
+  // await adbHelper.tapXY(device_id, ...coordinates['Image']);
+  // await delay(900);
+  // await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);  
+  await submitUploadQRSHB1({ device_id, bank }, 0);
+  await submitUploadQRSHB2({ device_id, bank }, 0);
+  await submitUploadQRSHB3({ device_id, bank }, 0);
 
   return { status: 200, message: 'Success' };
 };
@@ -979,6 +963,7 @@ const scanQRABB = async ({ device_id }) => {
 const scanQRSTB = async ({ device_id }) => {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
   const coordinates = await loadCoordinates('stb', device_id);
+  const coordinates2 = await loadCoordinates('nab', device_id);
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
@@ -1006,11 +991,11 @@ const scanQRSTB = async ({ device_id }) => {
   } else {
     Logger.log(0, `STB XML dump cho thấy đang ở TH2 (không có tồn tại "Báo cáo lỗi")`, __filename);
   }
-  const galleryCoord = useReportBug ? coordinates['Gallery2'] : coordinates['Gallery1'];
+  const galleryCoord = useReportBug ? coordinates2['Gallery2'] : coordinates2['Gallery1'];
 
   await adbHelper.tapXY(device_id, ...galleryCoord);
   await delay(800);
-  await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);
+  await adbHelper.tapXY(device_id, ...coordinates2['Target-Img']);
 
   return { status: 200, message: 'QR đã được chọn' };
 };
@@ -1503,13 +1488,13 @@ const submitLoginSTB1 = async ({ device_id, bank }, password, timer) => {
   const latestFile = path.join(logDir, files[0].name);
   const content = fs.readFileSync(latestFile, 'utf-8');
 
-  const hasWelcome = content.includes('text="Xin chào"');
+  const hasTransfer = content.includes('text="Chuyển tiền"');
   const hasQuickAccess = content.includes('text="Truy cập nhanh"');
 
-  console.log(`🟡 hasWelcome: ${hasWelcome}, hasQuickAccess: ${hasQuickAccess}`);
+  console.log(`🟡 hasTransfer: ${hasTransfer}, hasQuickAccess: ${hasQuickAccess}`);
 
-  if (hasWelcome && hasQuickAccess) {
-    console.log('Đã thấy Xin chào và Truy cập nhanh → nhập mật khẩu');
+  if (hasTransfer && hasQuickAccess) {
+    console.log('Đã thấy Chuyển tiền và Truy cập nhanh → nhập mật khẩu');
     await client.shell(device_id, 'input tap 970 150');
   } else {
     const t = await reset(timer, device_id, bank);
@@ -1622,6 +1607,120 @@ const submitLoginSTB4 = async ({ device_id, bank }, expectedLength, timer) => {
   }
 };
 
+const submitUploadQRSHB1 = async ({ device_id, bank }, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitUploadQRSHB1({ device_id, bank }, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  const moveCamera = content.includes('text="Di chuyển Camera vào mã QR"');
+  const uploadQR = content.includes('text="Tải QR lên"');
+
+  console.log(`🟡 moveCamera: ${moveCamera}, uploadQR: ${uploadQR}`);
+
+  if (moveCamera && uploadQR) {
+    console.log('Đã thấy màn hình Tải QR lên → Tải QR lên');
+    await client.shell(device_id, 'input tap 540 1666');
+    // "SM-N960": {
+    //    "ScanQR": [540, 995],
+    //     "Image": [540, 1666],    
+    //     "Target-Img": [177, 730]        
+    // }
+  } else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitUploadQRSHB1({ device_id, bank }, t), 500);
+  }
+};
+
+const submitUploadQRSHB2 = async ({ device_id, bank }, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitUploadQRSHB2({ device_id, bank }, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  const lastest = content.includes("Mới mẻ");
+  const belowBounds = content.includes('bounds="[0,1175][1080,1322]"');
+  const aboveBounds = content.includes('bounds="[0,400][1080,547]"');
+
+  console.log(`🟡 lastest: ${lastest} có bounds: ${belowBounds}`);
+
+  if (lastest && belowBounds) {
+    console.log('Đã thấy màn hình latest phía dưới → Click Album (phía dưới)');
+    await client.shell(device_id, 'input tap 655 1100');
+    // "SM-N960": {
+    //    "ScanQR": [540, 995],
+    //     "Image": [540, 1666],    
+    //     "Target-Img": [177, 730]        
+    // }
+  } else if (lastest && aboveBounds) {
+    console.log('Đã thấy màn hình có bound latest phía trên → Click Album (phía trên)');
+    await client.shell(device_id, 'input tap 655 326');
+  }
+  else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitUploadQRSHB2({ device_id, bank }, t), 500);
+  }
+};
+
+const submitUploadQRSHB3 = async ({ device_id, bank }, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await reset(timer, device_id, bank);
+    return setTimeout(() => submitUploadQRSHB3({ device_id, bank }, t), 500);
+  }
+
+  const latestFile = path.join(logDir, files[0].name);
+  const content = fs.readFileSync(latestFile, 'utf-8');
+
+  const album = content.includes("Album");
+  const cam = content.includes("Máy ảnh"); //
+  const belowBounds = content.includes('bounds="[42,1715][152,1768]"');
+  const aboveBounds = content.includes('bounds="[42,940][152,993]"');
+
+  console.log(`🟡 album: ${album}, cam: ${cam}, belowBounds: ${belowBounds}, aboveBounds: ${aboveBounds}`);
+
+  if (album && cam && belowBounds) {
+    console.log('Đã thấy màn hình có bounds cam phía dưới → Click Máy ảnh (phía dưới)');
+    await client.shell(device_id, 'input tap 177 1400');
+    await delay(300);
+    await client.shell(device_id, 'input tap 177 1400');
+  } else if (album && cam && aboveBounds) {
+    console.log('Đã thấy màn hình có bounds cam phía dưới → Click Máy ảnh (phía trên)');
+    await client.shell(device_id, 'input tap 177 633');
+    await delay(300);
+    await client.shell(device_id, 'input tap 177 633');
+  } else {
+    const t = await reset(timer, device_id, bank);
+    setTimeout(() => submitUploadQRSHB3({ device_id, bank }, t), 500);
+  }
+};
+
 async function checkLogin({ device_id, bank }) {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
   const keywords = bankLoginSuccessKeywords[bank.toLowerCase()] || [];
@@ -1703,7 +1802,13 @@ async function checkScanQR({ device_id, bank, transId }) {
   return false;
 }
 
-const runBankTransfer = async ({ device_id, bank, controller }) => {
+const runBankTransfer = async ({ device_id, bank, controller }) => {  
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const json = JSON.parse(raw);
+  const type = json?.type;
+  bank = json?.data?.bank;
+  transId = json?.data?.trans_id; 
   const stopApp = mapStopBank[bank.toLowerCase()];
   const startApp = mapStartBank[bank.toLowerCase()];
   const loginApp = mapLoginBank[bank.toLowerCase()];
