@@ -1,4 +1,4 @@
 const port = 8899;
-const ver = '_V3.0.7';
+const ver = '_V3.1.0';
 
 module.exports = { port, ver };

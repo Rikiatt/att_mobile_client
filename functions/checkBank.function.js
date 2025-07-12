@@ -1104,9 +1104,146 @@ async function checkContentSHB(device_id, localPath) {
   }
 }
 
+async function checkContentSHBVN(device_id, localPath) {
+  try {
+    const content = fs.readFileSync(localPath, "utf-8").trim();
+
+    // chưa làm
+    // chưa làm
+    // chưa làm
+    const screenKeywords = [
+      {
+        name: "Chuyển tiền",
+        vi: ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"],
+        en: ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
+      }
+    ];
+
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
+    for (const screen of screenKeywords) {
+      if (screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
+        // Đọc file local-banks.json
+        const localBanksPath = path.join(__dirname, "../database/local-banks.json");
+        let banksData = [];
+
+        if (fs.existsSync(localBanksPath)) {
+          const rawData = fs.readFileSync(localBanksPath, "utf-8").trim();
+          if (rawData) {
+            banksData = JSON.parse(rawData);
+          }
+        }
+
+        let message = '';
+        if (banksData.length === 0) {
+          message = `Phát hiện có thao tác thủ công khi xuất với SHBVN ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+        } else {
+          const bankItem = banksData.find(item => item["THIẾT BỊ"]?.includes(device_id));
+          if (bankItem) {
+            message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng SHBVN`;
+          } else {
+            message = `Phát hiện có thao tác thủ công khi xuất với SHBVN ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+          }
+        }
+
+        Logger.log(1, message, __filename);
+        Logger.log(0, 'Đóng app SHBVN', __filename);
+        notifier.emit('multiple-banks-detected', {
+          device_id,
+          message: `Phát hiện thao tác thủ công (id: ${device_id})`
+        });
+
+        await stopSHBVN({ device_id });
+        await sendTelegramAlert(telegramToken, chatId, message);
+        await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
+        return;
+      }
+    }
+
+    /* TH2: Màn hình xác nhận sau khi quét QR */
+    // chưa làm
+    // chưa làm
+    // chưa làm
+    
+  } catch (error) {
+    console.error("Lỗi xử lý XML:", error.message);
+  }
+}
+
 // ok - tieng viet - chinh xong canh bao
 async function checkContentTPB(device_id, localPath) {
   Logger.log(0, 'TPB hiện không còn hỗ trợ dump (từ ngày 01/07/2025).', __filename);
+}
+
+// ok - chua co TH2
+async function checkContentVIKKI(device_id, localPath) {
+  try {
+    const content = fs.readFileSync(localPath, "utf-8").trim();
+
+    const jsonPath = "C:/att_mobile_client/database/info-qr.json";
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+
+    let expectedAccount = "";
+    let expectedAmount = "";
+    const vietqrUrl = jsonData.data?.vietqr_url || "";
+    const match = vietqrUrl.match(/image\/[^-]+-(\d+)-qr\.png\?amount=(\d+)/);
+    if (match) {
+      expectedAccount = match[1].replace(/\s/g, "");
+      expectedAmount = match[2].replace(/[.,\s]/g, "");
+    }
+
+    /* TH1: Màn hình thao tác thủ công cần cảnh báo */
+    const screenKeywords = [
+      {
+        name: "Chuyển đến",
+        vi: ["Chuyển đến", "Chủ tài khoản VikkiME khác", "Số tài khoản", "Số thẻ"],
+        en: ["Chuyển đến", "Chủ tài khoản VikkiME khác", "Số tài khoản", "Số thẻ"]
+      }
+    ];
+
+    for (const screen of screenKeywords) {
+      if (screen.vi.every(kw => content.includes(kw)) || screen.en.every(kw => content.includes(kw))) {
+        // Đọc file local-banks.json
+        const localBanksPath = path.join(__dirname, "../database/local-banks.json");
+        let banksData = [];
+
+        if (fs.existsSync(localBanksPath)) {
+          const rawData = fs.readFileSync(localBanksPath, "utf-8").trim();
+          if (rawData) {
+            banksData = JSON.parse(rawData);
+          }
+        }
+
+        let message = '';
+        if (banksData.length === 0) {
+          message = `Phát hiện có thao tác thủ công khi xuất với VIKKI ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+        } else {
+          const bankItem = banksData.find(item => item["THIẾT BỊ"]?.includes(device_id));
+          if (bankItem) {
+            message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng VIKKI`;
+          } else {
+            message = `Phát hiện có thao tác thủ công khi xuất với VIKKI ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+          }
+        }
+
+        Logger.log(1, message, __filename);
+        Logger.log(0, 'Đóng app VIKKI', __filename);
+        notifier.emit('multiple-banks-detected', {
+          device_id,
+          message: `Phát hiện có thao tác thủ công khi xuất với VIKKI ở màn hình: ${screen.name} (id thiết bị: ${device_id})`
+        });
+
+        await stopVIKKI({ device_id });
+        await sendTelegramAlert(telegramToken, chatId, message);
+        await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
+        return;
+      }
+    }
+
+    /* TH2: Màn hình xác nhận sau khi quét QR */
+    
+  } catch (error) {
+    console.error("Lỗi xử lý XML:", error.message);
+  }
 }
 
 // ok tieng viet - ok tieng viet2 - VPB khong on dinh de dump xml :((
@@ -1454,11 +1591,6 @@ async function checkContentVIETBANK(device_id, localPath) {
 }
 
 // chua lam
-async function checkContentVIKKI(device_id, localPath) {
-  Logger.log(0, 'VIKKI chưa làm.', __filename);
-}
-
-// chua lam
 async function checkContentPVCB(device_id, localPath) {
   Logger.log(0, 'PVCB chưa làm.', __filename);
 }
@@ -1571,6 +1703,13 @@ async function stopSHBSAHA({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
+async function stopSHBVN({ device_id }) {
+  await client.shell(device_id, 'am force-stop com.shinhan.global.vn.bank');
+  Logger.log(0, 'Đã dừng SHBVN', __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
 async function stopTPB({ device_id }) {
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
@@ -1596,6 +1735,13 @@ async function stopVIB({ device_id }) {
 async function stopVIETBANK({ device_id }) {
   await client.shell(device_id, 'am force-stop com.vnpay.vietbank');
   Logger.log(0, 'Đã dừng VIETBANK', __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+}
+
+async function stopVIKKI({ device_id }) {
+  await client.shell(device_id, 'am force-stop com.finx.vikki');
+  Logger.log(0, 'Đã dừng VIKKI', __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 }
@@ -1651,6 +1797,6 @@ async function stopTCB({ device_id }) {
 }
 
 module.exports = {
-  checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, checkContentVIETBANK, checkContentVIKKI,
-  stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVPB
+  checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentSHBVN, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, checkContentVIETBANK, checkContentVIKKI,
+  stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopSHBVN, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVIKKI, stopVPB
 }

@@ -1,9 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Tooltip } from '@mui/material';
-import { shinhanClickLogin } from '../../services/handle.service';
+import { shbvnLogin } from '../../services/handle.service';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { grey } from '@mui/material/colors';
 
-const HandleShinhan = ({ item, X, Y, setLoading }) => {
+const HandleSHBVN = ({ item, X, Y, setLoading }) => {
   return (
     <Accordion
       disableGutters
@@ -19,16 +19,16 @@ const HandleShinhan = ({ item, X, Y, setLoading }) => {
         }
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMore />}>Shinhan Bank</AccordionSummary>
+      <AccordionSummary expandIcon={<ExpandMore />}>SHBVN</AccordionSummary>
       <AccordionDetails>
-        <Stack spacing={1}>
-          <Tooltip title="Nhập mật khẩu và click đăng nhập" arrow>
+        <Stack spacing={1}>          
+          <Tooltip title="Nhập mật khẩu và đăng nhập" arrow>
             <Button
               size="small"
               variant="contained"
               color="inherit"
               fullWidth
-              onClick={() => shinhanClickLogin({ device_id: item.id, X, Y }, setLoading)}
+              onClick={() => shbvnLogin({ device_id: item.id, X, Y }, setLoading)}
             >
               Đăng nhập
             </Button>
@@ -39,4 +39,4 @@ const HandleShinhan = ({ item, X, Y, setLoading }) => {
   );
 };
 
-export default HandleShinhan;
+export default HandleSHBVN;

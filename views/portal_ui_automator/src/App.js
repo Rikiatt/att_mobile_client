@@ -39,7 +39,7 @@ import HandleTransfer from './sections/bank_handle/HandleTransfer';
 import HandleVCB from './sections/bank_handle/HandleVCB';
 import HandleHDB from './sections/bank_handle/HandleHDB';
 import HandleICB from './sections/bank_handle/HandleICB';
-import HandleNCB from './sections/bank_handle/HandleNCB';
+import HandleSHBVN from './sections/bank_handle/HandleSHBVN';
 import HandleSEAB from './sections/bank_handle/HandleSEAB';
 import HandleVIETBANK from './sections/bank_handle/HandleVIETBANK';
 import HandleEIB from './sections/bank_handle/HandleEIB';
@@ -299,7 +299,7 @@ function App() {
                       <HandleVCB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleHDB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleICB item={item} X={X} Y={Y} setLoading={setLoading} />
-                      <HandleNCB item={item} X={X} Y={Y} setLoading={setLoading} />
+                      <HandleSHBVN item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleSEAB item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVIETBANK item={item} X={X} Y={Y} setLoading={setLoading} />
                       <HandleVIB item={item} X={X} Y={Y} setLoading={setLoading} />

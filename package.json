@@ -7,7 +7,7 @@
     "dev": "nodemon server.js",
     "postinstall": "patch-package"
   },
-  "author": "iris",
+  "author": "riki",
   "license": "ISC",
   "description": "",
   "dependencies": {

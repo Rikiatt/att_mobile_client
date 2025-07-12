@@ -41,8 +41,8 @@ if (siteToChatIdMap[validSite]) {
 }
 
 const coordinatessSemiAuto = require('../config/coordinatessSemiAuto.json');
-const { checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentTPB, checkContentVIETBANK, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
-  stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
+const { checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentSHBVN, checkContentTPB, checkContentVIETBANK, checkContentVIKKI, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, 
+  stopABB, stopACB, stopBIDV, stopVCB, stopVIB, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSEAB, stopSHBSAHA, stopSHBVN, stopPVCB, stopSTB, stopTCB, stopTPB, stopVPB
 } 
 = require('../functions/checkBank.function');
 const { Logger } = require('../config/require.config');
@@ -732,6 +732,81 @@ async function trackSHBSAHA ( { device_id } ) {
   return { status: 200, message: 'Success' };
 }
 
+async function trackSHBVN ( { device_id } ) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+  Logger.log(0, 'Đang theo dõi SHBVN...', __filename);
+
+  let running = await isSHBVNRunning( { device_id } );
+
+  if (!running) {
+    return await trackingLoop({ device_id });
+  }
+        
+  await clearTempFile( { device_id } );
+    
+  while (running) {
+    const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
+    const qrBank = infoQR?.data?.bank?.toLowerCase() || '';
+    const qrDevice = infoQR?.data?.device_id || '';
+    const qrType = infoQR?.type || '';
+    if ( device_id === qrDevice && (qrType === 'org' || qrType === 'att') && qrBank !== 'shbvn' ) {      
+      // Phát thông báo realtime
+      notifier.emit('multiple-banks-detected', {
+        device_id,
+        message: `Bank đang chạy là SHBVN nhưng QR yêu cầu bank khác (${qrBank}), stop SHBVN.`
+      });
+
+      await stopSHBVN({ device_id });
+
+      await sendTelegramAlert(
+        telegramToken,
+        chatId,
+        `Bank đang chạy là SHBVN nhưng QR yêu cầu bank khác (${qrBank}), stop SHBVN. (id: ${device_id})`
+      );
+
+      await saveAlertToDatabase({
+        timestamp: new Date().toISOString(),
+        reason: `Dùng sai app để chuyển tiền. (id: ${device_id})`,
+        filePath: ".xml"
+      });
+
+      return await trackingLoop({ device_id });
+    } 
+    else {
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+      await dumpXmlToLocal(device_id, localPath);
+      await checkContentSHBVN(device_id, localPath);
+    }
+
+    running = await isSHBVNRunning({ device_id });
+
+    const currentApp = await getCurrentForegroundApp({ device_id });
+    if (currentApp === null) {
+      // Nếu isSHBVNRunning vẫn true, tiếp tục theo dõi
+      if (!running) {
+        Logger.log(0, 'SHBVN process đã tắt. Dừng theo dõi.', __filename);
+        await clearTempFile({ device_id });
+        return await trackingLoop({ device_id });
+      }
+      // Nếu vẫn chạy, tiếp tục bình thường
+    } else if (currentApp !== 'com.shinhan.global.vn.bank') {
+      Logger.log(0, `SHBVN không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+
+    if (!running) {
+      Logger.log(0, 'SHBVN đã tắt. Dừng theo dõi.', __filename);
+      await clearTempFile({ device_id });
+      return await trackingLoop({ device_id });
+    }
+  }
+  return { status: 200, message: 'Success' };
+}
+
 async function trackTPB ( { device_id } ) {    
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1346,7 +1421,6 @@ async function trackVIB({ device_id }) {
   return { status: 200, message: 'Success' };
 }
 
-// chua lam checkContentVIKKI
 async function trackVIKKI({ device_id }) {
   const targetDir = path.join('C:\\att_mobile_client\\logs\\');
   ensureDirectoryExists(targetDir);
@@ -1392,7 +1466,7 @@ async function trackVIKKI({ device_id }) {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const localPath = path.join(targetDir, `${timestamp}.xml`);
 
-      // await dumpXmlToLocal(device_id, localPath);
+      await dumpXmlToLocal(device_id, localPath);
       await checkContentVIKKI(device_id, localPath);
     }    
 
@@ -1407,7 +1481,7 @@ async function trackVIKKI({ device_id }) {
         return await trackingLoop({ device_id });
       }
       // Nếu vẫn chạy, tiếp tục bình thường
-    } else if (currentApp !== 'zzzzzzzzzzzzzzzzzzzzzzz') { // chua lam
+    } else if (currentApp !== 'com.finx.vikki') { // chua lam
       Logger.log(0, `VIKKI không còn mở UI. Đang mở: ${currentApp}. Dừng theo dõi.`, __filename);
       await clearTempFile({ device_id });
       return await trackingLoop({ device_id });
@@ -1978,6 +2052,7 @@ const trackFunctions = {
   PVCB: trackPVCB,
   SEAB: trackSEAB,
   SHB: trackSHBSAHA,
+  SHBVN: trackSHBVN,
   STB: trackSTB,
   TCB: trackTCB,
   TPB: trackTPB,
@@ -2485,6 +2560,34 @@ async function isSHBSAHARunning({ device_id }) {
   }
 }
 
+async function isSHBVNRunning({ device_id }) {
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const packageName = 'com.shinhan.global.vn.bank';
+
+    // 1. Kiểm tra foreground (mResumedActivity)
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (TaskRecord hoặc ActivityRecord)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
+  } catch (error) {
+    console.error("Error checking SHBVN app status via activity stack:", error.message);
+    return false;
+  }
+}
+
 async function isICBRunning({ device_id }) {
   try {
     const output = await client.shell(device_id, 'dumpsys activity activities')
@@ -2668,12 +2771,14 @@ const bankApps = [
   { name: "PVCB", package: "com.pvcombank.retail" },
   { name: "SEAB", package: "vn.com.seabank.mb1" },
   { name: "SHB", package: "vn.shb.saha.mbanking" },
+  { name: "SHBVN", package: "com.shinhan.global.vn.bank" },
   { name: "STB", package: "com.sacombank.ewallet" },
   { name: "TCB", package: "vn.com.techcombank.bb.app" },
   { name: "TPB", package: "com.tpb.mb.gprsandroid" },
   { name: "VCB", package: "com.VCB" },
   { name: "VIB", package: "com.vib.myvib2" },
   { name: "VIETBANK", package: "com.vnpay.vietbank" },
+  { name: "VIKKI", package: "com.finx.vikki" },
   { name: "VPB", package: "com.vnpay.vpbankonline" }
 ];
 

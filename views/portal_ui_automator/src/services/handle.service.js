@@ -537,14 +537,14 @@ export const icbLogin = async (data, setLoading) => {
   setLoading(true);
 
   try {       
-    const deviceCoordinates = await actionDevice({ action: 'checkDeviceICB', device_id: data.device_id });    
+    const deviceCoordinates = await actionDevice({ action: 'checkDeviceICB', device_id: data.device_id });
     const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
     const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
     const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
             
     if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
       return swalNotification("error", "Thiết bị chưa hỗ trợ ICB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-    }         
+    }
 
     if (checkFontScale.status === 500 || checkFontScale.valid === false) {
       return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
@@ -575,7 +575,7 @@ export const icbLogin = async (data, setLoading) => {
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await delay(50);
-    await actionADB({ action: 'inputICB', device_id: data.device_id, text: text.trim() });
+    await actionADB({ action: 'inputICB', device_id: data.device_id, text: text.trim() });    
     await delay(4000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
@@ -673,6 +673,71 @@ export const hideDevOptions = async (data, setLoading) => {
   await actionHideDev({ action: 'hideDevOptions', device_id: data.device_id });
 
   setLoading(false);
+};
+
+// ============== SHBVN ============== //
+
+export const shbvnLogin = async (data, setLoading) => {  
+  const text = await swalInputPass('Nhập mật khẩu', '', 'Nhập mật khẩu cần truyền vào thiết bị');
+  if (!text) return;
+  
+  setLoading(true);
+
+  try {       
+    const deviceCoordinates = await actionDevice({ action: 'checkDeviceICB', device_id: data.device_id });    
+    const checkDeviceFHDOrNot = await actionDevice({ action: 'checkDeviceFHD', device_id: data.device_id });    
+    const checkFontScale = await actionDevice({ action: 'checkFontScale', device_id: data.device_id });    
+    const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
+            
+    if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
+      return swalNotification("error", "Thiết bị chưa hỗ trợ ICB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
+    }         
+
+    if (checkFontScale.status === 500 || checkFontScale.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
+    } 
+
+    if (checkWMDensity.status === 500 || checkWMDensity.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt Thu/Phóng màn hình nhỏ nhất và độ phân giải màn hình ở FHD+");       
+    }        
+    
+    if (checkDeviceFHDOrNot.status === 500 || checkDeviceFHDOrNot.valid === false) {
+      return swalNotification("error", "Vui lòng cài đặt độ phân giải màn hình ở FHD+");      
+    }
+
+    // Start app
+    await actionADB({ action: 'stopSHBVN', device_id: data.device_id });
+    await actionADB({ action: 'startSHBVN', device_id: data.device_id });
+    await delay(6000);
+
+    // Tab vào nút ĐĂNG NHẬP
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+    // Nhập mật khẩu và click nút Đăng nhập
+    await delay(1000);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
+    await delay(2000); // Chờ dump xong và ghi đè tọa độ phím
+    await actionADB({ action: 'inputSHBVN', device_id: data.device_id, text: text.trim() });
+    await delay(1000);
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+
+    setLoading(false);
+  } catch (error) {
+    swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
 };
 
 // ============== VIETBANK ============== //
