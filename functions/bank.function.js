@@ -1,5 +1,6 @@
 require('dotenv').config();
 const adb = require('adbkit');
+const xml2js = require('xml2js');
 const fs = require('fs');
 const path = require('path');
 const { delay } = require('../helpers/functionHelper');
@@ -12,6 +13,114 @@ const deviceHelper = require('../helpers/deviceHelper');
 const notifier = require('../events/notifier');
 const { escapeAdbText } = require('../helpers/adbHelper');
 const transferTaskManager = require('../helpers/transferTaskManager');
+const { isBankAppRunning } = require('../functions/bankStatus.function');
+const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
+const coordinatesLoginSHBVN = require('../config/coordinatesLoginSHBVN.json');
+const coordinatesLoginICB = require('../config/coordinatesLoginICB.json');
+const coordinatesScanQRICB = require('../config/coordinatesScanQRICB.json');
+const localDataPath = path.join(__dirname, '../database/localdata.json');
+const localRaw = fs.readFileSync(localDataPath, 'utf-8');
+const local = JSON.parse(localRaw);
+const siteOrg = local?.org?.site || '';
+const siteAtt = local?.att?.site?.split('/').pop() || '';
+// const { trackSHBVNUI } = require('../functions/bankStatus.function');
+const ensureDirectoryExists = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+async function clearTempFile({ device_id }) {
+  try {
+    await client.shell(device_id, `rm /sdcard/temp_dump.xml`);
+    await delay(1000);
+  } catch (error) {
+    console.error("Cannot delete file temp_dump.xml:", error.message);
+  }
+}
+
+async function waitForXmlReady(device_id, remotePath = '/sdcard/temp_dump.xml', timeout = 3000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    try {
+      const output = await client.shell(device_id, `ls ${remotePath}`)
+        .then(adb.util.readAll)
+        .then(buf => buf.toString().trim());
+
+      if (output === remotePath) return true;
+    } catch (_) { // ignore spam log
+      // file chưa tồn tại, tiếp tục vòng lặp
+    }
+    await delay(200); // không nên để thấp hơn 200ms để tránh spam shell
+  }
+  return false;
+}
+
+async function dumpXmlToLocal(device_id, localPath) {
+  try {
+    const remotePath = `/sdcard/temp_dump.xml`;
+    await client.shell(device_id, `uiautomator dump ${remotePath}`);
+
+    const ready = await waitForXmlReady(device_id, remotePath);
+    if (!ready) throw new Error('XML file not ready after dump');
+
+    const transfer = await client.pull(device_id, remotePath);
+    await new Promise((resolve, reject) => {
+      const fileStream = fs.createWriteStream(localPath);
+      transfer.pipe(fileStream);
+      fileStream.on('finish', resolve);
+      fileStream.on('error', reject);
+    });
+  } catch (error) {
+    console.error(`dumpXmlToLocal error: ${error.message}`);
+  }
+}
+
+async function isSHBVNRunning({ device_id }) {
+  try {
+    const output = await client.shell(device_id, 'dumpsys activity activities')
+      .then(adb.util.readAll)
+      .then(buffer => buffer.toString());
+
+    const packageName = 'com.shinhan.global.vn.bank';
+
+    // 1. Kiểm tra foreground (mResumedActivity)
+    const isForeground = output.includes('mResumedActivity') && output.includes(packageName);
+    if (isForeground) return true;
+
+    // 2. Kiểm tra background (TaskRecord hoặc ActivityRecord)
+    const escapedPackage = packageName.replace(/\./g, '\\.');
+    const isInTaskList =
+      new RegExp(`ActivityRecord\\{.*${escapedPackage}`).test(output) ||
+      new RegExp(`TaskRecord\\{.*${escapedPackage}`).test(output);
+    if (isInTaskList) return true;
+
+    // 3. Không chạy
+    return false;
+
+  } catch (error) {
+    console.error("Error checking SHBVN app status via activity stack:", error.message);
+    return false;
+  }
+}
+
+// Chỉ dùng cho loginSHBVN trên giao diện khi mà check "site" trong C:\att_mobile_client\database\localdata.json mà != "shbet" hoặc != "new88" hoặc != "jun88k36" hoặc != "jun88cmd" hoặc trong info-qr.json chỉ có {} 
+async function trackSHBVNUI({ device_id }) {
+  const targetDir = path.join('C:\\att_mobile_client\\logs\\');
+  ensureDirectoryExists(targetDir);
+  Logger.log(0, 'Đang dump SHBVN để sử dụng login SHBVN...', __filename);
+
+  let running = await isSHBVNRunning({ device_id });
+
+  await clearTempFile({ device_id });
+  
+  while (running) {
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const localPath = path.join(targetDir, `${timestamp}.xml`);
+
+    await dumpXmlToLocal(device_id, localPath);    
+  }
+}
 
 const allCoordinates = {
   stb: require('../config/coordinatesScanQRSTB.json'),
@@ -27,6 +136,16 @@ const allCoordinates = {
   vpb: require('../config/coordinatesScanQRVPB.json')
 };
 
+const isSpecialChar = (char) => {
+  return ['@', '#', '$', '%', '&', '*', '-', '+', '(', ')',
+    '~', '^', '<', '>', '|', '\\', '{', '}', '[', ']',
+    '=', '!', '"', "'", ':', ';', '/', '?'].includes(char);
+};
+
+const isUpperCase = (char) => {
+  return char === char.toUpperCase() && char !== char.toLowerCase();
+};
+
 async function loadCoordinates(bankCode, device_id) {
   try {
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
@@ -39,7 +158,7 @@ async function loadCoordinates(bankCode, device_id) {
     console.error(`Error loading coordinates for ${bankCode}: ${error.message}`);
     throw error;
   }
-}
+};
 
 async function loadCoordinatesLoginABB(device_id) {
   try {
@@ -49,10 +168,334 @@ async function loadCoordinatesLoginABB(device_id) {
 
     return deviceCoordinates;
   } catch (error) {
-    console.error(`Error loading coordinatesLoginABB for device: ${error.message}`);
+    console.error(`Got an error: ${error.message}`);
     throw error;
   }
 };
+
+async function loadCoordinatesLoginICB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+    const deviceCoordinates = coordinatesLoginICB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesLoginICB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesScanQRBIDV(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+    const deviceCoordinates = coordinatesScanQRBIDV[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRBIDV for device: ${error.message}`);
+    throw error;
+  }
+};
+
+async function loadCoordinatesScanQRICB(device_id) {
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+    const deviceCoordinates = coordinatesScanQRICB[deviceModel];
+
+    return deviceCoordinates;
+  } catch (error) {
+    console.error(`Error loading coordinatesScanQRICB for device: ${error.message}`);
+    throw error;
+  }
+};
+
+const logDir = 'C:\\att_mobile_client\\logs';
+
+const keyLoginMap = {
+  btn_login: 'LOGIN'
+};
+
+const keyPasswordFieldMap = {
+  tv_user_pw: 'FIELD_PASSWORD'
+};
+
+const keyMap = {
+  nf_key_1: '1', nf_key_2: '2', nf_key_3: '3', nf_key_4: '4', nf_key_5: '5',
+  nf_key_6: '6', nf_key_7: '7', nf_key_8: '8', nf_key_9: '9', nf_key_10: '0',
+
+  nf_key_11: 'q', nf_key_12: 'w', nf_key_13: 'e', nf_key_14: 'r', nf_key_15: 't',
+  nf_key_16: 'y', nf_key_17: 'u', nf_key_18: 'i', nf_key_19: 'o', nf_key_20: 'p',
+
+  nf_key_21: 'a', nf_key_22: 's', nf_key_23: 'd', nf_key_24: 'f', nf_key_25: 'g',
+  nf_key_26: 'h', nf_key_27: 'j', nf_key_28: 'k', nf_key_29: 'l',
+
+  nf_key_30: 'z', nf_key_31: 'x', nf_key_32: 'c', nf_key_33: 'v',
+  nf_key_34: 'b', nf_key_35: 'n', nf_key_36: 'm',
+
+  nf_fun_key_shift: 'Shift',
+  nf_fun_key_delete: 'BackSpace',
+  nf_fun_bottom_key_done: 'Enter'
+};
+
+const specialCharMap = {
+  '!': '1', '@': '2', '#': '3', '$': '4', '%': '5',
+  '^': '6', '&': '7', '*': '8', '(': '9', ')': '0'
+};
+
+const upperCaseCharMap = {
+  'A': 'a', 'B': 'b', 'C': 'c', 'D': 'd', 'E': 'e',
+  'F': 'f', 'G': 'g', 'H': 'h', 'I': 'i', 'J': 'j',
+  'K': 'k', 'L': 'l', 'M': 'm', 'N': 'n', 'O': 'o',
+  'P': 'p', 'Q': 'q', 'R': 'r', 'S': 's', 'T': 't',
+  'U': 'u', 'V': 'v', 'W': 'w', 'X': 'x', 'Y': 'y',
+  'Z': 'z',
+};
+
+function getCenter(boundsStr) {
+  const match = boundsStr.match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
+  if (!match) return null;
+  const [_, x1, y1, x2, y2] = match.map(Number);
+  const cx = Math.round((x1 + x2) / 2);
+  const cy = Math.round((y1 + y2) / 2);
+  return [cx, cy];
+}
+
+// Sau khi khởi động xong app Shinhanbank
+async function loadCoordinatesBeforePasswordFieldSHBVN(device_id) {
+  try {    
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
+    // const coordinatesLoginSHBVN = JSON.parse(fs.readFileSync(coordinatesPath, 'utf8'));
+
+    const files = fs.readdirSync(logDir)
+      .filter(f => f.endsWith('.xml'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+
+    if (files.length === 0) {
+      console.warn('⚠️ Không tìm thấy file XML nào trong thư mục logs.');
+      return coordinatesLoginSHBVN[deviceModel];
+    }
+
+    const latestXMLPath = path.join(logDir, files[0].name);
+    const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
+    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+
+    if (!result || !result.hierarchy) {
+      console.warn('⚠️ XML không chứa root <hierarchy>.');
+      return coordinatesLoginSHBVN[deviceModel];
+    }
+
+    const flatNodes = [];
+    function flatten(node) {
+      if (!node || typeof node !== 'object') return;
+      if (node['$'] && node['$']['resource-id']) flatNodes.push(node);
+      if (node.node) {
+        if (Array.isArray(node.node)) node.node.forEach(flatten);
+        else flatten(node.node);
+      }
+    }
+
+    flatten(result.hierarchy);
+
+    const updatedCoordinates = {};
+    for (const node of flatNodes) {
+      const resId = node?.['$']?.['resource-id'];
+      if (!resId) continue;
+      const id = resId.split('/').pop();
+      const key = keyLoginMap[id];
+      if (key) {
+        const bounds = node?.['$']?.bounds;
+        const center = getCenter(bounds);
+        if (center) {
+          updatedCoordinates[key] = center;
+        }
+      }
+    }
+
+    const expectedTotal = Object.values(keyLoginMap).length;
+    if (Object.keys(updatedCoordinates).length < expectedTotal) {
+      console.warn('⚠️ Không tìm thấy đủ phím LOGIN. Bỏ qua cập nhật.');
+    } else {
+      if (!coordinatesLoginSHBVN[deviceModel]) coordinatesLoginSHBVN[deviceModel] = {};
+      coordinatesLoginSHBVN[deviceModel] = {
+        ...coordinatesLoginSHBVN[deviceModel],
+        ...updatedCoordinates
+      };
+      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
+      console.log(`✅ Đã cập nhật tọa độ LOGIN cho thiết bị ${deviceModel}`);
+    }
+
+    return coordinatesLoginSHBVN[deviceModel];
+  } catch (error) {
+    console.error('❌ Got an error:', error);
+    throw error;
+  }
+}
+
+async function loadCoordinatesPasswordFieldSHBVN(device_id) {
+  try {
+    console.log('log device_id 2:', device_id);
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('log deviceModellllllllllllllllllllll 2:', deviceModel);
+    // const coordinatesLoginSHBVN = JSON.parse(fs.readFileSync(coordinatesPath, 'utf8'));
+
+    const files = fs.readdirSync(logDir)
+      .filter(f => f.endsWith('.xml'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+
+    if (files.length === 0) {
+      console.warn('⚠️ Không tìm thấy file XML nào trong thư mục logs.');
+      return coordinatesLoginSHBVN[deviceModel];
+    }
+
+    const latestXMLPath = path.join(logDir, files[0].name);
+    const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
+    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+
+    if (!result || !result.hierarchy) {
+      console.warn('⚠️ XML không chứa root <hierarchy>.');
+      return coordinatesLoginSHBVN[deviceModel];
+    }
+
+    const flatNodes = [];
+    function flatten(node) {
+      if (!node || typeof node !== 'object') return;
+      if (node['$'] && node['$']['resource-id']) flatNodes.push(node);
+      if (node.node) {
+        if (Array.isArray(node.node)) node.node.forEach(flatten);
+        else flatten(node.node);
+      }
+    }
+
+    flatten(result.hierarchy);
+
+    const updatedCoordinates = {};
+    for (const node of flatNodes) {
+      const resId = node?.['$']?.['resource-id'];
+      if (!resId) continue;
+      const id = resId.split('/').pop();
+      const key = keyPasswordFieldMap[id];
+      if (key) {
+        const bounds = node?.['$']?.bounds;
+        const center = getCenter(bounds);
+        if (center) {
+          updatedCoordinates[key] = center;
+        }
+      }
+    }
+
+    const expectedTotal = Object.values(keyPasswordFieldMap).length;
+    if (Object.keys(updatedCoordinates).length < expectedTotal) {
+      console.warn('⚠️ Không tìm thấy đủ phím ở màn hình nhập mật khẩu. Bỏ qua cập nhật tọa độ.');
+    } else {
+      if (!coordinatesLoginSHBVN[deviceModel]) coordinatesLoginSHBVN[deviceModel] = {};
+      coordinatesLoginSHBVN[deviceModel] = {
+        ...coordinatesLoginSHBVN[deviceModel],
+        ...updatedCoordinates
+      };
+      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
+      console.log(`✅ Đã cập nhật tọa độ FIELD-PASSWORD cho thiết bị ${deviceModel}`);
+    }
+
+    return coordinatesLoginSHBVN[deviceModel];
+  } catch (error) {
+    console.error('❌ Got an error:', error);
+    throw error;
+  }
+}
+
+async function loadCoordinatesLoginSHBVN({ device_id, text }) {
+  try {
+    console.log('log device_id 3:', device_id);
+    if (!device_id) {
+      return;
+    }
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    console.log('log deviceModellllllllllllllllllllll 3:', deviceModel);
+    // const coordinatesLoginSHBVN = JSON.parse(fs.readFileSync(coordinatesPath, 'utf8'));
+
+    // Lấy file XML mới nhất
+    const files = fs.readdirSync(logDir)
+      .filter(f => f.endsWith('.xml'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+
+    if (files.length === 0) {
+      console.warn('⚠️ Không tìm thấy file XML nào trong thư mục logs.');
+      return coordinatesLoginSHBVN[deviceModel];
+    }
+
+    const latestXMLPath = path.join(logDir, files[0].name);
+    const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
+
+    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+    const allNodes = result?.hierarchy?.node;
+    if (!allNodes) throw new Error('❌ Lỗi load XML: Không tìm thấy node "hierarchy".');
+
+    const flatNodes = [];
+    function flatten(node) {
+      if (!node) return;
+      flatNodes.push(node);
+      if (node.node) {
+        if (Array.isArray(node.node)) node.node.forEach(flatten);
+        else flatten(node.node);
+      }
+    }
+    flatten(allNodes);
+
+    // Duyệt qua flatNodes để lấy các phím từ resource-id có trong keyMap
+    const updatedCoordinates = {};
+    let foundKeys = [];
+
+    for (const node of flatNodes) {
+      const resId = node?.['$']?.['resource-id'];
+      if (!resId) continue;
+      const id = resId.split('/').pop(); // ví dụ: nf_key_11
+
+      const key = keyMap[id];
+      if (key) {
+        const bounds = node?.['$']?.bounds;
+        const center = getCenter(bounds);
+        if (center) {
+          updatedCoordinates[key] = center;
+          foundKeys.push(key);
+        }
+      }
+    }
+
+    // Bổ sung các ký tự in hoa và đặc biệt (từ những phím đã có)
+    for (const [uc, lc] of Object.entries(upperCaseCharMap)) {
+      if (updatedCoordinates[lc]) updatedCoordinates[uc] = updatedCoordinates[lc];
+    }
+
+    for (const [sc, base] of Object.entries(specialCharMap)) {
+      if (updatedCoordinates[base]) updatedCoordinates[sc] = updatedCoordinates[base];
+    }
+
+    // Kiểm tra đủ số lượng phím cần thiết
+    const expectedTotal =
+      Object.values(keyMap).length +
+      Object.keys(specialCharMap).length +
+      Object.keys(upperCaseCharMap).length;
+
+    if (Object.keys(updatedCoordinates).length < expectedTotal) {
+      console.warn('XML không đầy đủ toàn bộ phím, bỏ qua cập nhật tọa độ');
+    } else {
+      coordinatesLoginSHBVN[deviceModel] = updatedCoordinates;
+      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
+      console.log(`Đã cập nhật tọa độ cho thiết bị ${deviceModel}`);
+    }
+
+    return coordinatesLoginSHBVN[deviceModel];
+  } catch (error) {
+    console.error('Got an error:', error);
+    throw error;
+  }
+}
 
 const waitStartApp = {
   bab: 4000,
@@ -90,10 +533,26 @@ const stopABB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const stopACB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop mobile.acb.com.vn');
+  Logger.log(2, `Đã dừng ACB`, __filename);
+  await delay(200);
+  return { status: 200, message: 'Success' };
+};
+
 const stopBAB = async ({ device_id }) => {
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.bab.retailUAT');
   Logger.log(2, `Đã dừng BAB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopBIDV = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.vnpay.bidv');
+  Logger.log(2, `Đã dừng BIDV`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -122,6 +581,14 @@ const stopICB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const stopLPB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop vn.com.lpb.lienviet24h');
+  Logger.log(2, `Đã dừng LPB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const stopOCB = async ({ device_id }) => {
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
@@ -138,6 +605,15 @@ const stopNAB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const stopNCB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.ncb.bank');
+  Logger.log(2, `Đã dừng NCB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+// TPB không dùng được này từ 1/7/2025. Chưa làm lại.
 const stopTPB = async ({ device_id }) => {
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
@@ -162,6 +638,22 @@ const stopMB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const stopMSB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
+  Logger.log(2, `Đã dừng MSB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopPVCB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.pvcombank.retail');
+  Logger.log(2, `Đã dừng PVCB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const stopSHB = async ({ device_id }) => {
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop vn.shb.saha.mbanking');
@@ -170,10 +662,58 @@ const stopSHB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const stopSEAB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop vn.com.seabank.mb1');
+  Logger.log(2, `Đã dừng SEAB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopSHBVN = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.shinhan.global.vn.bank');
+  Logger.log(2, `Đã dừng SHBVN`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const stopSTB = async ({ device_id }) => {
   await client.shell(device_id, 'input keyevent 3');
   await client.shell(device_id, 'am force-stop com.sacombank.ewallet');
   Logger.log(2, `Đã dừng Sacombank`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopTCB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop vn.com.techcombank.bb.app');
+  Logger.log(2, `Đã dừng Sacombank`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopVCB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.VCB');
+  Logger.log(2, `Đã dừng VCB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopVIB = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.vib.myvib2');
+  Logger.log(2, `Đã dừng VIB`, __filename);
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const stopVIETBANK = async ({ device_id }) => {
+  await client.shell(device_id, 'input keyevent 3');
+  await client.shell(device_id, 'am force-stop com.vnpay.vietbank');
+  Logger.log(2, `Đã dừng VIB`, __filename);
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -207,6 +747,13 @@ const startBAB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+const startBIDV = async ({ device_id }) => {
+  Logger.log(0, `Đang khởi động BIDV...`, __filename);
+  await client.shell(device_id, 'monkey -p com.vnpay.bidv -c android.intent.category.LAUNCHER 1');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
 const startEIB = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động EIB...`, __filename);
   await client.shell(device_id, 'monkey -p com.vnpay.EximBankOmni -c android.intent.category.LAUNCHER 1');
@@ -218,6 +765,13 @@ const startHDB = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động HDB...`, __filename);
   await client.shell(device_id, 'monkey -p com.vnpay.hdbank -c android.intent.category.LAUNCHER 1');
   await delay(200);
+  return { status: 200, message: 'Success' };
+};
+
+const startICB = async ({ device_id }) => {
+  console.log('Đang khởi động app VietinBank iPay...');
+  await client.shell(device_id, 'monkey -p com.vietinbank.ipay -c android.intent.category.LAUNCHER 1');
+  await delay(500);
   return { status: 200, message: 'Success' };
 };
 
@@ -235,6 +789,7 @@ const startNAB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
+// TPB không dùng được này từ 1/7/2025. Chưa làm lại.
 const startTPB = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động TPB...`, __filename);
   await client.shell(device_id, 'monkey -p com.tpb.mb.gprsandroid -c android.intent.category.LAUNCHER 1');
@@ -279,7 +834,14 @@ const startVIKKI = async ({ device_id }) => {
 
 const startSHB = async ({ device_id }) => {
   Logger.log(0, `Đang khởi động SHB SAHA...`, __filename);
-  await client.shell(device_id, 'monkey -p vn.shb.saha.mbanking -c android.intent.category.LAUNCHER 1');
+  await client.shell(device_id, '');
+  await delay(500);
+  return { status: 200, message: 'Success' };
+};
+
+const startSHBVN = async ({ device_id }) => {
+  Logger.log(0, `Đang khởi động Shinhanbank...`, __filename);
+  await client.shell(device_id, 'monkey -p com.shinhan.global.vn.bank -c android.intent.category.LAUNCHER 1');
   await delay(500);
   return { status: 200, message: 'Success' };
 };
@@ -293,17 +855,29 @@ const startSTB = async ({ device_id }) => {
 
 const mapStopBank = {
   abb: stopABB,
+  abb: stopACB,
   bab: stopBAB,
+  bidv: stopBIDV,
   eib: stopEIB,
   hdb: stopHDB,
   icb: stopICB,
+  lpb: stopLPB,
   ocb: stopOCB,
   nab: stopNAB,
+  ncb: stopNCB,
   tpb: stopTPB,
   vpb: stopVPB,
   mb: stopMB,
+  msb: stopMSB,
+  pvcb: stopPVCB,
+  seab: stopSEAB,
   shb: stopSHB,
+  shbvn: stopSHBVN,
   stb: stopSTB,
+  tcb: stopTCB,
+  vcb: stopVCB,
+  vib: stopVIB,
+  vietbank: stopVIETBANK,
   vikki: stopVIKKI
 };
 
@@ -311,34 +885,21 @@ const mapStartBank = {
   abb: startABB,
   acb: startACB,
   bab: startBAB,
+  bidv: startBIDV,
   eib: startEIB,
   hdb: startHDB,
+  icb: startICB,
   ocb: startOCB,
-  nab: startNAB,  
+  nab: startNAB,
   vpb: startVPB,
   mb: startMB,
   ncb: startNCB,
   shb: startSHB,
+  shbvn: startSHBVN,
   stb: startSTB,
   tpb: startTPB,
   vikki: startVIKKI,
-};
-
-const bankPackages = {
-  abb: 'vn.abbank.retail',
-  acb: 'mobile.acb.com.vn',
-  bab: 'com.bab.retailUAT',
-  eib: 'com.vnpay.EximBankOmni',
-  hdb: 'com.vnpay.hdbank',
-  icb: 'com.vietinbank.ipay',
-  ocb: 'vn.com.ocb.awe',
-  nab: 'ops.namabank.com.vn',
-  ncb: 'com.ncb.bank',
-  tpb: 'com.tpb.mb.gprsandroid',
-  vpb: 'com.vnpay.vpbankonline',
-  mb: 'com.mbmobile',
-  shb: 'vn.shb.saha.mbanking',
-  stb: 'com.sacombank.ewallet'
+  vietbank: startVIETBANK
 };
 
 async function forceKillApp({ device_id, packageName }) {
@@ -348,23 +909,6 @@ async function forceKillApp({ device_id, packageName }) {
     await client.shell(device_id, `killall ${packageName}`).catch(() => { });
   } catch (err) {
     console.error(`Không thể force-kill ${packageName}:`, err.message);
-  }
-}
-
-// check running bank
-async function isBankAppRunning({ bank, device_id }) {
-  const packageName = bankPackages[bank.toLowerCase()];
-  if (!packageName) return false;
-
-  try {
-    const output = await client.shell(device_id, `dumpsys activity activities | grep -i ${packageName}`)
-      .then(adb.util.readAll)
-      .then(buffer => buffer.toString().trim());
-
-    return output.includes(packageName);
-  } catch (error) {
-    Logger.log(2, `Lỗi khi kiểm tra app đang chạy: ${error.message}`, __filename);
-    return false;
   }
 }
 
@@ -382,7 +926,7 @@ function getBankPass(bank, device_id) {
     return bankName === normalizedAppId && deviceField.includes(normalizedDeviceId);
   });
 
-  if (!matched || !matched["MẬT KHẨU"]) {    
+  if (!matched || !matched["MẬT KHẨU"]) {
     // Phát thông báo realtime
     notifier.emit('multiple-banks-detected', {
       device_id,
@@ -398,6 +942,7 @@ function getBankPass(bank, device_id) {
   return matched["MẬT KHẨU"].toString().trim();
 }
 
+// chua lam
 const loginABB = async ({ device_id }) => {
   Logger.log(0, `3. Login ABB...`, __filename);
   const coordinatesLoginABB = await loadCoordinatesLoginABB(device_id);
@@ -409,7 +954,7 @@ const loginABB = async ({ device_id }) => {
   const password = getBankPass(bank, device_id);
   const escapedPassword = escapeAdbText(password);
 
-  // nó có cái nhập mật khẩu bằng mã PIN hoặc chuỗi chưa làm.
+  // nó có cái nhập mật khẩu bằng mã PIN hoặc chuỗi chua lam.
   for (const char of password) {
     await adbHelper.tapXY(device_id, ...coordinatesLoginABB[char]);
     await delay(50);
@@ -432,7 +977,7 @@ const loginEIB = async ({ device_id, bank }) => {
 
   await client.shell(device_id, 'input tap 918 305');
   await delay(1000);
-  await client.shell(device_id, 'input tap 118 820');  
+  await client.shell(device_id, 'input tap 118 820');
   await client.shell(device_id, 'input tap 118 820');
   await delay(600);
   await client.shell(device_id, `input text ${escapedPassword}`);
@@ -440,6 +985,7 @@ const loginEIB = async ({ device_id, bank }) => {
   await client.shell(device_id, 'input tap 540 1020');
 };
 
+// TPB không dùng được này từ 1/7/2025. Chưa làm lại.
 const loginTPB = async ({ device_id, bank }) => {
   Logger.log(0, `3. Login TPB...`, __filename);
 
@@ -484,7 +1030,7 @@ const loginNAB = async ({ device_id, bank }) => {
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
   bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);  
+  const password = getBankPass(bank, device_id);
 
   await client.shell(device_id, 'input tap 540 655');
   await submitLoginNAB1({ device_id, bank }, 0);
@@ -512,9 +1058,9 @@ const loginHDB = async ({ device_id, bank }) => {
   // await delay(1000);
   // await client.shell(device_id, 'input keyevent 66');
   // await client.shell(device_id, 'input keyevent 66');
-  
+
   // Đợi đến khi không có thông báo lỗi nhập sai mật khẩu thì mới submit login    
-  await submitLoginHDB({ device_id, bank }, password.length, 0);  
+  await submitLoginHDB({ device_id, bank }, password.length, 0);
 };
 
 const loginMB = async ({ device_id }) => {
@@ -528,8 +1074,8 @@ const loginMB = async ({ device_id }) => {
   const password = getBankPass(bank, device_id);
   const escapedPassword = escapeAdbText(password);
 
-  console.log('log password:',password);
-  console.log('log escapedPassword:',escapedPassword);
+  console.log('log password:', password);
+  console.log('log escapedPassword:', escapedPassword);
 
   await client.shell(device_id, 'input tap 540 1280');
   await client.shell(device_id, 'input tap 540 1280');
@@ -551,9 +1097,9 @@ const loginOCB = async ({ device_id }) => {
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);  
+  const password = getBankPass(bank, device_id);
 
-  await client.shell(device_id, 'input tap 540 1955');  
+  await client.shell(device_id, 'input tap 540 1955');
   await submitLoginOCB({ device_id, bank, password }, 0);
 };
 
@@ -571,11 +1117,245 @@ const loginSHB = async ({ device_id }) => {
 
   await client.shell(device_id, 'input tap 118 1040');
   await delay(500);
-  await client.shell(device_id, `input text ${escapedPassword}`);    
+  await client.shell(device_id, `input text ${escapedPassword}`);
 
   // Đợi đến khi đủ ký tự dạng ● rồi mới tap "Đăng nhập"
-  console.log('log password.length:',password.length);
-  await submitLoginSHB ({ device_id, bank }, password.length, 0);  
+  console.log('log password.length:', password.length);
+  await submitLoginSHB({ device_id, bank }, password.length, 0);
+};
+
+const clickScanQRBIDV = async ({ device_id }) => {
+  const coordinatesScanQRBIDV = await loadCoordinatesScanQRBIDV(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRBIDV['ScanQR']);
+  return { status: 200, message: 'Success' };
+};
+
+const copyQRImages = async ({ device_id }) => {
+  try {
+    // 1. Lấy danh sách ảnh .png trong thư mục Camera
+    const lsOutput = await client.shell(device_id, `ls /sdcard/DCIM/Camera/`);
+    const lsBuffer = await adb.util.readAll(lsOutput);
+    const fileList = lsBuffer.toString().split('\n').map(f => f.trim()).filter(f => f.endsWith('.png'));
+
+    if (!fileList.length) throw new Error('Không tìm thấy ảnh .png nào.');
+
+    // 2. Lấy ảnh mới nhất theo tên (thường dạng timestamp)
+    fileList.sort();
+    const latestFile = fileList[fileList.length - 1];
+    const sourcePath = `/sdcard/DCIM/Camera/${latestFile}`;
+    const baseName = latestFile.replace(/\.png$/, '');
+    const destinationDir = `/sdcard/DCIM/Camera/`;
+
+    // 3. Tạo 2 bản copy
+    for (let i = 1; i <= 2; i++) {
+      const destinationPath = `${destinationDir}${baseName}_copy_${i}.png`;
+      try {
+        await client.shell(device_id, `cp "${sourcePath}" "${destinationPath}"`);
+        console.log(`Copied to: ${destinationPath}`);
+
+        // 4. Gửi broadcast để Gallery cập nhật ảnh
+        await client.shell(
+          device_id,
+          `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${destinationPath}`
+        );
+        console.log(`Broadcasted: ${destinationPath}`);
+      } catch (err) {
+        console.error(`Lỗi khi copy hoặc broadcast: ${destinationPath} - ${err.message}`);
+      }
+    }
+
+    // 5. Gửi broadcast cho ảnh gốc (nếu cần)
+    await client.shell(
+      device_id,
+      `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${sourcePath}`
+    );
+    console.log(`Broadcasted gốc: ${sourcePath}`);
+
+    return { status: 200, message: 'Copy + broadcast ảnh QR thành công' };
+
+  } catch (error) {
+    console.error("Got an error:", error.message);
+    return { status: 500, message: 'Thất bại khi copy và broadcast ảnh QR' };
+  }
+};
+
+const scanQRICB = async ({ device_id }) => {
+  const coordinatesScanQRICB = await loadCoordinatesScanQRICB(device_id);
+  const deviceModel = await deviceHelper.getDeviceModel(device_id);
+
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['ScanQR']);
+  await delay(600);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Image']);
+  await delay(800);
+  if (deviceModel === 'SM-N960') {  // Nếu là S20 FE 5G thì chỉ cần Target-Img ở đây
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Target-Img']);
+  }
+  else if (deviceModel === 'ONEPLUS A5010' || deviceModel === 'ONEPLUS A5000') {
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Hamburger-Menu']);
+    await delay(800);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['ONEPLUS A5010']); // = Galaxy Note9
+    await delay(700);
+    await client.shell(device_id, `input swipe 500 1800 500 300`);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Target-Img']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Finish']);
+  }
+  else if (deviceModel === 'CPH2321') {
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Overflow-Menu']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Browse']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Hamburger-Menu']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['OPPO-A55-5G']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['DCIM']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Camera']);
+    await delay(700);
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Target-Image']);
+  }
+
+
+  return { status: 200, message: 'Success' };
+};
+
+const clickSelectImageBIDV = async ({ device_id }) => {
+  const coordinatesScanQRBIDV = await loadCoordinatesScanQRBIDV(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRBIDV['Select-Image']);
+  return { status: 200, message: 'Success' };
+};
+
+const clickLoginHDB = async ({ device_id }) => {
+  const coordinatesLoginHDB = await loadCoordinatesLoginHDB(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesLoginHDB['Click-Login']);
+  return { status: 200, message: 'Success' };
+};
+
+const clickConfirmBIDV = async ({ device_id }) => {
+  const coordinatesScanQRBIDV = await loadCoordinatesScanQRBIDV(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRBIDV['Confirm']);
+  return { status: 200, message: 'Success' };
+};
+
+const clickConfirmScanFaceBIDV = async ({ device_id }) => {
+  const coordinatesScanQRBIDV = await loadCoordinatesScanQRBIDV(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRBIDV['Confirm']);
+  return { status: 200, message: 'Success' };
+};
+
+const clickConfirmICB = async ({ device_id }) => {
+  const coordinatesScanQRICB = await loadCoordinatesScanQRICB(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQRICB['Confirm']);
+  return { status: 200, message: 'Success' };
+};
+
+const clickConfirmOCB = async ({ device_id }) => {
+  const coordinatesScanQROCB = await loadCoordinatesScanQROCB(device_id);
+  await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Confirm']);
+  return { status: 200, message: 'Success' };
+};
+
+const inputPINBIDV = async ({ device_id, text }) => {
+  const coordinatesScanQRBIDV = await loadCoordinatesScanQRBIDV(device_id);
+
+  for (const char of text) {
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRBIDV[char]);
+    console.log('Log char of PIN:', char);
+  }
+
+  return { status: 200, message: 'Success' };
+};
+
+const inputPINICB = async ({ device_id, text }) => {
+  const coordinatesScanQRICB = await loadCoordinatesScanQRICB(device_id);
+
+  for (const char of text) {
+    await adbHelper.tapXY(device_id, ...coordinatesScanQRICB[char]);
+    console.log('Log char of PIN:', char);
+  }
+
+  return { status: 200, message: 'Success' };
+};
+
+const inputICB = async ({ device_id, text }) => {
+  const coordinatesLoginICB = await loadCoordinatesLoginICB(device_id);
+
+  for (const char of text) {
+    console.log('log char in text:', char);
+    if (isUpperCase(char)) {
+      await adbHelper.tapXY(device_id, ...coordinatesLoginICB['CapsLock']);
+      await delay(50);
+      await adbHelper.tapXY(device_id, ...coordinatesLoginICB[char]);
+      await delay(50);
+    }
+    else if (isSpecialChar(char)) {
+      await adbHelper.tapXY(device_id, ...coordinatesLoginICB['!#1']);
+      await delay(50);
+      await adbHelper.tapXY(device_id, ...coordinatesLoginICB[char]);
+      await delay(50);
+      await adbHelper.tapXY(device_id, ...coordinatesLoginICB['ABC']);
+    }
+    else {
+      await adbHelper.tapXY(device_id, ...coordinatesLoginICB[char.toLowerCase()]);
+    }
+
+    await delay(50);
+  }
+  return { status: 200, message: 'Success' };
+};
+
+const tapLoginButton = async (device_id) => {
+  const coordinatesTap = await loadCoordinatesBeforePasswordFieldSHBVN(device_id);
+
+  if (!coordinatesTap?.LOGIN) {
+    return { status: 400, message: '❌ Không tìm thấy tọa độ LOGIN để tap' };
+  }
+
+  await adbHelper.tapXY(device_id, ...coordinatesTap.LOGIN);
+  return { status: 200, message: '✅ Đã tap LOGIN thành công' };
+};
+
+const tapPasswordFiled = async (device_id) => {
+  const coordsPassField = await loadCoordinatesPasswordFieldSHBVN(device_id);
+
+  if (!coordsPassField?.LOGIN) {
+    return { status: 400, message: '❌ Không tìm thấy tọa độ LOGIN để tap' };
+  }
+
+  await adbHelper.tapXY(device_id, ...coordsPassField.FIELD_PASSWORD);
+  return { status: 200, message: '✅ Đã tap LOGIN thành công' };
+};
+
+const inputSHBVN = async ({ device_id, text }) => {
+  const coordsKeyboard = await loadCoordinatesLoginSHBVN({ device_id });
+
+  console.log('log device_id in inputSHBVN:', device_id);
+  console.log('log text in inputSHBVN:', text);
+  for (const char of text) {
+    console.log('log char in text:', char);
+    if (isUpperCase(char) || isSpecialChar(char)) {
+      await adbHelper.tapXY(device_id, ...coordsKeyboard['Shift']);
+      await delay(50);
+      await adbHelper.tapXY(device_id, ...coordsKeyboard[char]);
+      await delay(50);
+    }
+    else {
+      await adbHelper.tapXY(device_id, ...coordsKeyboard[char.toLowerCase()]);
+    }
+    await delay(50);
+  }
+  await delay(50);
+  await adbHelper.tapXY(device_id, ...coordsKeyboard['Enter']);
+  return { status: 200, message: 'Success' };
+};
+
+const loginSHBVN = async ({ device_id, bank, text }) => {
+  Logger.log(0, `3. Login Shinhanbank...`, __filename);    
+  await submitLoginSHBVN1({ device_id, bank }, 0);    
+  await submitLoginSHBVN2({ device_id, bank }, 0);  
+  await submitLoginSHBVN3({ device_id, bank, text }, 0);  
 };
 
 const loginSTB = async ({ device_id }) => {
@@ -586,15 +1366,7 @@ const loginSTB = async ({ device_id }) => {
   const info = JSON.parse(raw);
 
   const bank = info?.data?.bank;
-  const password = getBankPass(bank, device_id);  
-
-  // await client.shell(device_id, 'input tap 970 220');
-  // await delay(300);
-  // await client.shell(device_id, 'input tap 540 1666');
-  // await delay(1000);
-  // await client.shell(device_id, `input text ${escapedPassword}`);
-  // await delay(1100);
-  // await client.shell(device_id, 'input tap 540 911');
+  const password = getBankPass(bank, device_id);
 
   await submitLoginSTB1({ device_id, bank }, password.length, 0);
   await submitLoginSTB2({ device_id, bank }, password.length, 0);
@@ -616,35 +1388,13 @@ const loginVIKKI = async ({ device_id }) => {
   await submitLoginVIKKI1({ device_id, bank }, password.length, 0);
 };
 
-// const loginVAB = async ({ device_id, bank }) => {    
-//   Logger.log(0, `3. Login VAB...`, __filename);
-
-//   const infoPath = path.join(__dirname, '../database/info-qr.json');
-//   const raw = fs.readFileSync(infoPath, 'utf-8');
-//   const info = JSON.parse(raw);
-
-//   // bank = info?.data?.bank;
-//   bank = info?.data?.bank_temp || info?.data?.bank;
-//   const password = getBankPass(bank, device_id);    
-//   const escapedPassword = escapeAdbText(password);     
-
-//   await client.shell(device_id, 'input tap 918 305');
-//   await delay(1000);
-//   await client.shell(device_id, 'input tap 118 820');
-//   await delay(400);
-//   await client.shell(device_id, 'input tap 118 820');
-//   await delay(400);
-//   await client.shell(device_id, `input text ${escapedPassword}`);
-//   await delay(1200);  
-//   await client.shell(device_id, 'input tap 540 1020');
-// };
-
 const mapLoginBank = {
   bab: loginBAB,
   hdb: loginHDB,
   tpb: loginTPB,
   eib: loginEIB,
   shb: loginSHB,
+  shbvn: loginSHBVN,
   ocb: loginOCB,
   abb: loginABB,
   nab: loginNAB,
@@ -653,9 +1403,14 @@ const mapLoginBank = {
   vikki: loginVIKKI,
 };
 
-const reset = async (timer, device_id, bank, controller) => {
+const reset = async (timer, device_id, bank, controller, title) => {
   timer++;
-  const count = 30;
+  const count = 30;  
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const json = JSON.parse(raw);
+  const type = json?.type;
+  bank = json?.data?.bank || 'shbvn';
 
   if (isNaN(timer)) {
     Logger.log(2, `Reset vì timer không hợp lệ: ${timer}`, __filename);
@@ -666,6 +1421,43 @@ const reset = async (timer, device_id, bank, controller) => {
   if (timer >= count) {
     Logger.log(1, `Đã đạt giới hạn retry (${timer}/${count}), reset lại...`, __filename);
     await runBankTransfer({ device_id, bank, controller });
+    // if (bank === 'shbvn') {
+    //   notifier.emit('multiple-banks-detected', {
+    //     device_id,
+    //     message: `Vui lòng mở thiết bị lên để có thể dump được màn hình`
+    //   });
+    // }
+    return 0;
+  }
+
+  Logger.log(1, `Retry lần ${timer}/${count}`, __filename);
+  return timer;
+};
+
+const resetSHBVN = async (timer, device_id, bank, text, title) => {
+  timer++;
+  const count = 30;  
+  const infoPath = path.join(__dirname, '../database/info-qr.json');
+  const raw = fs.readFileSync(infoPath, 'utf-8');
+  const json = JSON.parse(raw);
+  const type = json?.type;
+  bank = json?.data?.bank || 'shbvn';
+
+  if (isNaN(timer)) {
+    Logger.log(2, `Reset vì timer không hợp lệ: ${timer}`, __filename);
+    await loginSHBVN({ device_id, bank, text });
+    return 0;
+  }
+
+  if (timer >= count) {
+    Logger.log(1, `Đã đạt giới hạn retry (${timer}/${count}), reset lại...`, __filename);
+    await loginSHBVN({ device_id, bank, text });
+    // if (bank === 'shbvn') {
+    //   notifier.emit('multiple-banks-detected', {
+    //     device_id,
+    //     message: `Vui lòng mở thiết bị lên để có thể dump được màn hình`
+    //   });
+    // }
     return 0;
   }
 
@@ -694,6 +1486,7 @@ const checkTransactions = async ({ device_id }) => {
   return null;
 };
 
+// TPB không dùng được này từ 1/7/2025. Chưa làm lại.
 const scanQRTPB = async ({ device_id, transId }) => {
   const coordinates = await loadCoordinates('tpb', device_id);
   const infoPath = path.join(__dirname, '../database/info-qr.json');
@@ -703,7 +1496,6 @@ const scanQRTPB = async ({ device_id, transId }) => {
 
   await adbHelper.tapXY(device_id, ...coordinates['ScanQR']);
   await delay(800);
-  // Đoạn này tí chỉnh thành click vào Album thì hay hơn
   await adbHelper.tapXY(device_id, ...coordinates['Image']);
   await delay(800);
   await adbHelper.tapXY(device_id, ...coordinates['Target-Image-1']);
@@ -711,9 +1503,8 @@ const scanQRTPB = async ({ device_id, transId }) => {
   return { status: 200, message: 'QR đã được chọn' };
 };
 
-// scanQRBAB
-const scanQRBAB = async ({ device_id, bank }) => {    
-  await client.shell(device_id, 'input tap 540 1920');  
+const scanQRBAB = async ({ device_id, bank }) => {
+  await client.shell(device_id, 'input tap 540 1920');
   await uploadQRSHB1({ device_id, bank }, 0);
   await uploadQRSHB2({ device_id, bank }, 0);
   await uploadQRSHB3({ device_id, bank }, 0);
@@ -755,13 +1546,7 @@ const scanQREIB = async ({ device_id, transId }) => {
 };
 
 const scanQRSHB = async ({ device_id, bank }) => {
-  // const coordinates = await loadCoordinates('shb', device_id);      
-  // await adbHelper.tapXY(device_id, ...coordinates['ScanQR']);
-  // await delay(600);
-  // await adbHelper.tapXY(device_id, ...coordinates['Image']);
-  // await delay(900);
-  // await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);      
-  await client.shell(device_id, 'input tap 540 999');  
+  await client.shell(device_id, 'input tap 540 999');
   await uploadQRSHB1({ device_id, bank }, 0);
   await uploadQRSHB2({ device_id, bank }, 0);
   await uploadQRSHB3({ device_id, bank }, 0);
@@ -771,67 +1556,12 @@ const scanQRSHB = async ({ device_id, bank }) => {
 
 const scanQROCB = async ({ device_id, bank }) => {
   const coordinates = await loadCoordinates('ocb', device_id);
-  // await adbHelper.tapXY(device_id, ...coordinates['ScanQR']);
-  // await delay(600);
-  // await adbHelper.tapXY(device_id, ...coordinates['Image']);  
-  // // Cài trước bằng cấp full quyền cho app OCB rồi click chọn ảnh từ các tệp đã ẩn để app nó lưu đường dẫn
-  // // thì sẽ không cần các bước như đã hidden bên dưới nữa
-  // // await delay(1000);   
-  // // await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Hamburger-Menu']);
-  // // await delay(800);   
-  // // await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Galaxy-Note9']);
-  // // await delay(600);                 
-  // // await client.shell(device_id, `input swipe 500 1800 500 300`);          
-  // await delay(900);
-  // await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);
-  // // await delay(600);
-  // // await adbHelper.tapXY(device_id, ...coordinatesScanQROCB['Finish']);     
-  await client.shell(device_id, 'input tap 540 2010');  
+  await client.shell(device_id, 'input tap 540 2010');
   await uploadQROCB1({ device_id, bank }, 0);
   await uploadQROCB2({ device_id, bank }, 0);
 
   return { status: 200, message: 'Success' };
 };
-
-// const scanQRNAB = async ({ device_id, transId }) => {
-//   const logDir = path.join('C:\\att_mobile_client\\logs\\');
-//   const coordinates = await loadCoordinates('nab', device_id);
-//   const infoPath = path.join(__dirname, '../database/info-qr.json');
-//   const raw = fs.readFileSync(infoPath, 'utf-8');
-//   const info = JSON.parse(raw);
-//   transId = info?.data?.trans_id;
-
-//   await adbHelper.tapXY(device_id, ...coordinates['ScanQR']);
-//   await delay(800);
-//   await adbHelper.tapXY(device_id, ...coordinates['Image']);
-//   await delay(800);
-
-//   let useReportBug = false;
-//   await delay(2500);
-
-//   const files = fs.readdirSync(logDir)
-//     .filter(f => f.endsWith('.xml'))
-//     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
-//     .sort((a, b) => b.time - a.time);
-//   const latestFile = path.join(logDir, files[0].name);
-//   const content = fs.readFileSync(latestFile, 'utf-8');
-
-//   if (content.includes("Báo cáo lỗi")) {
-//     Logger.log(0, `Đang ở màn hình có "Báo cáo lỗi", "Bộ sưu tập", "Dấu vết hệ thống", "File của bạn"`, __filename);
-//     useReportBug = true;
-//     Logger.log(0, `NAB XML dump cho thấy đang ở TH1 (có tồn tại "Báo cáo lỗi")`, __filename);
-//   } else {
-//     Logger.log(0, `NAB XML dump cho thấy đang ở TH2 (không có tồn tại "Báo cáo lỗi")`, __filename);
-//   }
-
-//   const galleryCoord = useReportBug ? coordinates['Gallery2'] : coordinates['Gallery1'];
-
-//   await adbHelper.tapXY(device_id, ...galleryCoord);
-//   await delay(800);
-//   await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);
-
-//   return { status: 200, message: 'QR đã được chọn' };
-// };
 
 const scanQRNAB = async ({ device_id, bank }) => {
   // const coordinates = await loadCoordinates('shb', device_id);      
@@ -840,7 +1570,7 @@ const scanQRNAB = async ({ device_id, bank }) => {
   // await adbHelper.tapXY(device_id, ...coordinates['Image']);
   // await delay(900);
   // await adbHelper.tapXY(device_id, ...coordinates['Target-Img']);      
-  await client.shell(device_id, 'input tap 945 1465');  
+  await client.shell(device_id, 'input tap 945 1465');
   await uploadQRNAB1({ device_id, bank }, 0);
   await uploadQRNAB2({ device_id, bank }, 0);
   await uploadQRNAB3({ device_id, bank }, 0);
@@ -848,9 +1578,9 @@ const scanQRNAB = async ({ device_id, bank }) => {
   return { status: 200, message: 'Success' };
 };
 
-const scanQRMB = async ({ device_id, bank }) => {      
-  await client.shell(device_id, 'input tap 540 1936'); 
-  await delay(500); 
+const scanQRMB = async ({ device_id, bank }) => {
+  await client.shell(device_id, 'input tap 540 1936');
+  await delay(500);
   await client.shell(device_id, 'input tap 805 1875');
   await uploadQRMB1({ device_id, bank }, 0);
   await uploadQRMB2({ device_id, bank }, 0);
@@ -873,7 +1603,7 @@ const scanQRACB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
-const scanQRVIKKI = async ({ device_id, bank }) => {    
+const scanQRVIKKI = async ({ device_id, bank }) => {
   // await client.shell(device_id, 'input tap 540 2010');  
   // await uploadQROCB1({ device_id, bank }, 0);
   // await uploadQROCB2({ device_id, bank }, 0);
@@ -934,7 +1664,7 @@ const scanQRSTB = async ({ device_id }) => {
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
     .sort((a, b) => b.time - a.time);
   const latestFile = path.join(logDir, files[0].name);
-  const content = fs.readFileSync(latestFile, 'utf-8');  
+  const content = fs.readFileSync(latestFile, 'utf-8');
 
   if (content.includes("Báo cáo lỗi")) {
     Logger.log(0, `Đang ở màn hình có "Báo cáo lỗi", "Bộ sưu tập", "File của bạn"`, __filename);
@@ -967,49 +1697,57 @@ const scanQRMap = {
 };
 
 const bankStartSuccessKeywords = {
+  shbvn: ["com.shinhan.global.vn.bank:id/text_welcome",
+    "com.shinhan.global.vn.bank:id/btn_login",
+    "com.shinhan.global.vn.bank:id/btn_sign_up"
+  ],
   stb: ["Xin chào", "Truy cập nhanh"],
   bab: ["Quên mật khẩu", "Đăng nhập"],
   hdb: ["com.vnpay.hdbank:id/forget_pass"],
-  tpb: ["Smart OTP", "Quét QR", "Mật khẩu"], // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
+  tpb: ["Smart OTP", "Quét QR", "Mật khẩu"], // TPB không dùng được này từ 1/7/2025. Chưa làm lại.
   eib: [""], // Màn hình đăng nhập (sau khi khởi động app) là rỗng
   shb: ["Nhập mật khẩu"],
   ocb: ["Tìm ATM và chi nhánh", "Tra cứu lãi suất", "Liên hệ hỗ trợ", "Đăng nhập"],
   nab: ["Tap &amp; Pay", "Soft OTP", "Happy Cashback", "Quét QR"],
   mb: ["Xin chào,", "Tài khoản khác", "Quên mật khẩu?", "Đăng nhập", "Xác thực D-OTP"],
-  acb: ["aaaaaaaaaaaaaaaaaaaaa"], // chưa làm                
+  acb: ["aaaaaaaaaaaaaaaaaaaaa"], // chua lam                
   vikki: ["Quên mã PIN?"],
   vpb: ["Mật khẩu", "Đăng nhập", "Quên mật khẩu?"] // chưa ok
 };
 
-const bankLoginSuccessKeywords = {  
+const bankLoginSuccessKeywords = {
   stb: ["Xin chào", "Truy cập nhanh"],
+  shbvn: ["com.shinhan.global.vn.bank:id/lbl_account_detail",
+    "com.shinhan.global.vn.bank:id/tv_banking_services"
+  ],
   bab: ["Tài khoản thanh toán", "Số dư: ************ VND", "Trang chủ"],
   shb: ["Tài khoản trực tuyến", "Tài khoản", "Tiết kiệm", "Chuyển tiền", "Thanh toán"],
   ocb: ["Tài khoản của tôi", "Chuyển tiền", "Xem tất cả", "Thanh toán hóa đơn"],
   nab: ["ops.namabank.com.vn:id/title_trang_chu", "ops.namabank.com.vn:id/title_dich_vu", "ops.namabank.com.vn:id/titleQRCode", "ops.namabank.com.vn:id/title_thanh_vien", "ops.namabank.com.vn:id/title_tien_ich", "Quét QR", "Thẻ"],
   mb: ["Trang chủ", "Thẻ", "Chuyển tiền", "Tổng số dư VND&#10;*** *** VND"], // Chú ý đoạn này sau update app
   acb: ["Số dư khả dụng", "Dịch vụ ngân hàng", "Trang chủ", "Tài khoản"],
-  hdb: ["com.vnpay.hdbank:id/tvTitle", "com.vnpay.hdbank:id/tvLoanAmount", "com.vnpay.hdbank:id/transfer_in", "com.vnpay.hdbank:id/transfer"],  
+  hdb: ["com.vnpay.hdbank:id/tvTitle", "com.vnpay.hdbank:id/tvLoanAmount", "com.vnpay.hdbank:id/transfer_in", "com.vnpay.hdbank:id/transfer"],
   eib: [""], // Màn hình sau login là rỗng                
-  tpb: ["Trang Chủ", "Chợ tiện ích", "Quét mọi QR", "Dịch vụ NH", "Cá Nhân"], // TPB 10.12.15 không cho dump xml nữa, dump phát là văng app luôn.
+  tpb: ["Trang Chủ", "Chợ tiện ích", "Quét mọi QR", "Dịch vụ NH", "Cá Nhân"], // TPB không dùng được này từ 1/7/2025. Chưa làm lại.
   vikki: ["******,  VND", "THẺ", "KHOẢN VAY", "TIẾT KIỆM"],
   vpb: ["Tài khoản", "QR Code", "Chuyển tiền"] // chưa ok
 };
 
 const scanQRSuccessKeywords = {
   stb: ["Số tài khoản", "Tên người nhận", "Số tiền cần chuyển"],
+  shbvn: ["chưa làmmmmmmmmmmmmmmmmmmmmmmmmmmmm"],
   bab: ["Thông tin chuyển tiền", "Quý khách vui lòng nhập không dấu.Các ký tự đặc biệt được sử dụng là '.', ',', '-', '_' và '/'"],
   hdb: [''], // chua lam
   eib: ['com.vnpay.EximBankOmni:id/layThuong'],
   shb: ['Chuyển tiền đến', 'Ngân hàng nhận', 'Số tài khoản', 'Tên người nhận', 'Số tiền', 'Lời nhắn', 'Tài khoản nguồn'],
   mb: ['MInput_0a67f0a6-0cc5-483a-8e23-9300e20ab1ac'],
-  abb: ['ABBANK', 'Chọn ảnh'], // chưa làm
-  stb: ['Sacombank', 'Hình ảnh'], // chưa làm
-  vpb: ['QR Code', 'Chọn ảnh'], // chưa làm
-  ocb: ['Thư viện', 'Gallery'], // chưa làm
+  abb: ['ABBANK', 'Chọn ảnh'], // chua lam
+  stb: ['Sacombank', 'Hình ảnh'], // chua lam
+  vpb: ['QR Code', 'Chọn ảnh'], // chua lam
+  ocb: ['Thư viện', 'Gallery'], // chua lam
   tpb: ['Chuyển tiền tới', 'Tiếp tục'],
   nab: ['Tài khoản nguồn', 'Ngân hàng nhận', 'Tên người nhận'],
-  acb: ['Chọn ảnh', 'Gallery'] // chưa làm
+  acb: ['Chọn ảnh', 'Gallery'] // chua lam
 };
 
 async function checkStartApp({ device_id, bank }) {
@@ -1017,7 +1755,7 @@ async function checkStartApp({ device_id, bank }) {
   const keywords = bankStartSuccessKeywords[bank.toLowerCase()] || [];
 
   let attempt = 0;
-  const maxAttempts = 5;
+  const maxAttempts = 3;
   const retryDelay = 2000;
 
   while (attempt < maxAttempts) {
@@ -1051,24 +1789,27 @@ async function checkStartApp({ device_id, bank }) {
 
 async function checkHome({ device_id, bank }) {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
-  const requiredKeywordsMap = {  
+  const requiredKeywordsMap = {
     stb: [
       'Tài khoản thanh toán',
       'Số dư: ************ VND',
       'Trang chủ'
     ],
+    shbvn: ["com.shinhan.global.vn.bank:id/lbl_account_detail",
+      "com.shinhan.global.vn.bank:id/tv_banking_services"
+    ],
     bab: [
       'Tài khoản thanh toán',
       'Số dư: ************ VND',
       'Trang chủ'
-    ],  
+    ],
     shb: [
       'Tài khoản trực tuyến',
       'Tài khoản',
       'Tiết kiệm',
       'Chuyển tiền',
       'Thanh toán'
-    ],    
+    ],
     ocb: [
       'Tài khoản của tôi',
       'Chuyển tiền',
@@ -1086,16 +1827,16 @@ async function checkHome({ device_id, bank }) {
     ],
     mb: [
       'Tổng số dư VND&#10;*** *** VND',
-      'Chuyển tiền',      
+      'Chuyển tiền',
       'Trang chủ',
       'Thẻ'
     ],
     acb: [
       'Số dư khả dụng',
-      'Dịch vụ ngân hàng',      
-      'Trang chủ',      
-      'Tài khoản'      
-    ],    
+      'Dịch vụ ngân hàng',
+      'Trang chủ',
+      'Tài khoản'
+    ],
     eib: [
       ''
     ],
@@ -1105,13 +1846,13 @@ async function checkHome({ device_id, bank }) {
       'com.vnpay.hdbank:id/transfer_in',
       'com.vnpay.hdbank:id/transfer'
     ],
-    // TPB 01/07/2025 không còn cho dump nữa
+    // TPB không dùng được này từ 1/7/2025. Chưa làm lại.
     tpb: [
       'Trang Chủ',
       'Chợ tiện ích',
       'Quét mọi QR',
       'Dịch vụ NH',
-      'Cá Nhân',            
+      'Cá Nhân',
     ]
   };
 
@@ -1131,9 +1872,9 @@ async function checkHome({ device_id, bank }) {
   const latestFile = path.join(logDir, files[0].name);
   const content = fs.readFileSync(latestFile, 'utf-8');
 
-  const allMatched = keywords.every(keyword => content.includes(keyword));  
+  const allMatched = keywords.every(keyword => content.includes(keyword));
 
-  if (allMatched) {    
+  if (allMatched) {
     Logger.log(0, `${bank.toUpperCase()} xác nhận đang ở màn hình HOME`, __filename);
     return true;
   } else {
@@ -1143,6 +1884,7 @@ async function checkHome({ device_id, bank }) {
 }
 
 // ============== submitLogin TPB ============== //
+// TPB không dùng được này từ 1/7/2025. Chưa làm lại.
 const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
 
@@ -1163,15 +1905,15 @@ const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
   const regex = /text="([•●]{4,})" resource-id="com\.tpb\.mb\.gprsandroid:id\/etPassword"/;
   const match = content.match(regex);
 
-  console.log('🟡 match:', match);
+  console.log('match:', match);
 
   const isCompleted = match?.[1]?.length === expectedLength;
 
   if (match && match[1]) {
-    console.log(`🟡 match[1].length: ${match[1].length}`);
+    console.log(`match[1].length: ${match[1].length}`);
     const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
-    console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
-  }  
+    console.log('Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
+  }
 
   // Nếu đủ ký tự → tap "Đăng nhập"
   if (isCompleted) {
@@ -1205,13 +1947,13 @@ const submitLoginBAB = async ({ device_id, bank }, expectedLength, timer) => {
   const regex = /text="(\*+)"\s+resource-id=""\s+class="android\.widget\.EditText"/;
   const match = content.match(regex);
 
-  console.log('🟡 match:', match);
+  console.log('match:', match);
 
   const isCompleted = match?.[1]?.length === expectedLength;
 
   if (match && match[1]) {
-    console.log(`🟡 match[1].length: ${match[1].length}`);
-  }  
+    console.log(`match[1].length: ${match[1].length}`);
+  }
 
   if (isCompleted) {
     console.log('Mật khẩu đủ, tiến hành tap "Đăng nhập"...');
@@ -1284,19 +2026,19 @@ const submitLoginSHB = async ({ device_id, bank }, expectedLength, timer) => {
   const regex = /text="([•●]{4,})" resource-id="vn\.shb\.saha\.mbanking:id\/edtPwd"/;
   const match = content.match(regex);
 
-  console.log('🟡 match:', match);
+  console.log('match:', match);
 
   const isCompleted = match?.[1]?.length === expectedLength;
 
   if (match && match[1]) {
-    console.log(`🟡 match[1].length: ${match[1].length}`);
+    console.log(`match[1].length: ${match[1].length}`);
     const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
-    console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
-  }  
+    console.log('Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
+  }
 
   // Nếu đủ ký tự → tap "Đăng nhập"
   if (isCompleted) {
-    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');    
+    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');
     await client.shell(device_id, 'input tap 540 1220');
   } else {
     const t = await reset(timer, device_id, bank);
@@ -1311,7 +2053,7 @@ const submitLoginOCB = async ({ device_id, bank, password }, timer) => {
   const info = JSON.parse(raw);
 
   bank = info?.data?.bank;
-  password = getBankPass(bank, device_id);  
+  password = getBankPass(bank, device_id);
 
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
@@ -1399,8 +2141,8 @@ const submitLoginNAB2 = async ({ device_id, bank }, timer) => {
 
     bank = info?.data?.bank;
     const password = getBankPass(bank, device_id);
-    const escapedPassword = escapeAdbText(password);    
-    await client.shell(device_id, `input text ${escapedPassword}`);  
+    const escapedPassword = escapeAdbText(password);
+    await client.shell(device_id, `input text ${escapedPassword}`);
   } else {
     const t = await reset(timer, device_id, bank);
     setTimeout(() => submitLoginNAB2({ device_id, bank }, t), 500);
@@ -1416,7 +2158,7 @@ const submitLoginNAB3 = async ({ device_id, bank }, expectedLength, timer) => {
     .sort((a, b) => b.time - a.time);
 
   if (files.length === 0) {
-    const t = await reset(timer, device_id, bank);    
+    const t = await reset(timer, device_id, bank);
     return setTimeout(() => submitLoginNAB3({ device_id, bank }, expectedLength, t), 500);
   }
 
@@ -1435,11 +2177,11 @@ const submitLoginNAB3 = async ({ device_id, bank }, expectedLength, timer) => {
     console.log(`🟡 match[1].length: ${match[1].length}`);
     const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
     console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
-  }  
+  }
 
   // Nếu đủ ký tự → tap "Đăng nhập"
   if (isCompleted) {
-    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');    
+    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');
     await client.shell(device_id, 'input tap 540 1186');
   } else {
     const t = await reset(timer, device_id, bank);
@@ -1468,19 +2210,19 @@ const submitLoginMB = async ({ device_id, bank }, expectedLength, timer) => {
   const regex = /<node[^>]*text="([•●]{4,})"[^>]*class="android\.widget\.EditText"[^>]*>/;
   const match = content.match(regex);
 
-  console.log('🟡 match:', match);
+  console.log('match:', match);
 
-  const isCompleted = match?.[1]?.length === expectedLength;  
+  const isCompleted = match?.[1]?.length === expectedLength;
 
   if (match && match[1]) {
-    console.log(`🟡 match[1].length: ${match[1].length}`);
+    console.log(`match[1].length: ${match[1].length}`);
     const unicodeChars = match[1].split('').map(c => c.charCodeAt(0).toString(16));
-    console.log('🟡 Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
-  }  
+    console.log('Unicode các ký tự:', unicodeChars); // Debug xem là U+2022 hay U+25CF
+  }
 
   // Nếu đủ ký tự → tap "Đăng nhập"
   if (isCompleted) {
-    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');    
+    console.log('Đã nhập đủ mật khẩu, tiến hành tap Đăng nhập...');
     await client.shell(device_id, 'input keyevent 66');
     await client.shell(device_id, 'input keyevent 66');
   } else {
@@ -1509,7 +2251,7 @@ const submitLoginSTB1 = async ({ device_id, bank }, password, timer) => {
   const hasTransfer = content.includes('text="Chuyển tiền"');
   const hasQuickAccess = content.includes('text="Truy cập nhanh"');
 
-  console.log(`🟡 hasTransfer: ${hasTransfer}, hasQuickAccess: ${hasQuickAccess}`);
+  console.log(`hasTransfer: ${hasTransfer}, hasQuickAccess: ${hasQuickAccess}`);
 
   if (hasTransfer && hasQuickAccess) {
     console.log('Đã thấy Chuyển tiền và Truy cập nhanh → nhập mật khẩu');
@@ -1574,10 +2316,10 @@ const submitLoginSTB3 = async ({ device_id, bank }, password, timer) => {
 
   const latestFile = path.join(logDir, files[0].name);
   const content = fs.readFileSync(latestFile, 'utf-8');
-  
+
   const forgetPass = content.includes('resource-id="com.sacombank.ewallet:id/btn_forget_password"');
 
-  console.log(`🟡 forgetPass: ${forgetPass}`);
+  console.log(`forgetPass: ${forgetPass}`);
 
   if (forgetPass) {
     console.log('Đã thấy khu vực nhập mật khẩu → Nhập mật khẩu');
@@ -1608,12 +2350,12 @@ const submitLoginSTB4 = async ({ device_id, bank }, expectedLength, timer) => {
   const regex = /text="([^"]+)"\s+resource-id="com\.sacombank\.ewallet:id\/pinview_bottom_mpass"/;
   const match = content.match(regex);
 
-  console.log('🟡 match:', match);
+  console.log('match:', match);
 
   const isCompleted = match?.[1]?.length === expectedLength;
 
   if (match && match[1]) {
-    console.log(`🟢 Mật khẩu hiện tại: "${match[1]}" | Độ dài: ${match[1].length} | Mong đợi: ${expectedLength}`);
+    console.log(`Mật khẩu hiện tại: "${match[1]}" | Độ dài: ${match[1].length} | Mong đợi: ${expectedLength}`);
   }
 
   if (isCompleted) {
@@ -1625,10 +2367,9 @@ const submitLoginSTB4 = async ({ device_id, bank }, expectedLength, timer) => {
   }
 };
 
-// ============== submitLogin SHBVN ============== // chua lam
-// ============== submitLogin SHBVN ============== // chua lam
-// lấy xml ra lấy bounds -> chia 2 lấy tọa độ (x,y)
-const submitLoginSHBVN1 = async ({ device_id, bank }, password, timer) => {
+// ============== submitLogin SHBVN ============== //
+// click vào nút ĐĂNG NHẬP / LOG IN ở màn hình đăng nhập (sau khi start app)
+const submitLoginSHBVN1 = async ({ device_id, bank }, timer) => {
   const logDir = path.join('C:\\att_mobile_client\\logs\\');
 
   const files = fs.readdirSync(logDir)
@@ -1637,26 +2378,89 @@ const submitLoginSHBVN1 = async ({ device_id, bank }, password, timer) => {
     .sort((a, b) => b.time - a.time);
 
   if (files.length === 0) {
-    const t = await reset(timer, device_id, bank);
-    return setTimeout(() => submitLoginSHBVN1({ device_id, bank }, password, t), 500);
+    const t = await resetSHBVN(timer, device_id, bank);
+    return setTimeout(() => submitLoginSHBVN1({ device_id, bank }, t), 500);
   }
 
-  const latestFile = path.join(logDir, files[0].name);
-  const content = fs.readFileSync(latestFile, 'utf-8');
+  const latestXMLPath = path.join(logDir, files[0].name);
+  console.log('log latestXMLPath:',latestXMLPath);
+  const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
 
-  // lấy xml ra lấy bounds -> chia 2 lấy tọa độ (x,y)
-  // const hasTransfer = content.includes('text="Chuyển tiền"');
-  // const hasQuickAccess = content.includes('text="Truy cập nhanh"');
+  const hasLogin = xmlContent.includes('com.shinhan.global.vn.bank:id/btn_login');
+  const hasRegis = xmlContent.includes('com.shinhan.global.vn.bank:id/btn_sign_up');
 
-  // console.log(`🟡 hasTransfer: ${hasTransfer}, hasQuickAccess: ${hasQuickAccess}`);
+  console.log(`hasLogin: ${hasLogin}, hasRegis: ${hasRegis}`);
 
-  // if (hasTransfer && hasQuickAccess) {
-  //   console.log('Đã thấy Chuyển tiền và Truy cập nhanh → nhập mật khẩu');
-  //   await client.shell(device_id, 'input tap 970 150');
-  // } else {
-  //   const t = await reset(timer, device_id, bank);
-  //   setTimeout(() => submitLoginSHBVN1({ device_id, bank }, password, t), 500);
-  // }
+  if (hasLogin && hasRegis) {
+    console.log('Đã thấy ...bắt đầu click nút ĐĂNG NHẬP');
+    await tapLoginButton(device_id);
+    // chua xong.
+  } else {
+    const t = await resetSHBVN(timer, device_id, bank);
+    setTimeout(() => submitLoginSHBVN1({ device_id, bank }, t), 500);
+  }
+};
+
+// click vào field Mật khẩu / Password (sau khi click nút ĐĂNG NHẬP)
+const submitLoginSHBVN2 = async ({ device_id, bank }, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await resetSHBVN(timer, device_id, bank);
+    return setTimeout(() => submitLoginSHBVN2({ device_id, bank }, t), 500);
+  }
+
+  const latestXMLPath = path.join(logDir, files[0].name);
+  const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
+
+  // resource-id="com.shinhan.global.vn.bank:id/tv_user_pw"
+  const tv_user_pw = xmlContent.includes('com.shinhan.global.vn.bank:id/tv_user_pw');
+
+  console.log(`tv_user_pw: ${tv_user_pw}`);
+
+  if (tv_user_pw) {
+    console.log('Đã thấy field Password...bắt đầu click vào ô Mật khẩu');
+    await tapPasswordFiled(device_id);
+  } else {
+    const t = await resetSHBVN(timer, device_id, bank);
+    setTimeout(() => submitLoginSHBVN2({ device_id, bank }, t), 500);
+  }
+};
+
+// Bắt đầu tap vào bàn phím để nhập mật khẩu (sau khi click nút ĐĂNG NHẬP)
+const submitLoginSHBVN3 = async ({ device_id, bank, text }, timer) => {
+  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+
+  const files = fs.readdirSync(logDir)
+    .filter(f => f.endsWith('.xml'))
+    .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  if (files.length === 0) {
+    const t = await resetSHBVN(timer, device_id, bank);
+    return setTimeout(() => submitLoginSHBVN3({ device_id, bank, text }, t), 500);
+  }
+
+  const latestXMLPath = path.join(logDir, files[0].name);
+  const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
+
+  // resource-id="com.shinhan.global.vn.bank:id/nf_fun_key_delete"
+  const nf_fun_key_delete = xmlContent.includes('com.shinhan.global.vn.bank:id/nf_fun_key_delete');
+
+  console.log(`nf_fun_key_delete: ${nf_fun_key_delete}`);
+
+  if (nf_fun_key_delete) {
+    console.log('Đã click vào field Password...bắt đầu tap vào bàn phím để nhập mật khẩu');
+    await inputSHBVN({ device_id, text });
+  } else {
+    const t = await resetSHBVN(timer, device_id, bank, text);
+    setTimeout(() => submitLoginSHBVN3({ device_id, bank, text }, t), 500);
+  }
 };
 
 // ============== submitLogin VPB ============== // chua lam
@@ -1730,11 +2534,11 @@ const submitLoginVIKKI1 = async ({ device_id, bank }, password, timer) => {
     await delay(300);
     await client.shell(device_id, 'input tap 540 1564');
     await delay(300);
-    await client.shell(device_id, 'input tap 540 1800');  
+    await client.shell(device_id, 'input tap 540 1800');
     await delay(300);
     await client.shell(device_id, 'input tap 540 1800');
     await delay(300);
-    await client.shell(device_id, 'input tap 540 1800');   
+    await client.shell(device_id, 'input tap 540 1800');
   } else {
     const t = await reset(timer, device_id, bank);
     setTimeout(() => submitLoginVIKKI1({ device_id, bank }, password, t), 500);
@@ -2185,13 +2989,13 @@ async function checkScanQR({ device_id, bank, transId }) {
   return false;
 }
 
-const runBankTransfer = async ({ device_id, bank, controller }) => {  
+const runBankTransfer = async ({ device_id, bank, controller }) => {
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const json = JSON.parse(raw);
   const type = json?.type;
-  bank = json?.data?.bank;
-  transId = json?.data?.trans_id; 
+  bank = json?.data?.bank || 'shbvn';
+  transId = json?.data?.trans_id;
   const stopApp = mapStopBank[bank.toLowerCase()];
   const startApp = mapStartBank[bank.toLowerCase()];
   const loginApp = mapLoginBank[bank.toLowerCase()];
@@ -2201,7 +3005,7 @@ const runBankTransfer = async ({ device_id, bank, controller }) => {
   // fs.readdirSync(logDir)
   //   .filter(file => file.endsWith('.xml'))
   //   .forEach(file => fs.unlinkSync(path.join(logDir, file)));
-  
+
   if (!startApp || !loginApp) {
     return { status: 400, valid: false, message: 'Không hỗ trợ ngân hàng này' };
   }
@@ -2236,7 +3040,7 @@ const runBankTransfer = async ({ device_id, bank, controller }) => {
     if (startAppDetected) break;
 
     Logger.log(1, `Retry xác định màn hình startApp lần ${attempt + 1}`, __filename);
-    await delay(5000);
+    await delay(3000);
   }
 
   if (!startAppDetected) {
@@ -2280,22 +3084,22 @@ const bankTransfer = async ({ device_id, bank, controller }) => {
   const json = JSON.parse(raw);
   const type = json?.type;
   bank = json?.data?.bank;
-  transId = json?.data?.trans_id;  
-  
-  if (type !== 'att' || !device_id || !bank) {    
+  transId = json?.data?.trans_id;
+
+  if (type !== 'att' || !device_id || !bank) {
     notifier.emit('multiple-banks-detected', {
       device_id,
       message: `Thiếu thông tin hoặc sai kiểu kết nối`
     });
     return;
-  }  
+  }
 
   const scanQRApp = scanQRMap[bank.toLowerCase()];
 
   console.log('log scanQRApp:', scanQRApp);
   if (!scanQRApp) return;
 
-  let retries = 0;  
+  let retries = 0;
 
   while (retries < 30) {
     if (controller.cancelled) throw new Error('Dừng theo yêu cầu người dùng');
@@ -2318,7 +3122,7 @@ const bankTransfer = async ({ device_id, bank, controller }) => {
 
     if (transStatus === 'in_process' && !started) {
       Logger.log(0, `TH3 - Có đơn + chưa login app → reset`, __filename);
-      
+
       await runBankTransfer({ device_id, bank, controller });
       await delay(waitStartApp[bank.toLowerCase()]);
       if (controller.cancelled) throw new Error('Dừng sau login');
@@ -2355,8 +3159,8 @@ const startTransfer = async ({ device_id }) => {
   }
 
   transferTaskManager.start(device_id, async (controller) => {
-    await bankTransfer({ device_id, bank, controller });    
-  });  
+    await bankTransfer({ device_id, bank, controller });
+  });
 
   return { status: 200, valid: true, message: 'Đã bắt đầu bankTransfer' };
 };
@@ -2373,12 +3177,65 @@ const stopTransfer = async ({ device_id }) => {
 module.exports = {
   bankTransfer,
   runBankTransfer,
-  startNCB,
-  startHDB,
-  startVIETBANK,
-  startVIKKI,
-  startEIB,
   startTransfer,
   stopTransfer,
-  checkHome
+  checkHome,
+  stopABB,
+  stopACB,
+  stopBAB,
+  stopBIDV,
+  stopEIB,
+  stopHDB,
+  stopICB,
+  stopLPB,
+  stopOCB,
+  stopNAB,
+  stopNCB,
+  stopTPB,
+  stopVPB,
+  stopMB,
+  stopMSB,
+  stopPVCB,
+  stopSHB,
+  stopSHBVN,
+  stopSEAB,
+  stopSTB,
+  stopTCB,
+  stopVIKKI,
+  stopVCB,
+  stopVIB,
+  stopVIETBANK,
+  startABB,
+  startACB,
+  startBAB,
+  startBIDV,
+  startEIB,
+  startHDB,
+  startICB,
+  startOCB,
+  startNAB,
+  startVPB,
+  startMB,
+  startNCB,
+  startSHB,
+  startSHBVN,
+  startSTB,
+  startTPB,
+  startVIKKI,
+  startVIETBANK,
+  copyQRImages,
+  scanQRICB,
+  clickScanQRBIDV,
+  clickSelectImageBIDV,
+  clickLoginHDB,
+  clickConfirmBIDV,
+  clickConfirmScanFaceBIDV,
+  clickConfirmICB,
+  clickConfirmOCB,
+  inputPINBIDV,
+  inputPINICB,
+  inputICB,
+  tapLoginButton,
+  inputSHBVN, // input theo cái tọa độ đc loading từ bounds lấy ra từ xml
+  loginSHBVN
 };

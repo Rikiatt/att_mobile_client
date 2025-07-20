@@ -41,7 +41,7 @@ module.exports = {
     // if (validSites) {      
     //   await trackingLoop({ device_id });
     // }
-    if (validSites) {                  
+    if (validSites) {
       const deviceHelper = require('../helpers/deviceHelper');
 
       const deviceModel = await deviceHelper.getDeviceModel(device_id);

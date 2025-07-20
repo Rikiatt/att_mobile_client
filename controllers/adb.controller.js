@@ -1,57 +1,26 @@
-const { listDevice, delADBImg, clickConfirmICB, inputPINVPB, inputPINMSB, inputPINBIDV, inputPINICB, 
-  copyQRImages, scanQRICB, clickScanQRICB, 
-  clickConfirmScanFaceBIDV, clickScanQRMSB, clickScanQRNCB, clickLoginNAB, clickScanQRBIDV, clickSelectImageBIDV, clickConfirmMB, clickConfirmOCB, clickConfirmBIDV, 
-  stopICB, stopSHBVN, startICB, startSHBVN, 
-  tapADB, inputADB, inputICB, inputSHBVN, checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDevice, checkDeviceNCB, checkDeviceMSB, checkDeviceOCB, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB, 
-  connectTcpIp, disconnectTcpIp,
-  stopBIDV, startBIDV, closeAll, clickLoginHDB, clickLoginACB, clickPasswordFieldEIB } = require('../functions/adb.function');
+const { closeAll, listDevice, delADBImg, 
+  tapADB, inputADB,  checkDeviceACB, checkDeviceEIB, checkDeviceNAB, checkDeviceTPB, checkDeviceVPB, checkDevice, checkDeviceNCB, checkDeviceMSB, checkDeviceOCB, enterADB, tabADB, newlineADB, unlockScreenADB, backHomeADB, keyEventADB,
+  connectTcpIp, disconnectTcpIp }
+  = require('../functions/adb.function');
 const { connectScrcpy, cameraScrcpy } = require('../functions/scrcpy.function');
 const responseHelper = require('../helpers/responseHelper');
 const { trackingLoop } = require('../functions/bankStatus.function');
 
-const mapAction = {    
-  trackingLoop: trackingLoop,  
+const mapAction = {
   closeAll: closeAll,
-  clickLoginHDB: clickLoginHDB,
-  clickLoginACB: clickLoginACB,    
-  clickScanQRNCB: clickScanQRNCB,   
-  clickPasswordFieldEIB: clickPasswordFieldEIB,             
-  delImg: delADBImg,
-  clickConfirmICB: clickConfirmICB,
-  inputPINVPB: inputPINVPB,
-  inputPINMSB: inputPINMSB,
-  inputPINBIDV: inputPINBIDV,
-  inputPINICB: inputPINICB,
-  copyQRImages: copyQRImages,  
-  scanQRICB: scanQRICB,
-  clickScanQRICB: clickScanQRICB,  
-  clickConfirmScanFaceBIDV: clickConfirmScanFaceBIDV,       
-  clickScanQRMSB: clickScanQRMSB,      
-  clickLoginNAB: clickLoginNAB,    
-  clickConfirmMB: clickConfirmMB,
-  clickConfirmOCB: clickConfirmOCB,
-  clickScanQRBIDV: clickScanQRBIDV,
-  clickSelectImageBIDV: clickSelectImageBIDV,
-  clickConfirmBIDV: clickConfirmBIDV,        
-  stopICB: stopICB,
-  stopSHBVN: stopSHBVN,
-  startICB: startICB,
-  startSHBVN: startSHBVN,
-  stopBIDV: stopBIDV,
-  startBIDV: startBIDV,
+  trackingLoop: trackingLoop,  
+  delImg: delADBImg,  
   tap: tapADB,
-  input: inputADB,
-  inputICB: inputICB,
-  inputSHBVN: inputSHBVN,
+  input: inputADB,    
   checkDeviceACB: checkDeviceACB,
   checkDeviceEIB: checkDeviceEIB,
   checkDeviceNCB: checkDeviceNCB,
   checkDeviceNAB: checkDeviceNAB,
   checkDeviceTPB: checkDeviceTPB,
   checkDeviceVPB: checkDeviceVPB,
-  checkDevice: checkDevice,  
-  checkDeviceMSB: checkDeviceMSB,  
-  checkDeviceOCB: checkDeviceOCB,  
+  checkDevice: checkDevice,
+  checkDeviceMSB: checkDeviceMSB,
+  checkDeviceOCB: checkDeviceOCB,
   enter: enterADB,
   tab: tabADB,
   newline: newlineADB,
@@ -76,8 +45,8 @@ module.exports = {
   },
 
   actionADB: async (req, res) => {
-    try {      
-      const result = await mapAction[req.body.action](req.body);           
+    try {
+      const result = await mapAction[req.body.action](req.body);
       responseHelper(res, 200, { status: result?.status || 200, valid: result.valid || true, message: result?.message || 'Thành công' });
     } catch (error) {
       console.log('error:', error);

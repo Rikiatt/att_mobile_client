@@ -56,7 +56,7 @@ const bankBins = {
   msb: '970426',
   mb: '970422',
   mafc: '977777',
-  lpbank: '970449',
+  lpb: '970449',
   kbank: '668888',
   klb: '970452',
   kebhanahcm: '970466',

@@ -11,6 +11,18 @@ const hideDevOptions = async ({ device_id }) => {
             return { status: 400, valid: false, message: 'Thiếu device_id' };
         }
 
+        // Kiểm tra biến môi trường PATH có chứa đường dẫn cần thiết không
+        const pathEnv = process.env.PATH || process.env.Path || '';
+        const requiredPath = 'C:\\att_mobile_client\\platform-tools';
+
+        if (!pathEnv.split(';').some(p => p.trim().toLowerCase() === requiredPath.toLowerCase())) {
+            return {
+                status: 400,
+                valid: false,
+                message: `PATH chưa bao gồm đường dẫn ${requiredPath}`
+            };
+        }
+
         const command = 'settings put global development_settings_enabled 0';
 
         await client.shell(device_id, command);

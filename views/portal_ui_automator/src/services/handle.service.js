@@ -18,7 +18,7 @@ export const enter = async (data) => {
 };
 
 export const copyQRImages = async (data) => {
-  await actionADB({ action: 'copyQRImages', device_id: data.device_id });
+  await actionBank({ action: 'copyQRImages', device_id: data.device_id });
 };
 
 export const home = async (data) => {
@@ -52,6 +52,7 @@ export const disconnectTcpIp = async (data) => {
   return await actionADB({ action: 'disconnectTcpIp', device_id: data.device_id });
 };
 
+// ok
 // ============== CHUYỂN TIỀN ============== //
 
 export const bankTransfer = async (data, setLoading) => {  
@@ -84,6 +85,7 @@ export const stopBankTransfer = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ok
 // ============== BIDV ============== //
 
 export const bidvLogin = async (data, setLoading) => {
@@ -120,7 +122,7 @@ export const bidvLogin = async (data, setLoading) => {
     await delay(500);
 
     console.log('2. Đang khởi động BIDV...');
-    await actionADB({ action: 'startBIDV', device_id: data.device_id });
+    await actionBank({ action: 'startBIDV', device_id: data.device_id });
     await delay(8000);
 
     // Tab vào ô mật khẩu
@@ -176,12 +178,12 @@ export const bidvScanQR = async (data, setLoading) => {
 
   try {        
     // Click vào ô Scan QR  (540, 2125)
-    await actionADB({ action: 'clickScanQRBIDV', device_id: data.device_id });
+    await actionBank({ action: 'clickScanQRBIDV', device_id: data.device_id });
     setLoading(true);
     await delay(1200);
 
     // Click vào ô chọn ảnh (456, 1620) ... chọn mã QR thủ công
-    await actionADB({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
+    await actionBank({ action: 'clickSelectImageBIDV', device_id: data.device_id });  
     setLoading(false);
   } catch (error) {
     swalToast({ title: `Đã xảy ra lỗi: ${error.message}`, icon: 'error' });
@@ -218,7 +220,7 @@ export const bidvConfirm = async (data, setLoading) => {
 
   // Click vào Next 
   setLoading(true);
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  await actionBank({ action: 'clickConfirmBIDV', device_id: data.device_id });
   await delay(4000);
 
   // Paste PIN  
@@ -226,7 +228,7 @@ export const bidvConfirm = async (data, setLoading) => {
   await delay(4000);
 
   // Click Confirm
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  await actionBank({ action: 'clickConfirmBIDV', device_id: data.device_id });
 
   setLoading(false);
 };
@@ -254,7 +256,7 @@ export const bidvConfirmBeforeFace = async (data, setLoading) => {
   }
 
   // Click vào Next
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  await actionBank({ action: 'clickConfirmBIDV', device_id: data.device_id });
   setLoading(false);
 };
 
@@ -284,7 +286,7 @@ export const bidvConfirmAfterFace = async (data, setLoading) => {
   if (!text) return;
 
   // Input PIN  
-  await actionADB({ action: 'inputPINBIDV', device_id: data.device_id, text: text.trim() });   
+  await actionBank({ action: 'inputPINBIDV', device_id: data.device_id, text: text.trim() });   
   await delay(3000);
 
   // Xóa luôn ảnh trong thư viện trong lúc quét mặt
@@ -292,7 +294,7 @@ export const bidvConfirmAfterFace = async (data, setLoading) => {
   await delay(1000);  
 
   // Click vào Confirm
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });
+  await actionBank({ action: 'clickConfirmBIDV', device_id: data.device_id });
   setLoading(false);
 };
 
@@ -324,12 +326,13 @@ export const bidvScanFaceConfirm = async (data, setLoading) => {
   // Nhập PIN (sau bước quét mặt)
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   setLoading(true);
-  await actionADB({ action: 'clickConfirmBIDV', device_id: data.device_id });  
+  await actionBank({ action: 'clickConfirmBIDV', device_id: data.device_id });  
   await delay(3000);  
 
   setLoading(false);
 };
 
+// ok
 // ============== VCB ============== //
 
 export const vcbOldClickLogin = async (data, setLoading) => {
@@ -406,6 +409,7 @@ export const vcbNewGetOTP = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ok
 // ============== HDB ============== //
 
 export const hdbLogin = async (data, setLoading) => {  
@@ -444,8 +448,8 @@ export const hdbLogin = async (data, setLoading) => {
   await delay(5500);
 
   console.log('3. Login...');
-  await actionADB({ action: 'clickLoginHDB', device_id: data.device_id });
-  await actionADB({ action: 'clickLoginHDB', device_id: data.device_id });
+  await actionBank({ action: 'clickLoginHDB', device_id: data.device_id });
+  await actionBank({ action: 'clickLoginHDB', device_id: data.device_id });
   await delay(300);
   await actionADB({ action: 'input', device_id: data.device_id, text: text.trim() });
   await delay(1000);
@@ -455,6 +459,7 @@ export const hdbLogin = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ok
 // ============== ICB ============== //
 
 export const icbScanQR = async (data, setLoading) => {  
@@ -494,12 +499,12 @@ export const icbScanQR = async (data, setLoading) => {
     await delay(500);
 
     console.log('2. Khởi động app ICB...');
-    await actionADB({ action: 'startICB', device_id: data.device_id });
+    await actionBank({ action: 'startICB', device_id: data.device_id });
     await delay(6000);
     
     // Tab vào ô Scan QR và chọn ảnh .. chọn mã QR thủ công ... xóa luôn ảnh trong thư viện
     console.log('3. scanQR');
-    await actionADB({ action: 'scanQRICB', device_id: data.device_id }); // Chọn ảnh từ trong máy         
+    await actionBank({ action: 'scanQRICB', device_id: data.device_id });
     await delay(2000);
 
     console.log('4. Login');  
@@ -508,18 +513,18 @@ export const icbScanQR = async (data, setLoading) => {
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });    
-    await actionADB({ action: 'inputICB', device_id: data.device_id, text: text.trim() });
+    await actionBank({ action: 'inputICB', device_id: data.device_id, text: text.trim() });
     await delay(1000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 }); 
     await delay(5000);
 
     console.log('5. Click Next / Confirm');  
-    await actionADB({ action: 'clickConfirmICB', device_id: data.device_id });
+    await actionBank({ action: 'clickConfirmICB', device_id: data.device_id });
     await delay(12000); // chờ quét mặt hoặc video loading...
-    await actionADB({ action: 'inputPINICB', device_id: data.device_id, text: text2.trim() });
+    await actionBank({ action: 'inputPINICB', device_id: data.device_id, text: text2.trim() });
     await delay(4000);
-    await actionADB({ action: 'clickConfirmICB', device_id: data.device_id });
+    await actionBank({ action: 'clickConfirmICB', device_id: data.device_id });
 
     setLoading(false);
   } catch (error) {
@@ -559,8 +564,8 @@ export const icbLogin = async (data, setLoading) => {
     }
 
     // Start app
-    await actionADB({ action: 'stopICB', device_id: data.device_id });
-    await actionADB({ action: 'startICB', device_id: data.device_id });
+    await actionBank({ action: 'stopICB', device_id: data.device_id });
+    await actionBank({ action: 'startICB', device_id: data.device_id });
     await delay(8000);
 
     // Tab vào ô mật khẩu
@@ -575,7 +580,7 @@ export const icbLogin = async (data, setLoading) => {
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
     await delay(50);
-    await actionADB({ action: 'inputICB', device_id: data.device_id, text: text.trim() });    
+    await actionBank({ action: 'inputICB', device_id: data.device_id, text: text.trim() });    
     await delay(4000);
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
     await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });  
@@ -617,16 +622,16 @@ export const icbConfirmAfterFace = async (data, setLoading) => {
     
     setLoading(true);
     
-    await actionADB({ action: 'clickConfirmICB', device_id: data.device_id });
+    await actionBank({ action: 'clickConfirmICB', device_id: data.device_id });
     await delay(10000); // chờ quét mặt hoặc video loading...
     
     // Nhập mã PIN và xác nhận ... xóa luôn ảnh trong thư viện    
-    await actionADB({ action: 'inputPINICB', device_id: data.device_id, text: text.trim() });    
+    await actionBank({ action: 'inputPINICB', device_id: data.device_id, text: text.trim() });    
     await actionADB({ action: 'delImg', device_id: data.device_id });    
     await delay(1000);
 
     // Click xác nhận
-    await actionADB({ action: 'clickConfirmICB', device_id: data.device_id });
+    await actionBank({ action: 'clickConfirmICB', device_id: data.device_id });
 
     setLoading(false);
   } catch (error) {
@@ -637,6 +642,7 @@ export const icbConfirmAfterFace = async (data, setLoading) => {
   }
 };
 
+// ok
 // ============== NCB ============== //
 
 export const ncbLogin = async (data, setLoading) => {  
@@ -664,6 +670,7 @@ export const ncbLogin = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ok
 // ============== SEAB ============== //
 
 export const hideDevOptions = async (data, setLoading) => {  
@@ -675,6 +682,7 @@ export const hideDevOptions = async (data, setLoading) => {
   setLoading(false);
 };
 
+// not ok
 // ============== SHBVN ============== //
 
 export const shbvnLogin = async (data, setLoading) => {  
@@ -690,8 +698,8 @@ export const shbvnLogin = async (data, setLoading) => {
     const checkWMDensity = await actionDevice({ action: 'checkWMDensity', device_id: data.device_id });    
             
     if (deviceCoordinates.status === 500 || deviceCoordinates.valid === false) {
-      return swalNotification("error", "Thiết bị chưa hỗ trợ ICB", "Vui lòng chuyển ngân hàng sang điện thoại khác");      
-    }         
+      return swalNotification("error", "Thiết bị này chưa hỗ trợ Shinhanbank", "Vui lòng chuyển ngân hàng sang điện thoại khác");
+    }
 
     if (checkFontScale.status === 500 || checkFontScale.valid === false) {
       return swalNotification("error", "Vui lòng cài đặt cỡ font và kiểu font nhỏ nhất");      
@@ -706,30 +714,31 @@ export const shbvnLogin = async (data, setLoading) => {
     }
 
     // Start app
-    await actionADB({ action: 'stopSHBVN', device_id: data.device_id });
-    await actionADB({ action: 'startSHBVN', device_id: data.device_id });
+    await actionBank({ action: 'stopSHBVN', device_id: data.device_id });
+    await actionBank({ action: 'startSHBVN', device_id: data.device_id });
     await delay(6000);
+    await actionBank({ action: 'loginSHBVN', device_id: data.device_id, text: text.trim() });    
 
-    // Tab vào nút ĐĂNG NHẬP
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    // // Tab vào nút ĐĂNG NHẬP
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 61 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
 
-    // Nhập mật khẩu và click nút Đăng nhập
-    await delay(1000);
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
-    await delay(2000); // Chờ dump xong và ghi đè tọa độ phím
-    await actionADB({ action: 'inputSHBVN', device_id: data.device_id, text: text.trim() });
-    await delay(1000);
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
-    await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
+    // // Nhập mật khẩu và click nút Đăng nhập
+    // await delay(2000);
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 19 });
+    // await actionADB({ action: 'keyEvent', device_idg: data.device_id, key_event: 19 });
+    // await delay(2000); // Chờ dump xong và ghi đè tọa độ phím
+    // await actionBank({ action: 'inputSHBVN', device_id: data.device_id, text: text.trim() });
+    // await delay(1000);
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 20 });
+    // await actionADB({ action: 'keyEvent', device_id: data.device_id, key_event: 66 });
 
     setLoading(false);
   } catch (error) {
@@ -740,6 +749,7 @@ export const shbvnLogin = async (data, setLoading) => {
   }
 };
 
+// ok
 // ============== VIETBANK ============== //
 
 export const vietbankLogin = async (data, setLoading) => {  
@@ -809,6 +819,7 @@ export const vietbankLogin = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ok
 // ============== VIB ============== //
 
 export const hideUSBDebugging = async (data, setLoading) => {  
@@ -820,6 +831,7 @@ export const hideUSBDebugging = async (data, setLoading) => {
   setLoading(false);
 };
 
+// ok
 // ============== EIB ============== //
 
 export const eibLogin = async (data, setLoading) => {  

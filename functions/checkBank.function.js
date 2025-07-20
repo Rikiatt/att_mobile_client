@@ -3,19 +3,19 @@ dotenv.config();
 const adb = require('adbkit');
 const fs = require('fs');
 const path = require('path');
-const { delay } = require('../helpers/functionHelper');
+const { delay, normalizeText } = require('../helpers/functionHelper');
 const xml2js = require('xml2js');
 const adbPath = path.join(__dirname, '../platform-tools', 'adb.exe');
 const client = adb.createClient({ bin: adbPath });
 const Tesseract = require('tesseract.js');
 const { pipeline } = require("stream/promises");
 const { Logger } = require("../config/require.config");
+const { stopABB, stopACB, stopBAB, stopBIDV, stopEIB, stopHDB, stopMB, stopOCB, stopNAB, stopSEAB, stopSHB, stopSHBVN, stopSTB, stopVIETBANK, stopVIKKI } = require('../functions/bank.function');
 
 const filePath = 'C:\\att_mobile_client\\database\\localdata.json';
 let chatId = process.env.CHATID; // mặc định là gửi vào nhóm Warning - Semi Automated Transfer
 const telegramToken = process.env.TELEGRAM_TOKEN;
 const { sendTelegramAlert, saveAlertToDatabase } = require('../functions/alert.function');
-// const jsonFilePath = "C:\\att_mobile_client\\database\\info-qr.json";
 const notifier = require('../events/notifier');
 
 const fileContent = fs.readFileSync(filePath, 'utf-8');
@@ -24,7 +24,7 @@ const jsonData = JSON.parse(fileContent);
 const siteOrg = jsonData?.org?.site || '';
 const siteAtt = jsonData?.att?.site?.split('/').pop() || '';
 
-const validSite = siteOrg || siteAtt; // Ưu tiên org nếu có, nếu không dùng att
+const validSite = siteOrg || siteAtt;
 const { getDataJson } = require('../functions/function');
 
 const siteToChatIdMap = {
@@ -38,7 +38,7 @@ if (siteToChatIdMap[validSite]) {
   chatId = siteToChatIdMap[validSite];
 }
 
-// chua xong - chinh xong canh bao
+// chưa xong
 async function checkContentABB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -92,7 +92,7 @@ async function checkContentABB(device_id, localPath) {
   }
 }
 
-// check QR dang sai - chinh xong canh bao
+// check QR chưa xong
 async function checkContentACB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -215,7 +215,7 @@ async function checkContentACB(device_id, localPath) {
   }
 }
 
-// Chưa làm TH2
+// check QR chưa xong
 async function checkContentBAB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -272,18 +272,8 @@ async function checkContentBAB(device_id, localPath) {
   }
 }
 
-// khong dump dc
 async function checkContentBIDV(device_id, localPath) {
   Logger.log(0, 'BIDV không hỗ trợ dump.', __filename);
-}
-
-function normalizeText(str) {
-  return str
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function extractOCRFieldsFromLinesEIB(ocrRawText) {
@@ -315,48 +305,9 @@ function extractOCRFieldsFromLinesEIB(ocrRawText) {
   };
 }
 
-function extractOCRFieldsFromLinesNCB(ocrRawText) {
-  const lines = ocrRawText.split('\n').map(line => line.trim()).filter(Boolean);
-  let foundAccount = "", foundAmount = "";
-  let vndIndex = -1;
-
-  for (let i = 0; i < lines.length; i++) {
-    const lower = normalizeText(lines[i]);
-    if (lower.includes("vnd")) {
-      vndIndex = i;
-      break;
-    }
-  }
-
-  if (vndIndex !== -1) {
-    for (let i = vndIndex - 1; i >= 0; i--) {
-      const match = lines[i].match(/\d{1,3}(,\d{3})*/);
-      if (match) {
-        foundAmount = match[0].replace(/[^0-9]/g, "");
-        break;
-      }
-    }
-  }
-
-  for (let i = 0; i < lines.length; i++) {
-    const prev = normalizeText(lines[i - 1] || "");
-    const curr = lines[i].replace(/\s/g, "");
-    if (prev.includes("nguoi nhan") && /^[0-9]{6,20}$/.test(curr)) {
-      foundAccount = curr;
-      break;
-    }
-  }
-
-  return {
-    ocrAccount: normalizeText(foundAccount),
-    ocrAmount: normalizeText(foundAmount)
-  };
-}
-
 let ocrMatchedByDevice = {}; // Theo dõi trạng thái từng thiết bị
 let lastActivityByDevice = {}; // Theo dõi activity gần nhất của từng thiết bị
 
-// ok - chinh xong canh bao
 async function checkContentEIB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -504,7 +455,7 @@ async function checkContentEIB(device_id, localPath) {
   }
 }
 
-// ca tieng anh, tieng viet duoc - chinh xong canh bao
+// ca tieng anh, tieng viet duoc
 async function checkContentHDB(device_id, localPath) {
   try {
     const xmlData = fs.readFileSync(localPath, 'utf-8');
@@ -573,12 +524,10 @@ async function checkContentHDB(device_id, localPath) {
   }
 }
 
-// xong
 async function checkContentICB(device_id, localPath) {
   Logger.log(0, 'ICB không hỗ trợ dump.', __filename);
 }
 
-// ok - chinh xong canh bao
 async function checkContentMB(device_id, localPath) {
   try {
     const xml = fs.readFileSync(localPath, "utf-8").trim();
@@ -708,12 +657,10 @@ async function checkContentMB(device_id, localPath) {
   }
 }
 
-// khong dump dc
 async function checkContentMSB(device_id, localPath) {
   Logger.log(0, 'MSB không hỗ trợ dump.', __filename);
 }
 
-// ok - chinh xong canh bao
 async function checkContentNAB(device_id, localPath) {
   try {
     /* TH1: Màn hình thao tác thủ công cần cảnh báo */
@@ -834,12 +781,10 @@ async function checkContentNAB(device_id, localPath) {
   }
 }
 
-// xong
 async function checkContentNCB(device_id, localPath) {
   Logger.log(0, 'NCB không hỗ trợ dump.', __filename);
 }
 
-// ok - chinh xong canh bao
 async function checkContentOCB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -971,7 +916,6 @@ async function checkContentOCB(device_id, localPath) {
   }
 }
 
-// ok - chinh xong canh bao
 async function checkContentSHB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1000,24 +944,24 @@ async function checkContentSHB(device_id, localPath) {
 
         let message = '';
         if (banksData.length === 0) {
-          message = `Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+          message = `Phát hiện có thao tác thủ công khi xuất với SHB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
         } else {
           const bankItem = banksData.find(item => item["THIẾT BỊ"]?.includes(device_id));
           if (bankItem) {
-            message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng SHB SAHA`;
+            message = `Thiết bị ${bankItem["THIẾT BỊ"]} có thao tác thủ công khi dùng SHB`;
           } else {
-            message = `Phát hiện có thao tác thủ công khi xuất với SHB SAHA ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
+            message = `Phát hiện có thao tác thủ công khi xuất với SHB ở màn hình: ${screen.name} (id thiết bị: ${device_id})`;
           }
         }
 
         Logger.log(1, message, __filename);
-        Logger.log(0, 'Đóng app SHB SAHA', __filename);
+        Logger.log(0, 'Đóng app SHB', __filename);
         notifier.emit('multiple-banks-detected', {
           device_id,
           message: `Phát hiện thao tác thủ công (id: ${device_id})`
         });
 
-        await stopSHBSAHA({ device_id });
+        await stopSHB({ device_id });
         await sendTelegramAlert(telegramToken, chatId, message);
         await saveAlertToDatabase({ timestamp: new Date().toISOString(), reason: message, filePath: localPath });
         return;
@@ -1073,7 +1017,7 @@ async function checkContentSHB(device_id, localPath) {
           const reason = "XML KHÁC info-qr về số tài khoản hoặc số tiền";
           Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
 
-          await stopSHBSAHA({ device_id });
+          await stopSHB({ device_id });
           notifier.emit('multiple-banks-detected', {
             device_id,
             message: `XML KHÁC info-qr về số tài khoản hoặc số tiền`
@@ -1082,10 +1026,10 @@ async function checkContentSHB(device_id, localPath) {
           await sendTelegramAlert(
             telegramToken,
             chatId,
-            `${reason} với SHB SAHA (id thiết bị: ${device_id})`
+            `${reason} với SHB (id thiết bị: ${device_id})`
           );
 
-          Logger.log(1, `${reason} với SHB SAHA (id thiết bị: ${device_id})`, __filename);
+          Logger.log(1, `${reason} với SHB (id thiết bị: ${device_id})`, __filename);
 
           await saveAlertToDatabase({
             timestamp: new Date().toISOString(),
@@ -1108,14 +1052,11 @@ async function checkContentSHBVN(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
 
-    // chưa làm
-    // chưa làm
-    // chưa làm
     const screenKeywords = [
       {
         name: "Chuyển tiền",
-        vi: ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"],
-        en: ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
+        vi: ["Chuyển khoản trong nước", "Chuyển khoản nước ngoài", "Chuyển khoản theo mẫu", "Chuyển khoản tự động", "Quản lý chuyển khoản"],
+        en: ["Chuyển khoản trong nước", "Chuyển khoản nước ngoài", "Chuyển khoản theo mẫu", "Chuyển khoản tự động", "Quản lý chuyển khoản"]
       }
     ];
 
@@ -1160,21 +1101,18 @@ async function checkContentSHBVN(device_id, localPath) {
     }
 
     /* TH2: Màn hình xác nhận sau khi quét QR */
-    // chưa làm
-    // chưa làm
-    // chưa làm
+    // chua lam
     
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
 
-// ok - tieng viet - chinh xong canh bao
 async function checkContentTPB(device_id, localPath) {
   Logger.log(0, 'TPB hiện không còn hỗ trợ dump (từ ngày 01/07/2025).', __filename);
 }
 
-// ok - chua co TH2
+// Chua lam TH2
 async function checkContentVIKKI(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1246,12 +1184,10 @@ async function checkContentVIKKI(device_id, localPath) {
   }
 }
 
-// ok tieng viet - ok tieng viet2 - VPB khong on dinh de dump xml :((
 async function checkContentVPB(device_id, localPath) {
-  Logger.log(0, 'VPB không còn hỗ trợ dump.', __filename);
+  Logger.log(0, 'VPB không hỗ trợ dump.', __filename);
 }
 
-// ok - chinh xong canh bao
 async function checkContentSEAB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1317,66 +1253,12 @@ async function checkContentSEAB(device_id, localPath) {
     }
 
     /* TH2: Check QR thông qua edittext */
-    // const regex = /text="([^"]+)"\s+resource-id="vn\.com\.seabank\.mb1:id\/edittext"/g;
-    // const detectText = [];
-    // let matchItem;
-    // while ((matchItem = regex.exec(content)) !== null) {
-    //   detectText.push(matchItem[1]);
-    // }
-
-    // if (detectText.length >= 2) {
-    //   const infoQR = await getDataJson(path.join('C:\\att_mobile_client\\database\\info-qr.json'));
-    //   const qrDevice = infoQR?.data?.device_id || '';
-    //   const qrType = infoQR?.type || '';
-
-    //   if (device_id === qrDevice && qrType !== 'test') { // TEST THẺ thì không cần check gì hết, chỉ check nếu qrType === 'org' || 'att'
-    //     const accountNumber = detectText[0].replace(/\s/g, "");
-    //     const amount = detectText[1].replace(/[.,\s]/g, "");
-
-    //     Logger.log(0, `OCR Account Number: ${accountNumber}`, __filename);
-    //     Logger.log(0, `INFO Account Number: ${expectedAccount}`, __filename);
-    //     Logger.log(0, `OCR Amount: ${amount}`, __filename);
-    //     Logger.log(0, `INFO Amount: ${expectedAmount}`, __filename);
-
-    //     const isMatch = accountNumber === expectedAccount && amount === expectedAmount;
-
-    //     if (!isMatch) {
-    //       const reason = `SEAB: OCR KHÁC info-qr về số tài khoản hoặc số tiền`;
-    //       Logger.log(1, `${reason}. Gửi cảnh báo.`, __filename);
-
-    //       await stopSEAB({ device_id });
-
-    //       notifier.emit('multiple-banks-detected', {
-    //         device_id,
-    //         message: reason
-    //       });
-
-    //       await sendTelegramAlert(
-    //         telegramToken,
-    //         chatId,
-    //         `${reason} (id thiết bị: ${device_id})`
-    //       );
-
-    //       await saveAlertToDatabase({
-    //         timestamp: new Date().toISOString(),
-    //         reason: `${reason} (id thiết bị: ${device_id})`,
-    //         filePath: localPath
-    //       });
-
-    //       return;
-    //     } else {
-    //       Logger.log(0, 'SEAB: OCR TRÙNG info-qr về account_number và amount.', __filename);
-    //       return;
-    //     }
-    //   }
-    // }
 
   } catch (error) {
     console.error("Lỗi xử lý XML:", error.message);
   }
 }
 
-// chua chinh canh bao
 async function checkContentSTB(device_id, localPath) {
   try {
     const content = fs.readFileSync(localPath, "utf-8").trim();
@@ -1522,22 +1404,18 @@ async function checkContentSTB(device_id, localPath) {
   }
 }
 
-// chua lam// chua lam// chua lam
 async function checkContentTCB(device_id, localPath) {
-  Logger.log(0, 'TCB chưa làm.', __filename);
+  Logger.log(0, 'TCB chua lam.', __filename);
 }
 
-// khong dump dc
-async function checkContentVCB(device_id, localPath) { // chua lam
+async function checkContentVCB(device_id, localPath) {
   Logger.log(0, 'VCB không hỗ trợ dump.', __filename);
 }
 
-// chua lam
 async function checkContentVIB(device_id, localPath) {
-  Logger.log(0, 'VIB chưa làm.', __filename);
+  Logger.log(0, 'VIB chua lam.', __filename);
 }
 
-// ca tieng anh, tieng viet duoc - chinh xong canh bao
 async function checkContentVIETBANK(device_id, localPath) {
   try {
     const xmlData = fs.readFileSync(localPath, 'utf-8');
@@ -1590,213 +1468,14 @@ async function checkContentVIETBANK(device_id, localPath) {
   }
 }
 
-// chua lam
 async function checkContentPVCB(device_id, localPath) {
-  Logger.log(0, 'PVCB chưa làm.', __filename);
-}
-
-// // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng OCB
-// const bankBinMapOCB = {
-//     "Asia (ACB)": "970416",
-//     "Vietnam Foreign Trade (VCB)": "970436",
-//     "Vietinbank (Vietnam Joint Stock Commercial Bank for Industry and Trade)": "970415", "Ngân hàng TMCP Công Thương Việt Nam": "970415",  
-//     "Technology and Trade (TCB)": "970407",
-//     "Investment and development (BIDV)": "970418", "Ngân hàng TMCP Đầu Tư và Phát Triển Việt Nam": "970418",
-//     "Military (MB)": "970422", "Ngân hàng TMCP Quân Đội": "970422",
-//     "NCB": "970419", "Ngân hàng TMCP Quốc Dân": "970419"  
-// }
-
-// // Bảng ánh xạ tên ngân hàng sang mã BIN khi dùng MB Bank
-// const bankBinMapMB = {
-//     "Asia (ACB)": "970416",
-//     "Vietnam Foreign Trade (VCB)": "970436",
-//     "Vietnam Industry and Trade (VIETINBANK)": "970415",
-//     "Technology and Trade (TCB)": "970407",
-//     "Investment and development (BIDV)": "970418",
-//     "Military (MB)": "970422",
-//     "NCB": "970419",
-
-//     "Á Châu (ACB)": "970416",
-//     "Ngoại thương Việt Nam (VCB)": "970436",
-//     "Công Thương Việt Nam (VIETINBANK)": "970415",
-//     "Kỹ Thương (TCB)": "970407",
-//     "Đầu tư và phát triển (BIDV)": "970418",
-//     "Quân đội (MB)": "970422",
-//     "Quốc Dân (NCB)": "970419"
-// }
-
-async function stopABB({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.abbank.retail');
-  Logger.log(0, 'Đã dừng app ABB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopACB({ device_id }) {
-  await client.shell(device_id, 'am force-stop mobile.acb.com.vn');
-  Logger.log(0, 'Đã dừng app ACB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopBIDV({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.vnpay.bidv');
-  Logger.log(0, 'Đã dừng BIDV', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopEIB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.vnpay.EximBankOmni');
-  Logger.log(0, 'Đã dừng EIB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopHDB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.vnpay.hdbank');
-  Logger.log(0, 'Đã dừng HDB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopICB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.vietinbank.ipay');
-  Logger.log(0, 'Đã dừng ICB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopLPBANK({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.com.lpb.lienviet24h');
-  Logger.log(0, 'Đã dừng app LPB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopNCB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.ncb.bank');
-  Logger.log(0, 'Đã dừng app NCB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopOCB({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.com.ocb.awe');
-  Logger.log(0, 'Đã dừng app OCB OMNI', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopNAB({ device_id }) {
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop ops.namabank.com.vn');
-  Logger.log(0, 'Dừng luôn app NAB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopSHBSAHA({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.shb.saha.mbanking');
-  Logger.log(0, 'Đã dừng SHB SAHA', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopSHBVN({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.shinhan.global.vn.bank');
-  Logger.log(0, 'Đã dừng SHBVN', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopTPB({ device_id }) {
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop com.tpb.mb.gprsandroid');
-  Logger.log(0, 'Dừng luôn app TPB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopVCB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.VCB');
-  Logger.log(0, 'Đã dừng VCB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopVIB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.vib.myvib2');
-  Logger.log(0, 'Đã dừng VIB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopVIETBANK({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.vnpay.vietbank');
-  Logger.log(0, 'Đã dừng VIETBANK', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopVIKKI({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.finx.vikki');
-  Logger.log(0, 'Đã dừng VIKKI', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopVPB({ device_id }) {
-  await client.shell(device_id, 'input keyevent 3');
-  await client.shell(device_id, 'am force-stop com.vnpay.vpbankonline');
-  Logger.log(0, 'Dừng luôn app VPB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopMB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.mbmobile');
-  Logger.log(0, 'Đã dừng app MB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopMSB({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.com.msb.smartBanking');
-  Logger.log(0, 'Đã dừng app MSB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopPVCB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.pvcombank.retail');
-  Logger.log(0, 'Đã dừng app PVCB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopSTB({ device_id }) {
-  await client.shell(device_id, 'am force-stop com.sacombank.ewallet');
-  Logger.log(0, 'Đã dừng app STB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopSEAB({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.com.seabank.mb1');
-  Logger.log(0, 'Đã dừng app SEAB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
-}
-
-async function stopTCB({ device_id }) {
-  await client.shell(device_id, 'am force-stop vn.com.techcombank.bb.app');
-  Logger.log(0, 'Đã dừng app TCB', __filename);
-  await delay(500);
-  return { status: 200, message: 'Success' };
+  Logger.log(0, 'PVCB chua lam.', __filename);
 }
 
 module.exports = {
-  checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, checkContentSHB, checkContentSHBVN, checkContentTPB, checkContentVPB, checkContentMB, checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, checkContentVCB, checkContentVIB, checkContentVIETBANK, checkContentVIKKI,
-  stopABB, stopACB, stopBIDV, stopEIB, stopHDB, stopICB, stopLPBANK, stopMB, stopMSB, stopNAB, stopNCB, stopOCB, stopSHBSAHA, stopSHBVN, stopPVCB, stopSEAB, stopSTB, stopTCB, stopVCB, stopVIB, stopTPB, stopVIKKI, stopVPB
+  checkContentABB, checkContentACB, checkContentBAB, checkContentBIDV, checkContentEIB, 
+  checkContentHDB, checkContentICB, checkContentNCB, checkContentOCB, checkContentNAB, 
+  checkContentSHB, checkContentSHBVN, checkContentTPB, checkContentVPB, checkContentMB, 
+  checkContentMSB, checkContentPVCB, checkContentSEAB, checkContentSTB, checkContentTCB, 
+  checkContentVCB, checkContentVIB, checkContentVIETBANK, checkContentVIKKI
 }
