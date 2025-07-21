@@ -18,11 +18,7 @@ const coordinatesScanQRBIDV = require('../config/coordinatesScanQRBIDV.json');
 const coordinatesLoginSHBVN = require('../config/coordinatesLoginSHBVN.json');
 const coordinatesLoginICB = require('../config/coordinatesLoginICB.json');
 const coordinatesScanQRICB = require('../config/coordinatesScanQRICB.json');
-const localDataPath = path.join(__dirname, '../database/localdata.json');
-const localRaw = fs.readFileSync(localDataPath, 'utf-8');
-const local = JSON.parse(localRaw);
-const siteOrg = local?.org?.site || '';
-const siteAtt = local?.att?.site?.split('/').pop() || '';
+const logDir = path.join('C:\\att_mobile_client\\logs\\');
 // const { trackSHBVNUI } = require('../functions/bankStatus.function');
 const ensureDirectoryExists = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
@@ -212,8 +208,6 @@ async function loadCoordinatesScanQRICB(device_id) {
   }
 };
 
-const logDir = 'C:\\att_mobile_client\\logs';
-
 const keyLoginMap = {
   btn_login: 'LOGIN'
 };
@@ -265,9 +259,9 @@ function getCenter(boundsStr) {
 
 // Sau khi khởi động xong app Shinhanbank
 async function loadCoordinatesBeforePasswordFieldSHBVN(device_id) {
-  try {    
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);    
-    // const coordinatesLoginSHBVN = JSON.parse(fs.readFileSync(coordinatesPath, 'utf8'));
+  try {
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    const existingCoords = coordinatesLoginSHBVN[deviceModel] || {};
 
     const files = fs.readdirSync(logDir)
       .filter(f => f.endsWith('.xml'))
@@ -276,16 +270,22 @@ async function loadCoordinatesBeforePasswordFieldSHBVN(device_id) {
 
     if (files.length === 0) {
       console.warn('⚠️ Không tìm thấy file XML nào trong thư mục logs.');
-      return coordinatesLoginSHBVN[deviceModel];
+      return existingCoords;
     }
 
     const latestXMLPath = path.join(logDir, files[0].name);
     const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
-    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
 
-    if (!result || !result.hierarchy) {
+    if (!xmlContent.trim() || !xmlContent.includes('<hierarchy')) {
+      console.warn(`⚠️ File XML ${latestXMLPath} bị rỗng hoặc không hợp lệ, bỏ qua.`);
+      return existingCoords;
+    }
+
+    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+    const hierarchy = result?.hierarchy;
+    if (!hierarchy) {
       console.warn('⚠️ XML không chứa root <hierarchy>.');
-      return coordinatesLoginSHBVN[deviceModel];
+      return existingCoords;
     }
 
     const flatNodes = [];
@@ -298,7 +298,7 @@ async function loadCoordinatesBeforePasswordFieldSHBVN(device_id) {
       }
     }
 
-    flatten(result.hierarchy);
+    flatten(hierarchy);
 
     const updatedCoordinates = {};
     for (const node of flatNodes) {
@@ -309,38 +309,49 @@ async function loadCoordinatesBeforePasswordFieldSHBVN(device_id) {
       if (key) {
         const bounds = node?.['$']?.bounds;
         const center = getCenter(bounds);
-        if (center) {
-          updatedCoordinates[key] = center;
-        }
+        if (center) updatedCoordinates[key] = center;
       }
     }
 
-    const expectedTotal = Object.values(keyLoginMap).length;
-    if (Object.keys(updatedCoordinates).length < expectedTotal) {
-      console.warn('⚠️ Không tìm thấy đủ phím LOGIN. Bỏ qua cập nhật.');
-    } else {
-      if (!coordinatesLoginSHBVN[deviceModel]) coordinatesLoginSHBVN[deviceModel] = {};
-      coordinatesLoginSHBVN[deviceModel] = {
-        ...coordinatesLoginSHBVN[deviceModel],
-        ...updatedCoordinates
-      };
-      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
-      console.log(`✅ Đã cập nhật tọa độ LOGIN cho thiết bị ${deviceModel}`);
+    const requiredKeys = Object.keys(existingCoords);
+    const hasAllRequiredKeys = requiredKeys.every(k => updatedCoordinates[k] || existingCoords[k]);
+
+    if (!hasAllRequiredKeys) {
+      console.warn('⚠️ Không đủ key mặc định, không cập nhật gì.');
+      return existingCoords;
     }
 
-    return coordinatesLoginSHBVN[deviceModel];
+    let hasChange = false;
+    const finalCoords = { ...existingCoords };
+
+    for (const key of Object.keys(updatedCoordinates)) {
+      const oldVal = existingCoords[key];
+      const newVal = updatedCoordinates[key];
+      if (!oldVal || oldVal[0] !== newVal[0] || oldVal[1] !== newVal[1]) {
+        finalCoords[key] = newVal;
+        hasChange = true;
+      }
+    }
+
+    if (hasChange) {
+      coordinatesLoginSHBVN[deviceModel] = finalCoords;
+      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
+      console.log(`✅ Đã cập nhật tọa độ LOGIN cho thiết bị ${deviceModel}`);
+    } else {
+      console.log('Không có sự thay đổi tọa độ LOGIN, giữ nguyên.');
+    }
+
+    return finalCoords;
   } catch (error) {
-    console.error('❌ Got an error:', error);
-    throw error;
+    console.error('❌ Got an error in loadCoordinatesBeforePasswordFieldSHBVN:', error);
+    return coordinatesLoginSHBVN[device_id] || {};
   }
 }
 
 async function loadCoordinatesPasswordFieldSHBVN(device_id) {
   try {
-    console.log('log device_id 2:', device_id);
     const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('log deviceModellllllllllllllllllllll 2:', deviceModel);
-    // const coordinatesLoginSHBVN = JSON.parse(fs.readFileSync(coordinatesPath, 'utf8'));
+    const existingCoords = coordinatesLoginSHBVN[deviceModel] || {};
 
     const files = fs.readdirSync(logDir)
       .filter(f => f.endsWith('.xml'))
@@ -349,16 +360,22 @@ async function loadCoordinatesPasswordFieldSHBVN(device_id) {
 
     if (files.length === 0) {
       console.warn('⚠️ Không tìm thấy file XML nào trong thư mục logs.');
-      return coordinatesLoginSHBVN[deviceModel];
+      return existingCoords;
     }
 
     const latestXMLPath = path.join(logDir, files[0].name);
     const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
-    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
 
-    if (!result || !result.hierarchy) {
+    if (!xmlContent.trim() || !xmlContent.includes('<hierarchy')) {
+      console.warn(`⚠️ File XML ${latestXMLPath} bị rỗng hoặc không hợp lệ, bỏ qua.`);
+      return existingCoords;
+    }
+
+    const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+    const hierarchy = result?.hierarchy;
+    if (!hierarchy) {
       console.warn('⚠️ XML không chứa root <hierarchy>.');
-      return coordinatesLoginSHBVN[deviceModel];
+      return existingCoords;
     }
 
     const flatNodes = [];
@@ -371,7 +388,7 @@ async function loadCoordinatesPasswordFieldSHBVN(device_id) {
       }
     }
 
-    flatten(result.hierarchy);
+    flatten(hierarchy);
 
     const updatedCoordinates = {};
     for (const node of flatNodes) {
@@ -382,43 +399,52 @@ async function loadCoordinatesPasswordFieldSHBVN(device_id) {
       if (key) {
         const bounds = node?.['$']?.bounds;
         const center = getCenter(bounds);
-        if (center) {
-          updatedCoordinates[key] = center;
-        }
+        if (center) updatedCoordinates[key] = center;
       }
     }
 
-    const expectedTotal = Object.values(keyPasswordFieldMap).length;
-    if (Object.keys(updatedCoordinates).length < expectedTotal) {
-      console.warn('⚠️ Không tìm thấy đủ phím ở màn hình nhập mật khẩu. Bỏ qua cập nhật tọa độ.');
-    } else {
-      if (!coordinatesLoginSHBVN[deviceModel]) coordinatesLoginSHBVN[deviceModel] = {};
-      coordinatesLoginSHBVN[deviceModel] = {
-        ...coordinatesLoginSHBVN[deviceModel],
-        ...updatedCoordinates
-      };
-      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
-      console.log(`✅ Đã cập nhật tọa độ FIELD-PASSWORD cho thiết bị ${deviceModel}`);
+    const requiredKeys = Object.keys(existingCoords);
+    const hasAllRequiredKeys = requiredKeys.every(k => updatedCoordinates[k] || existingCoords[k]);
+
+    if (!hasAllRequiredKeys) {
+      console.warn('⚠️ Không đủ key mặc định, không cập nhật gì.');
+      return existingCoords;
     }
 
-    return coordinatesLoginSHBVN[deviceModel];
+    let hasChange = false;
+    const finalCoords = { ...existingCoords };
+
+    for (const key of Object.keys(updatedCoordinates)) {
+      const oldVal = existingCoords[key];
+      const newVal = updatedCoordinates[key];
+      if (!oldVal || oldVal[0] !== newVal[0] || oldVal[1] !== newVal[1]) {
+        finalCoords[key] = newVal;
+        hasChange = true;
+      }
+    }
+
+    if (hasChange) {
+      coordinatesLoginSHBVN[deviceModel] = finalCoords;
+      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
+      console.log(`✅ Đã cập nhật tọa độ FIELD_PASSWORD cho thiết bị ${deviceModel}`);
+    } else {
+      console.log('Không có sự thay đổi tọa độ FIELD_PASSWORD, giữ nguyên.');
+    }
+
+    return finalCoords;
   } catch (error) {
-    console.error('❌ Got an error:', error);
-    throw error;
+    console.error('❌ Got an error in loadCoordinatesPasswordFieldSHBVN:', error);
+    return coordinatesLoginSHBVN[device_id] || {};
   }
 }
 
 async function loadCoordinatesLoginSHBVN({ device_id, text }) {
   try {
-    console.log('log device_id 3:', device_id);
-    if (!device_id) {
-      return;
-    }
-    const deviceModel = await deviceHelper.getDeviceModel(device_id);
-    console.log('log deviceModellllllllllllllllllllll 3:', deviceModel);
-    // const coordinatesLoginSHBVN = JSON.parse(fs.readFileSync(coordinatesPath, 'utf8'));
+    if (!device_id) return;
 
-    // Lấy file XML mới nhất
+    const deviceModel = await deviceHelper.getDeviceModel(device_id);
+    const existingCoords = coordinatesLoginSHBVN[deviceModel] || {};
+
     const files = fs.readdirSync(logDir)
       .filter(f => f.endsWith('.xml'))
       .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -426,15 +452,25 @@ async function loadCoordinatesLoginSHBVN({ device_id, text }) {
 
     if (files.length === 0) {
       console.warn('⚠️ Không tìm thấy file XML nào trong thư mục logs.');
-      return coordinatesLoginSHBVN[deviceModel];
+      return existingCoords;
     }
 
     const latestXMLPath = path.join(logDir, files[0].name);
     const xmlContent = fs.readFileSync(latestXMLPath, 'utf-8');
 
+    // ✅ Bổ sung kiểm tra XML rỗng hoặc không chứa <hierarchy>
+    if (!xmlContent.trim() || !xmlContent.includes('<hierarchy')) {
+      console.warn(`⚠️ File XML ${latestXMLPath} bị rỗng hoặc không hợp lệ, bỏ qua.`);
+      return existingCoords;
+    }
+
     const result = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+
     const allNodes = result?.hierarchy?.node;
-    if (!allNodes) throw new Error('❌ Lỗi load XML: Không tìm thấy node "hierarchy".');
+    if (!allNodes) {
+      console.warn('⚠️ XML không chứa node con trong <hierarchy>.');
+      return existingCoords;
+    }
 
     const flatNodes = [];
     function flatten(node) {
@@ -447,15 +483,13 @@ async function loadCoordinatesLoginSHBVN({ device_id, text }) {
     }
     flatten(allNodes);
 
-    // Duyệt qua flatNodes để lấy các phím từ resource-id có trong keyMap
     const updatedCoordinates = {};
-    let foundKeys = [];
+    const foundKeys = [];
 
     for (const node of flatNodes) {
       const resId = node?.['$']?.['resource-id'];
       if (!resId) continue;
-      const id = resId.split('/').pop(); // ví dụ: nf_key_11
-
+      const id = resId.split('/').pop();
       const key = keyMap[id];
       if (key) {
         const bounds = node?.['$']?.bounds;
@@ -467,33 +501,47 @@ async function loadCoordinatesLoginSHBVN({ device_id, text }) {
       }
     }
 
-    // Bổ sung các ký tự in hoa và đặc biệt (từ những phím đã có)
+    // Bổ sung các ký tự in hoa và đặc biệt
     for (const [uc, lc] of Object.entries(upperCaseCharMap)) {
       if (updatedCoordinates[lc]) updatedCoordinates[uc] = updatedCoordinates[lc];
     }
-
     for (const [sc, base] of Object.entries(specialCharMap)) {
       if (updatedCoordinates[base]) updatedCoordinates[sc] = updatedCoordinates[base];
     }
 
-    // Kiểm tra đủ số lượng phím cần thiết
-    const expectedTotal =
-      Object.values(keyMap).length +
-      Object.keys(specialCharMap).length +
-      Object.keys(upperCaseCharMap).length;
+    // So sánh để xác định thay đổi
+    let hasChange = false;
+    const finalCoords = { ...existingCoords };
 
-    if (Object.keys(updatedCoordinates).length < expectedTotal) {
-      console.warn('XML không đầy đủ toàn bộ phím, bỏ qua cập nhật tọa độ');
-    } else {
-      coordinatesLoginSHBVN[deviceModel] = updatedCoordinates;
-      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
-      console.log(`Đã cập nhật tọa độ cho thiết bị ${deviceModel}`);
+    for (const key of Object.keys(updatedCoordinates)) {
+      const oldVal = existingCoords[key];
+      const newVal = updatedCoordinates[key];
+      if (!oldVal || oldVal[0] !== newVal[0] || oldVal[1] !== newVal[1]) {
+        finalCoords[key] = newVal;
+        hasChange = true;
+      }
     }
 
-    return coordinatesLoginSHBVN[deviceModel];
+    const requiredKeys = Object.keys(existingCoords);
+    const hasAllRequiredKeys = requiredKeys.every(k => finalCoords[k]);
+
+    if (!hasAllRequiredKeys) {
+      console.warn('⚠️ Không đủ key mặc định, không cập nhật gì.');
+      return existingCoords;
+    }
+
+    if (hasChange) {
+      coordinatesLoginSHBVN[deviceModel] = finalCoords;
+      fs.writeFileSync('C:\\att_mobile_client\\config\\coordinatesLoginSHBVN.json', JSON.stringify(coordinatesLoginSHBVN, null, 2));
+      console.log(`✅ Đã cập nhật tọa độ bàn phím cho thiết bị ${deviceModel}`);
+    } else {
+      console.log('Không có sự thay đổi tọa độ bàn phím, giữ nguyên.');
+    }
+
+    return finalCoords;
   } catch (error) {
-    console.error('Got an error:', error);
-    throw error;
+    console.error('Got an error in loadCoordinatesLoginSHBVN:', error);
+    return coordinatesLoginSHBVN[device_id] || {};
   }
 }
 
@@ -1330,8 +1378,7 @@ const tapPasswordFiled = async (device_id) => {
 
 const inputSHBVN = async ({ device_id, text }) => {
   const coordsKeyboard = await loadCoordinatesLoginSHBVN({ device_id });
-
-  console.log('log device_id in inputSHBVN:', device_id);
+  
   console.log('log text in inputSHBVN:', text);
   for (const char of text) {
     console.log('log char in text:', char);
@@ -1352,10 +1399,14 @@ const inputSHBVN = async ({ device_id, text }) => {
 };
 
 const loginSHBVN = async ({ device_id, bank, text }) => {
-  Logger.log(0, `3. Login Shinhanbank...`, __filename);    
-  await submitLoginSHBVN1({ device_id, bank }, 0);    
-  await submitLoginSHBVN2({ device_id, bank }, 0);  
-  await submitLoginSHBVN3({ device_id, bank, text }, 0);  
+  Logger.log(0, `3. Login Shinhanbank...`, __filename);   
+  // Chạy trackSHBVNUI song song, không await để tránh bị chặn
+  trackSHBVNUI({ device_id }).catch((err) => {
+    Logger.log(2, `trackSHBVNUI error: ${err.message}`, __filename);
+  });
+  await submitLoginSHBVN1({ device_id, bank }, 0);
+  await submitLoginSHBVN2({ device_id, bank }, 0);
+  await submitLoginSHBVN3({ device_id, bank, text }, 0);
 };
 
 const loginSTB = async ({ device_id }) => {
@@ -1642,8 +1693,7 @@ const scanQRABB = async ({ device_id }) => {
   return { status: 200, message: 'Success' };
 };
 
-const scanQRSTB = async ({ device_id }) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+const scanQRSTB = async ({ device_id }) => {  
   const coordinates = await loadCoordinates('stb', device_id);
   const coordinates2 = await loadCoordinates('nab', device_id);
   const infoPath = path.join(__dirname, '../database/info-qr.json');
@@ -1750,8 +1800,7 @@ const scanQRSuccessKeywords = {
   acb: ['Chọn ảnh', 'Gallery'] // chua lam
 };
 
-async function checkStartApp({ device_id, bank }) {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+async function checkStartApp({ device_id, bank }) {  
   const keywords = bankStartSuccessKeywords[bank.toLowerCase()] || [];
 
   let attempt = 0;
@@ -1787,8 +1836,7 @@ async function checkStartApp({ device_id, bank }) {
   return false;
 }
 
-async function checkHome({ device_id, bank }) {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+async function checkHome({ device_id, bank }) {  
   const requiredKeywordsMap = {
     stb: [
       'Tài khoản thanh toán',
@@ -1886,8 +1934,6 @@ async function checkHome({ device_id, bank }) {
 // ============== submitLogin TPB ============== //
 // TPB không dùng được này từ 1/7/2025. Chưa làm lại.
 const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -1928,8 +1974,6 @@ const submitLoginTPB = async ({ device_id, bank }, expectedLength, timer) => {
 
 // ============== submitLogin BAB ============== //
 const submitLoginBAB = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -1965,9 +2009,7 @@ const submitLoginBAB = async ({ device_id, bank }, expectedLength, timer) => {
 };
 
 // ============== submitLogin HDB ============== //
-const submitLoginHDB = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
+const submitLoginHDB = async ({ device_id, bank }, expectedLength, timer) => {  
   // Đợi hệ thống render thông báo lỗi (nếu có)
   await delay(200);
 
@@ -2007,8 +2049,6 @@ const submitLoginHDB = async ({ device_id, bank }, expectedLength, timer) => {
 
 // ============== submitLogin SHB ============== //
 const submitLoginSHB = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2046,8 +2086,7 @@ const submitLoginSHB = async ({ device_id, bank }, expectedLength, timer) => {
   }
 };
 
-const submitLoginOCB = async ({ device_id, bank, password }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+const submitLoginOCB = async ({ device_id, bank, password }, timer) => {  
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
@@ -2083,8 +2122,6 @@ const submitLoginOCB = async ({ device_id, bank, password }, timer) => {
 
 // ============== submitLogin NAB ============== //
 const submitLoginNAB1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2114,8 +2151,6 @@ const submitLoginNAB1 = async ({ device_id, bank }, timer) => {
 };
 
 const submitLoginNAB2 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2150,8 +2185,6 @@ const submitLoginNAB2 = async ({ device_id, bank }, timer) => {
 };
 
 const submitLoginNAB3 = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2191,8 +2224,6 @@ const submitLoginNAB3 = async ({ device_id, bank }, expectedLength, timer) => {
 
 // ============== submitLogin MB ============== //
 const submitLoginMB = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2233,8 +2264,6 @@ const submitLoginMB = async ({ device_id, bank }, expectedLength, timer) => {
 
 // ============== submitLogin STB ============== //
 const submitLoginSTB1 = async ({ device_id, bank }, password, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2262,9 +2291,7 @@ const submitLoginSTB1 = async ({ device_id, bank }, password, timer) => {
   }
 };
 
-const submitLoginSTB2 = async ({ device_id, bank }, password, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
+const submitLoginSTB2 = async ({ device_id, bank }, password, timer) => {  
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2293,8 +2320,7 @@ const submitLoginSTB2 = async ({ device_id, bank }, password, timer) => {
   }
 };
 
-const submitLoginSTB3 = async ({ device_id, bank }, password, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+const submitLoginSTB3 = async ({ device_id, bank }, password, timer) => {  
   const infoPath = path.join(__dirname, '../database/info-qr.json');
   const raw = fs.readFileSync(infoPath, 'utf-8');
   const info = JSON.parse(raw);
@@ -2331,8 +2357,6 @@ const submitLoginSTB3 = async ({ device_id, bank }, password, timer) => {
 };
 
 const submitLoginSTB4 = async ({ device_id, bank }, expectedLength, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2370,8 +2394,6 @@ const submitLoginSTB4 = async ({ device_id, bank }, expectedLength, timer) => {
 // ============== submitLogin SHBVN ============== //
 // click vào nút ĐĂNG NHẬP / LOG IN ở màn hình đăng nhập (sau khi start app)
 const submitLoginSHBVN1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2403,8 +2425,6 @@ const submitLoginSHBVN1 = async ({ device_id, bank }, timer) => {
 
 // click vào field Mật khẩu / Password (sau khi click nút ĐĂNG NHẬP)
 const submitLoginSHBVN2 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2434,8 +2454,6 @@ const submitLoginSHBVN2 = async ({ device_id, bank }, timer) => {
 
 // Bắt đầu tap vào bàn phím để nhập mật khẩu (sau khi click nút ĐĂNG NHẬP)
 const submitLoginSHBVN3 = async ({ device_id, bank, text }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2465,8 +2483,6 @@ const submitLoginSHBVN3 = async ({ device_id, bank, text }, timer) => {
 
 // ============== submitLogin VPB ============== // chua lam
 const submitLoginVPB1 = async ({ device_id, bank }, password, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2496,8 +2512,6 @@ const submitLoginVPB1 = async ({ device_id, bank }, password, timer) => {
 
 // ============== submitLogin VIKKI ============== // dump xml không ổn định.
 const submitLoginVIKKI1 = async ({ device_id, bank }, password, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2547,8 +2561,6 @@ const submitLoginVIKKI1 = async ({ device_id, bank }, password, timer) => {
 
 // ============== upload image SHB ============== //
 const uploadQRSHB1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2582,8 +2594,6 @@ const uploadQRSHB1 = async ({ device_id, bank }, timer) => {
 };
 
 const uploadQRSHB2 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2622,8 +2632,6 @@ const uploadQRSHB2 = async ({ device_id, bank }, timer) => {
 };
 
 const uploadQRSHB3 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2662,8 +2670,6 @@ const uploadQRSHB3 = async ({ device_id, bank }, timer) => {
 
 // ============== upload image OCB ============== //
 const uploadQROCB1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2692,8 +2698,6 @@ const uploadQROCB1 = async ({ device_id, bank }, timer) => {
 };
 
 const uploadQROCB2 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2723,8 +2727,6 @@ const uploadQROCB2 = async ({ device_id, bank }, timer) => {
 
 // ============== upload image NAB ============== //
 const uploadQRNAB1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2753,8 +2755,6 @@ const uploadQRNAB1 = async ({ device_id, bank }, timer) => {
 };
 
 const uploadQRNAB2 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2784,8 +2784,6 @@ const uploadQRNAB2 = async ({ device_id, bank }, timer) => {
 };
 
 const uploadQRNAB3 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2816,8 +2814,6 @@ const uploadQRNAB3 = async ({ device_id, bank }, timer) => {
 
 // ============== upload image MB ============== //
 const uploadQRMB1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2847,8 +2843,6 @@ const uploadQRMB1 = async ({ device_id, bank }, timer) => {
 };
 
 const uploadQRMB2 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2879,8 +2873,6 @@ const uploadQRMB2 = async ({ device_id, bank }, timer) => {
 
 // ============== upload image BAB ============== //
 const uploadQRBAB1 = async ({ device_id, bank }, timer) => {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
-
   const files = fs.readdirSync(logDir)
     .filter(f => f.endsWith('.xml'))
     .map(f => ({ name: f, time: fs.statSync(path.join(logDir, f)).mtimeMs }))
@@ -2909,7 +2901,6 @@ const uploadQRBAB1 = async ({ device_id, bank }, timer) => {
 };
 
 async function checkLogin({ device_id, bank }) {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
   const keywords = bankLoginSuccessKeywords[bank.toLowerCase()] || [];
 
   let attempt = 0;
@@ -2949,8 +2940,7 @@ async function checkLogin({ device_id, bank }) {
   return false;
 }
 
-async function checkScanQR({ device_id, bank, transId }) {
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+async function checkScanQR({ device_id, bank, transId }) {  
   const keywords = scanQRSuccessKeywords[bank.toLowerCase()] || [];
   const maxAttempts = 10;
   const retryDelay = 2000;
@@ -2998,8 +2988,7 @@ const runBankTransfer = async ({ device_id, bank, controller }) => {
   transId = json?.data?.trans_id;
   const stopApp = mapStopBank[bank.toLowerCase()];
   const startApp = mapStartBank[bank.toLowerCase()];
-  const loginApp = mapLoginBank[bank.toLowerCase()];
-  const logDir = path.join('C:\\att_mobile_client\\logs\\');
+  const loginApp = mapLoginBank[bank.toLowerCase()];  
 
   // Dọn sạch logs cũ
   // fs.readdirSync(logDir)
